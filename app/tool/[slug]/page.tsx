@@ -16,6 +16,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ToolLogo } from "@/components/tools/ToolLogo";
+import { EmbeddedTool } from "@/components/tools/embedded/EmbeddedTool";
+import { LoginPrompt } from "@/components/tools/embedded/LoginPrompt";
+import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
+import { createClient } from "@/lib/supabase/server";
+import { getUsageSummary } from "@/lib/subscription/usage";
+import { getEmbedConfig, isProviderConfigured } from "@/lib/tools/embed";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -64,6 +70,16 @@ export default async function ToolPage({ params }: PageProps) {
 
   const category = getCategoryBySlug(tool.toolType);
   const related = await getRelatedTools(tool.toolType, tool.slug);
+  const embedConfig = getEmbedConfig(tool.slug);
+  const providerConfigured = embedConfig ? isProviderConfigured(embedConfig) : false;
+
+  const supabase = await createClient();
+  const user = supabase ? await getSessionUser(supabase) : null;
+  const profile = user && supabase ? await ensureProfile(supabase, user) : null;
+  const usage =
+    user && supabase && profile
+      ? await getUsageSummary(supabase, user.id, profile.plan)
+      : null;
 
   return (
     <>
@@ -111,19 +127,47 @@ export default async function ToolPage({ params }: PageProps) {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
+              {embedConfig && (
+                <a
+                  href="#use-tool"
+                  className="inline-flex items-center justify-center rounded-xl border border-gold/30 bg-gradient-to-r from-gold to-gold-light px-5 py-2.5 text-sm font-medium text-black transition-all hover:from-gold-light hover:to-gold shadow-gold"
+                >
+                  Использовать на сайте
+                </a>
+              )}
               <a
                 href={tool.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-xl border border-gold/30 bg-gradient-to-r from-gold to-gold-light px-5 py-2.5 text-sm font-medium text-black transition-all hover:from-gold-light hover:to-gold shadow-gold"
+                className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium transition-all ${
+                  embedConfig
+                    ? "border divider-metallic text-silver hover:border-gold/40 hover:text-gold-light"
+                    : "border border-gold/30 bg-gradient-to-r from-gold to-gold-light text-black hover:from-gold-light hover:to-gold shadow-gold"
+                }`}
               >
-                Перейти на сайт ↗
+                Официальный сайт ↗
               </a>
               <Button href="/catalog" variant="outline">
                 ← Назад в каталог
               </Button>
             </div>
           </header>
+
+          {embedConfig && (
+            <section id="use-tool" className="mb-12 scroll-mt-24">
+              {user && usage ? (
+                <EmbeddedTool
+                  slug={tool.slug}
+                  toolName={tool.name}
+                  config={embedConfig}
+                  providerConfigured={providerConfigured}
+                  usage={usage}
+                />
+              ) : (
+                <LoginPrompt toolName={tool.name} />
+              )}
+            </section>
+          )}
 
           <div className="grid gap-12 lg:grid-cols-3">
             <div className="space-y-10 lg:col-span-2">

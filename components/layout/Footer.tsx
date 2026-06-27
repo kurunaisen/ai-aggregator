@@ -3,6 +3,7 @@ import { Container } from "@/components/layout/Container";
 
 const footerLinks = [
   { href: "/catalog", label: "Каталог" },
+  { href: "/pricing", label: "Тарифы" },
   { href: "/about", label: "О проекте" },
   { href: "/submit", label: "Добавить инструмент" },
   { href: "/privacy", label: "Конфиденциальность" },

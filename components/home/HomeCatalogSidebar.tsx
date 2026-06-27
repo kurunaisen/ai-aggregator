@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categories } from "@/data/categories";
 import { Button } from "@/components/ui/Button";
+import { HomeCatalogSearch } from "@/components/home/HomeCatalogSearch";
 
 type HomeCatalogSidebarProps = {
   toolCount: number;
@@ -13,9 +14,11 @@ export function HomeCatalogSidebar({ toolCount }: HomeCatalogSidebarProps) {
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-gold/70">
           Каталог
         </h2>
-        <p className="mb-5 text-xs text-silver-dim">
+        <p className="mb-4 text-xs text-silver-dim">
           {toolCount} {toolCount === 1 ? "инструмент" : toolCount >= 2 && toolCount <= 4 ? "инструмента" : "инструментов"}
         </p>
+
+        <HomeCatalogSearch />
 
         <nav className="space-y-1">
           <SidebarLink href="/catalog" active>
