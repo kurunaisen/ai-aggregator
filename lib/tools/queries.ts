@@ -14,6 +14,7 @@ function mapToolRow(row: ToolRow): Tool {
     toolType: row.tool_type,
     pricing: row.pricing as PricingModel,
     website: row.website_url,
+    logoUrl: row.logo_url,
     featured: row.featured,
     tags: [],
     features: [],
@@ -117,4 +118,33 @@ export async function getRelatedTools(
   }
 
   return (data ?? []).map(mapToolRow);
+}
+
+export type MarqueeToolItem = {
+  slug: string;
+  name: string;
+  createdAt: string;
+};
+
+export async function getMarqueeTools(limit = 3): Promise<MarqueeToolItem[]> {
+  const supabase = createAnonClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("tools")
+    .select("slug, name, created_at")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("getMarqueeTools:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => ({
+    slug: row.slug,
+    name: row.name,
+    createdAt: row.created_at,
+  }));
 }

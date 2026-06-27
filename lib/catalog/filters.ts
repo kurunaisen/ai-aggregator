@@ -1,4 +1,4 @@
-import { getCategoryBySlug } from "@/data/categories";
+import { getCategoryBySlug, toolMatchesCategory } from "@/data/categories";
 import type { PricingModel, Tool } from "@/types/tool";
 
 export type CatalogFilters = {
@@ -58,7 +58,7 @@ export function filterAndSortTools(
   const filtered = tools.filter((tool) => {
     if (filters.category) {
       const cat = getCategoryBySlug(filters.category);
-      if (cat && tool.categoryLabel !== cat.name) return false;
+      if (cat && !toolMatchesCategory(tool, cat)) return false;
     }
 
     if (filters.toolType && tool.toolType !== filters.toolType) return false;

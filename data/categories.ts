@@ -25,23 +25,37 @@ export const categories: Category[] = [
     slug: "video",
     description: "Генерация и монтаж видео",
   },
-  {
-    id: "audio",
-    name: "Аудио",
-    slug: "audio",
-    description: "Голос, музыка и озвучка",
-  },
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {
   return categories.find((c) => c.slug === slug);
 }
 
+export function toolMatchesCategory(
+  tool: { categoryLabel: string; toolType: string },
+  category: Category,
+): boolean {
+  return (
+    tool.categoryLabel === category.name ||
+    tool.toolType === category.slug ||
+    tool.categoryLabel === category.slug
+  );
+}
+
 export function getToolCountByCategoryLabel(
-  tools: { categoryLabel: string }[],
+  tools: { categoryLabel: string; toolType: string }[],
   categoryName: string,
 ): number {
-  return tools.filter((t) => t.categoryLabel === categoryName).length;
+  const category = categories.find((c) => c.name === categoryName);
+  if (!category) return 0;
+  return tools.filter((t) => toolMatchesCategory(t, category)).length;
+}
+
+export function getToolCountByCategory(
+  tools: { categoryLabel: string; toolType: string }[],
+  category: Category,
+): number {
+  return tools.filter((t) => toolMatchesCategory(t, category)).length;
 }
 
 export function getToolCountByToolType(

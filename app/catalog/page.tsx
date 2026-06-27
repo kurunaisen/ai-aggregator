@@ -29,7 +29,7 @@ export async function generateMetadata({
 
   return buildPageMetadata({
     title: "Каталог нейросетей",
-    description: `${filtered.length} AI-инструментов для текста, изображений, кода, видео и аудио. Поиск, фильтры и описания.`,
+    description: `${filtered.length} AI-инструментов для текста, изображений, кода и видео. Поиск, фильтры и описания.`,
     path: "/catalog",
   });
 }
@@ -52,11 +52,11 @@ export default async function CatalogPage({ searchParams }: PageProps) {
       <JsonLd data={buildCatalogItemListSchema(filtered)} />
 
       <Container className="py-10 sm:py-16">
-        <div className="mb-8 sm:mb-10">
+        <div className="mb-8 text-center sm:mb-10">
           <h1 className="text-3xl font-bold tracking-tight text-silver sm:text-4xl">
             Каталог нейросетей
           </h1>
-          <p className="mt-3 max-w-2xl text-base text-silver-dim sm:mt-4 sm:text-lg">
+          <p className="mx-auto mt-3 max-w-3xl text-base text-silver-dim sm:mt-4 sm:text-lg">
             {tools.length === 0 ? (
               <>
                 Пока нет опубликованных инструментов. Проверьте подключение к
@@ -79,18 +79,18 @@ export default async function CatalogPage({ searchParams }: PageProps) {
         </div>
 
         {tools.length > 0 && (
-          <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,280px)_1fr] lg:items-start lg:gap-10">
-            <div className="order-2 lg:order-1 lg:sticky lg:top-24 lg:self-start">
+          <div className="flex flex-col gap-10">
+            <section className="w-full">
               <CatalogFiltersBar tools={tools} filters={filters} />
-            </div>
+            </section>
 
-            <div className="order-1 min-w-0 lg:order-2">
+            <section className="w-full">
               <ToolGrid
                 tools={filtered}
                 emptyTitle="Ничего не найдено"
                 emptyDescription="Попробуйте другую категорию или сбросьте фильтры."
               />
-            </div>
+            </section>
           </div>
         )}
 

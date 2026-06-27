@@ -19,6 +19,7 @@ export type Tool = {
   toolType: string;
   pricing: PricingModel;
   website: string;
+  logoUrl?: string | null;
   featured: boolean;
   tags: string[];
   features: string[];
@@ -35,5 +36,4 @@ export const toolTypeLabels: Record<string, string> = {
   image: "Изображения",
   code: "Код",
   video: "Видео",
-  audio: "Аудио",
 };

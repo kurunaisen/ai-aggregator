@@ -7,7 +7,7 @@ export function buildCatalogItemListSchema(tools: Tool[]) {
     "@type": "ItemList",
     name: "Каталог нейросетей DeltaplanAI",
     description:
-      "Список AI-инструментов и нейросетей: текст, изображения, код, видео, аудио.",
+      "Список AI-инструментов и нейросетей: текст, изображения, код, видео.",
     numberOfItems: tools.length,
     itemListElement: tools.map((tool, index) => ({
       "@type": "ListItem",

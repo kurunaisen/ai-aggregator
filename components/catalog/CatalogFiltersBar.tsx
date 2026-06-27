@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   categories,
-  getToolCountByCategoryLabel,
+  getToolCountByCategory,
   getToolCountByToolType,
   getUniqueToolTypes,
 } from "@/data/categories";
@@ -52,10 +51,7 @@ export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
 
   const toolTypes = getUniqueToolTypes(tools);
   const categoryCounts = Object.fromEntries(
-    categories.map((c) => [
-      c.slug,
-      getToolCountByCategoryLabel(tools, c.name),
-    ]),
+    categories.map((c) => [c.slug, getToolCountByCategory(tools, c)]),
   );
   const toolTypeCounts = Object.fromEntries(
     toolTypes.map((type) => [type, getToolCountByToolType(tools, type)]),
@@ -75,9 +71,13 @@ export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SearchBar value={searchInput} onChange={setSearchInput} />
+    <div className="space-y-5">
+      <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-3 sm:flex-row sm:justify-center xl:max-w-5xl 2xl:max-w-6xl">
+        <SearchBar
+          value={searchInput}
+          onChange={setSearchInput}
+          className="w-full min-w-0 flex-1"
+        />
         {filtersActive && (
           <Button variant="ghost" onClick={resetFilters} className="shrink-0 text-xs">
             Сбросить
@@ -85,29 +85,8 @@ export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <QuickChip href="/catalog" active={!filters.category && !filters.toolType}>
-          Все ({tools.length})
-        </QuickChip>
-        {categories.map((category) => {
-          const count = categoryCounts[category.slug] ?? 0;
-          if (count === 0) return null;
-          return (
-            <QuickChip
-              key={category.slug}
-              href={`/catalog?category=${category.slug}`}
-              active={filters.category === category.slug}
-            >
-              {category.name} ({count})
-            </QuickChip>
-          );
-        })}
-      </div>
-
       <FilterPanel
-        categories={categories.filter(
-          (c) => (categoryCounts[c.slug] ?? 0) > 0,
-        )}
+        categories={categories}
         toolTypes={toolTypes}
         selectedCategory={filters.category}
         onCategoryChange={(category) => updateFilter({ category })}
@@ -122,24 +101,5 @@ export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
         activeFilterCount={activeFilterCount}
       />
     </div>
-  );
-}
-
-function QuickChip({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`shrink-0 rounded-xl px-3.5 py-2 text-sm transition-colors ${active ? "chip-active" : "chip-inactive"}`}
-    >
-      {children}
-    </Link>
   );
 }

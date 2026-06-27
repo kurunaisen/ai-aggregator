@@ -15,6 +15,7 @@ import { Container } from "@/components/layout/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { ToolLogo } from "@/components/tools/ToolLogo";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -94,10 +95,20 @@ export default async function ToolPage({ params }: PageProps) {
               <Badge>{pricingLabels[tool.pricing]}</Badge>
             </div>
 
-            <h1 className="text-3xl font-bold tracking-tight text-silver sm:text-5xl">
-              {tool.name}
-            </h1>
-            <p className="mt-4 text-lg text-silver-dim sm:text-xl">{tool.tagline}</p>
+            <div className="flex items-start gap-4 sm:gap-5">
+              <ToolLogo
+                name={tool.name}
+                website={tool.website}
+                logoUrl={tool.logoUrl}
+                size="lg"
+              />
+              <div className="min-w-0">
+                <h1 className="text-3xl font-bold tracking-tight text-silver sm:text-5xl">
+                  {tool.name}
+                </h1>
+                <p className="mt-4 text-lg text-silver-dim sm:text-xl">{tool.tagline}</p>
+              </div>
+            </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <a

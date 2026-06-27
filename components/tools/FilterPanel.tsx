@@ -37,7 +37,7 @@ export function FilterPanel({
   activeFilterCount = 0,
 }: FilterPanelProps) {
   const filterBody = (
-    <div className="space-y-6">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <FilterGroup label="Категория">
         <FilterChip active={selectedCategory === null} onClick={() => onCategoryChange(null)}>
           Все
@@ -56,7 +56,7 @@ export function FilterPanel({
         ))}
       </FilterGroup>
 
-      <FilterGroup label="Тип (tool_type)">
+      <FilterGroup label="Тип инструмента">
         <FilterChip active={selectedToolType === null} onClick={() => onToolTypeChange(null)}>
           Все
         </FilterChip>
@@ -90,12 +90,12 @@ export function FilterPanel({
   );
 
   return (
-    <div className="lg:sticky lg:top-24 lg:self-start">
+    <div>
       {onMobileToggle && (
         <button
           type="button"
           onClick={onMobileToggle}
-          className="carbon-panel mb-4 flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-silver lg:hidden"
+          className="carbon-panel mb-4 flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-silver md:hidden"
           aria-expanded={mobileOpen}
         >
           <span className="flex items-center gap-2">
@@ -121,8 +121,8 @@ export function FilterPanel({
         </button>
       )}
 
-      <div className={`carbon-panel rounded-2xl p-5 sm:p-6 ${mobileOpen ? "block" : "hidden lg:block"}`}>
-        <h2 className="mb-5 hidden text-sm font-semibold text-silver lg:block">Фильтры</h2>
+      <div className={`carbon-panel rounded-2xl p-5 sm:p-6 ${mobileOpen ? "block" : "hidden md:block"}`}>
+        <h2 className="mb-5 text-center text-sm font-semibold text-silver">Фильтры</h2>
         {filterBody}
       </div>
     </div>
@@ -131,9 +131,9 @@ export function FilterPanel({
 
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="text-center sm:text-left">
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gold/70">{label}</h3>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <div className="flex flex-wrap justify-center gap-2 sm:justify-start">{children}</div>
     </div>
   );
 }

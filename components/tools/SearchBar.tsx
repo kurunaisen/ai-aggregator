@@ -4,15 +4,17 @@ type SearchBarProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  className?: string;
 };
 
 export function SearchBar({
   value,
   onChange,
   placeholder = "Поиск по названию или описанию...",
+  className = "",
 }: SearchBarProps) {
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       <svg
         className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gold/60"
         fill="none"

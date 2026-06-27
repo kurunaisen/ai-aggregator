@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { categories } from "@/data/categories";
-import { getFeaturedTools } from "@/lib/tools/queries";
+import { getFeaturedTools, getPublishedTools } from "@/lib/tools/queries";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { buildWebSiteSchema } from "@/lib/seo/schema";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
+import { HomeCatalogSidebar } from "@/components/home/HomeCatalogSidebar";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ToolGrid } from "@/components/tools/ToolGrid";
 
@@ -17,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
     .join(", ");
 
   const description = names
-    ? `Каталог AI-инструментов: ${names} и другие нейросети для текста, изображений, кода, видео и аудио.`
+    ? `Каталог AI-инструментов: ${names} и другие нейросети для текста, изображений, кода и видео.`
     : "Каталог нейросетей и AI-инструментов с описаниями, категориями и фильтрами.";
 
   return buildPageMetadata({
@@ -31,14 +30,17 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const featuredTools = await getFeaturedTools();
+  const [featuredTools, allTools] = await Promise.all([
+    getFeaturedTools(),
+    getPublishedTools(),
+  ]);
 
   return (
     <>
       <JsonLd data={buildWebSiteSchema()} />
 
       <section className="hero-glow border-b divider-metallic">
-        <Container className="py-24 sm:py-32">
+        <Container className="py-20 sm:py-28">
           <div className="mx-auto max-w-3xl text-center">
             <p className="mb-5 inline-flex items-center rounded-full border border-gold/25 bg-gold/10 px-4 py-1.5 text-sm font-medium text-gold-light">
               Каталог AI-инструментов
@@ -48,7 +50,7 @@ export default async function HomePage() {
               <span className="text-gradient-metallic">для любой задачи</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-silver-dim">
-              Текст, изображения, код, видео и аудио — собрали лучшие
+              Текст, изображения, код и видео — собрали лучшие
               AI-инструменты в одном месте с описаниями и категориями.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -63,44 +65,28 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      <section className="border-b divider-metallic">
-        <Container className="py-20">
-          <h2 className="mb-10 text-center text-sm font-semibold uppercase tracking-widest text-gold/70">
-            Категории
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/catalog?category=${category.slug}`}
-                className="carbon-card card-glow rounded-2xl px-5 py-6 text-center transition-all hover:border-gold/30 hover:shadow-gold"
-              >
-                <p className="font-medium text-silver">{category.name}</p>
-                <p className="mt-2 text-xs leading-relaxed text-silver-dim">
-                  {category.description}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      </section>
-
       <section>
-        <Container className="py-20">
-          <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-silver sm:text-3xl">
-                Популярные инструменты
-              </h2>
-              <p className="mt-2 text-silver-dim">
-                Топ нейросетей, которые стоит попробовать
-              </p>
+        <Container className="py-12 sm:py-16">
+          <div className="flex flex-col gap-10 xl:grid xl:grid-cols-[minmax(0,280px)_1fr] xl:items-start xl:gap-12 2xl:grid-cols-[minmax(0,300px)_1fr] 2xl:gap-14">
+            <HomeCatalogSidebar toolCount={allTools.length} />
+
+            <div className="min-w-0">
+              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-silver sm:text-3xl">
+                    Популярные инструменты
+                  </h2>
+                  <p className="mt-2 text-silver-dim">
+                    Топ нейросетей, которые стоит попробовать
+                  </p>
+                </div>
+                <Button href="/catalog" variant="ghost">
+                  Все инструменты →
+                </Button>
+              </div>
+              <ToolGrid tools={featuredTools} />
             </div>
-            <Button href="/catalog" variant="ghost">
-              Все инструменты →
-            </Button>
           </div>
-          <ToolGrid tools={featuredTools} />
         </Container>
       </section>
     </>
