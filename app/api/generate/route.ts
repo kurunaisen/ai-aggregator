@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { ensureProfile, getSessionUser, type Profile } from "@/lib/auth/profile";
 import {
   callAnthropic,
-  callOpenAI,
   pollRunwayTask,
   startRunwayVideo,
 } from "@/lib/providers/ai";
+import { callOpenAI } from "@/lib/providers/openai-chat";
+import { validateOpenAIOptions } from "@/lib/providers/validate-openai-options";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 import {
@@ -78,12 +79,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Некорректный запрос." }, { status: 400 });
   }
 
-  const { slug, messages, prompt, action, taskId } = body as {
+  const { slug, messages, prompt, action, taskId, openai } = body as {
     slug?: string;
     messages?: ChatMessage[];
     prompt?: string;
     action?: string;
     taskId?: string;
+    openai?: {
+      model?: string;
+      responseFormat?: "text" | "json_object" | "json_schema";
+      reasoningEffort?: "low" | "medium" | "high";
+      jsonSchema?: string;
+    };
   };
 
   if (!slug) {
@@ -142,10 +149,26 @@ export async function POST(request: Request) {
       }
 
       const chatConfig = embed as ChatEmbedConfig;
-      const reply =
-        chatConfig.provider === "anthropic"
-          ? await callAnthropic(chatConfig, messages)
-          : await callOpenAI(chatConfig, messages);
+
+      if (chatConfig.provider === "anthropic") {
+        const reply = await callAnthropic(chatConfig, messages);
+        await recordUsage(supabase, user.id, slug, "chat");
+        const usage = await getUsageSummary(supabase, user.id, profile.plan);
+        return NextResponse.json({ reply, usage });
+      }
+
+      const validated = validateOpenAIOptions(openai);
+      if (typeof validated === "string") {
+        return NextResponse.json({ error: validated }, { status: 400 });
+      }
+
+      const { parsedSchema, ...openaiOptions } = validated;
+      const reply = await callOpenAI(
+        chatConfig,
+        messages,
+        openaiOptions,
+        parsedSchema,
+      );
 
       await recordUsage(supabase, user.id, slug, "chat");
       const usage = await getUsageSummary(supabase, user.id, profile.plan);

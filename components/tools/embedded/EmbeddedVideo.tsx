@@ -6,12 +6,13 @@ import type { VideoEmbedConfig } from "@/data/embed-tools";
 import type { UsageSummary } from "@/lib/subscription/usage";
 import { Button } from "@/components/ui/Button";
 import { UsageBar } from "@/components/tools/embedded/UsageBar";
+import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
+import { useProviderConfigured } from "@/components/tools/embedded/useProviderConfigured";
 
 type EmbeddedVideoProps = {
   slug: string;
   toolName: string;
   config: VideoEmbedConfig;
-  providerConfigured: boolean;
   initialUsage: UsageSummary;
 };
 
@@ -19,7 +20,6 @@ export function EmbeddedVideo({
   slug,
   toolName,
   config,
-  providerConfigured,
   initialUsage,
 }: EmbeddedVideoProps) {
   const [prompt, setPrompt] = useState("");
@@ -29,6 +29,7 @@ export function EmbeddedVideo({
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
   const [usage, setUsage] = useState(initialUsage);
+  const providerConfigured = useProviderConfigured(config);
 
   const limitReached = usage.plan === "free" && (usage.remaining ?? 0) <= 0;
 
@@ -76,7 +77,7 @@ export function EmbeddedVideo({
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const text = prompt.trim();
-    if (!text || loading || polling || limitReached || !providerConfigured) return;
+    if (!text || loading || polling || limitReached || providerConfigured !== true) return;
 
     setLoading(true);
     setError(null);
@@ -125,9 +126,13 @@ export function EmbeddedVideo({
       </div>
 
       {!providerConfigured ? (
-        <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-silver-dim">
-          RUNWAY_API_KEY не настроен на сервере.
-        </div>
+        providerConfigured === false ? (
+          <ProviderSetupMessage config={config} />
+        ) : (
+          <div className="flex flex-1 items-center justify-center px-6 py-12 text-sm text-silver-dim">
+            Проверка API...
+          </div>
+        )
       ) : (
         <>
           <div className="flex-1 space-y-4 px-5 py-5 sm:px-6">

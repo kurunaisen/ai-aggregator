@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ChatEmbedConfig } from "@/data/embed-tools";
+import type { OpenAIChatRequestOptions, ResponseFormatType } from "@/data/openai-models";
 import type { UsageSummary } from "@/lib/subscription/usage";
 import { Button } from "@/components/ui/Button";
 import { UsageBar } from "@/components/tools/embedded/UsageBar";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
+import {
+  createInitialOpenAIOptions,
+  OpenAIChatSettings,
+} from "@/components/tools/embedded/OpenAIChatSettings";
 import { useProviderConfigured } from "@/components/tools/embedded/useProviderConfigured";
 
 type ChatMessage = {
@@ -14,24 +19,37 @@ type ChatMessage = {
   content: string;
 };
 
-type EmbeddedChatProps = {
+type EmbeddedOpenAIChatProps = {
   slug: string;
   toolName: string;
   config: ChatEmbedConfig;
   initialUsage: UsageSummary;
 };
 
-export function EmbeddedChat({
+function formatMessageContent(content: string, responseFormat: ResponseFormatType): string {
+  if (responseFormat === "text") return content;
+
+  try {
+    return JSON.stringify(JSON.parse(content), null, 2);
+  } catch {
+    return content;
+  }
+}
+
+export function EmbeddedOpenAIChat({
   slug,
   toolName,
   config,
   initialUsage,
-}: EmbeddedChatProps) {
+}: EmbeddedOpenAIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState(initialUsage);
+  const [openAIOptions, setOpenAIOptions] = useState<OpenAIChatRequestOptions>(
+    createInitialOpenAIOptions,
+  );
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const providerConfigured = useProviderConfigured(config);
@@ -57,7 +75,11 @@ export function EmbeddedChat({
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, messages: nextMessages }),
+        body: JSON.stringify({
+          slug,
+          messages: nextMessages,
+          openai: openAIOptions,
+        }),
       });
 
       const data = (await response.json()) as {
@@ -98,6 +120,7 @@ export function EmbeddedChat({
   }
 
   const limitReached = usage.plan === "free" && (usage.remaining ?? 0) <= 0;
+  const isJsonFormat = openAIOptions.responseFormat !== "text";
 
   return (
     <div className="carbon-panel flex min-h-[520px] flex-col overflow-hidden rounded-2xl">
@@ -118,6 +141,12 @@ export function EmbeddedChat({
         )
       ) : (
         <>
+          <OpenAIChatSettings
+            options={openAIOptions}
+            onChange={setOpenAIOptions}
+            disabled={loading}
+          />
+
           <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
             <div className="max-w-[85%] rounded-2xl rounded-bl-md border border-gold/20 bg-gold/10 px-4 py-3 text-sm leading-relaxed text-silver">
               {config.welcomeMessage}
@@ -134,7 +163,15 @@ export function EmbeddedChat({
                       : "rounded-bl-md border border-gold/15 bg-black/40 text-silver-dim"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  <p
+                    className={`whitespace-pre-wrap ${
+                      message.role === "assistant" && isJsonFormat ? "font-mono text-xs" : ""
+                    }`}
+                  >
+                    {message.role === "assistant"
+                      ? formatMessageContent(message.content, openAIOptions.responseFormat)
+                      : message.content}
+                  </p>
                 </div>
               </div>
             ))}
@@ -166,7 +203,7 @@ export function EmbeddedChat({
               <textarea
                 ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(event) => setInput(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={config.placeholder ?? "Напишите сообщение..."}
                 rows={2}

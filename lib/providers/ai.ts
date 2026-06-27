@@ -5,41 +5,22 @@ type ChatMessage = {
   content: string;
 };
 
-export async function callOpenAI(
-  config: ChatEmbedConfig,
-  messages: ChatMessage[],
-): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) throw new Error("OpenAI API не настроен");
+function formatProviderError(provider: string, message: string): string {
+  const lower = message.toLowerCase();
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: config.model,
-      messages: [
-        { role: "system", content: config.systemPrompt },
-        ...messages.map((m) => ({ role: m.role, content: m.content.trim() })),
-      ],
-      temperature: 0.7,
-    }),
-  });
-
-  const data = (await response.json()) as {
-    error?: { message?: string };
-    choices?: { message?: { content?: string } }[];
-  };
-
-  if (!response.ok) {
-    throw new Error(data.error?.message ?? "Ошибка OpenAI API");
+  if (lower.includes("exceeded your current quota") || lower.includes("insufficient_quota")) {
+    return `${provider}: исчерпана квота или не подключена оплата. Пополните баланс на platform.openai.com → Billing.`;
   }
 
-  const reply = data.choices?.[0]?.message?.content?.trim();
-  if (!reply) throw new Error("Пустой ответ от OpenAI");
-  return reply;
+  if (lower.includes("invalid api key") || lower.includes("incorrect api key")) {
+    return `${provider}: неверный API-ключ. Проверьте API-ключ в настройках сервера.`;
+  }
+
+  if (lower.includes("rate limit")) {
+    return `${provider}: слишком много запросов. Подождите минуту и попробуйте снова.`;
+  }
+
+  return `${provider}: ${message}`;
 }
 
 export async function callAnthropic(
@@ -73,7 +54,9 @@ export async function callAnthropic(
   };
 
   if (!response.ok) {
-    throw new Error(data.error?.message ?? "Ошибка Anthropic API");
+    throw new Error(
+      formatProviderError("Anthropic", data.error?.message ?? "Ошибка Anthropic API"),
+    );
   }
 
   const text = data.content?.find((c) => c.type === "text")?.text?.trim();

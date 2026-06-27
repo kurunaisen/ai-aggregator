@@ -21,13 +21,14 @@ import { LoginPrompt } from "@/components/tools/embedded/LoginPrompt";
 import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import { getUsageSummary } from "@/lib/subscription/usage";
-import { getEmbedConfig, isProviderConfigured } from "@/lib/tools/embed";
+import { getEmbedConfig } from "@/lib/tools/embed";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateStaticParams() {
   const slugs = await getPublishedToolSlugs();
@@ -71,7 +72,6 @@ export default async function ToolPage({ params }: PageProps) {
   const category = getCategoryBySlug(tool.toolType);
   const related = await getRelatedTools(tool.toolType, tool.slug);
   const embedConfig = getEmbedConfig(tool.slug);
-  const providerConfigured = embedConfig ? isProviderConfigured(embedConfig) : false;
 
   const supabase = await createClient();
   const user = supabase ? await getSessionUser(supabase) : null;
@@ -160,7 +160,6 @@ export default async function ToolPage({ params }: PageProps) {
                   slug={tool.slug}
                   toolName={tool.name}
                   config={embedConfig}
-                  providerConfigured={providerConfigured}
                   usage={usage}
                 />
               ) : (

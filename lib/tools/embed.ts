@@ -25,6 +25,15 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
   return false;
 }
 
+export function getProviderEnvVar(config: EmbedConfig): string | null {
+  if (config.type === "chat") {
+    if (config.provider === "openai") return "OPENAI_API_KEY";
+    if (config.provider === "anthropic") return "ANTHROPIC_API_KEY";
+  }
+  if (config.type === "video" && config.provider === "runway") return "RUNWAY_API_KEY";
+  return null;
+}
+
 /** @deprecated use isProviderConfigured */
 export function isChatApiConfigured(): boolean {
   return Boolean(process.env.OPENAI_API_KEY?.trim());
