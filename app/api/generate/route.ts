@@ -10,12 +10,19 @@ import { validateOpenAIOptions } from "@/lib/providers/validate-openai-options";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 import {
-  getUsageSummary,
-  isLimitReached,
-  recordUsage,
-  type UsageSummary,
-} from "@/lib/subscription/usage";
+  calculateTextDeaiCost,
+  calculateVideoDeaiCost,
+} from "@/lib/subscription/deai-cost";
+import {
+  canAffordDeai,
+  deductDeai,
+  getDeaiSummary,
+  getInsufficientDeaiMessage,
+  recordDeaiUsage,
+  type DeaiSummary,
+} from "@/lib/subscription/deai";
 import { getEmbedConfig } from "@/lib/tools/embed";
+import { getToolBySlug } from "@/lib/tools/queries";
 import type { ChatEmbedConfig, VideoEmbedConfig } from "@/data/embed-tools";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -28,16 +35,35 @@ const MAX_MESSAGES = 20;
 const MAX_CONTENT_LENGTH = 4000;
 const MAX_PROMPT_LENGTH = 1000;
 
+const EMBED_TOOL_TYPES: Record<string, string> = {
+  chatgpt: "text",
+  claude: "text",
+  runway: "video",
+};
+
 type AuthContext = {
   supabase: SupabaseClient<Database>;
   user: { id: string };
   profile: Profile;
-  usage: UsageSummary;
+  deai: DeaiSummary;
 };
 
-async function requireAuthAndLimit(
-  skipLimit = false,
-): Promise<AuthContext | NextResponse> {
+async function resolveToolMeta(slug: string) {
+  const tool = await getToolBySlug(slug);
+  return {
+    toolType: tool?.toolType ?? EMBED_TOOL_TYPES[slug] ?? "text",
+    toolName: tool?.name,
+  };
+}
+
+function totalMessageChars(messages: ChatMessage[]): number {
+  return messages.reduce((sum, message) => sum + message.content.length, 0);
+}
+
+async function requireAuth(
+  cost: number,
+  skipCheck = false,
+): Promise<(AuthContext & { blocked?: never }) | NextResponse> {
   const supabase = await createClient();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase не настроен." }, { status: 503 });
@@ -55,20 +81,21 @@ async function requireAuthAndLimit(
   }
 
   const profile = await ensureProfile(supabase, user);
-  const usage = await getUsageSummary(supabase, user.id, profile.plan);
+  const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 
-  if (!skipLimit && isLimitReached(usage)) {
+  if (!skipCheck && !canAffordDeai(deai, cost)) {
     return NextResponse.json(
       {
-        error: "Дневной лимит исчерпан. Оформите Pro за 990 ₽/мес.",
-        code: "LIMIT_REACHED",
-        usage,
+        error: getInsufficientDeaiMessage(cost),
+        code: "INSUFFICIENT_DEAI",
+        deai,
+        deaiCost: cost,
       },
       { status: 429 },
     );
   }
 
-  return { supabase, user, profile, usage };
+  return { supabase, user, profile, deai };
 }
 
 export async function POST(request: Request) {
@@ -102,8 +129,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Инструмент недоступен." }, { status: 403 });
   }
 
+  await resolveToolMeta(slug);
+
   if (action === "poll" && embed.type === "video") {
-    const auth = await requireAuthAndLimit(true);
+    const auth = await requireAuth(0, true);
     if (auth instanceof NextResponse) return auth;
 
     if (!taskId) {
@@ -120,11 +149,6 @@ export async function POST(request: Request) {
       );
     }
   }
-
-  const auth = await requireAuthAndLimit();
-  if (auth instanceof NextResponse) return auth;
-
-  const { supabase, user, profile } = auth;
 
   try {
     if (embed.type === "chat") {
@@ -149,31 +173,56 @@ export async function POST(request: Request) {
       }
 
       const chatConfig = embed as ChatEmbedConfig;
+      const chars = totalMessageChars(messages);
+
+      let model = chatConfig.model;
+      let reasoningEffort: "low" | "medium" | "high" | undefined;
+
+      if (chatConfig.provider === "openai") {
+        const prevalidated = validateOpenAIOptions(openai);
+        if (typeof prevalidated === "string") {
+          return NextResponse.json({ error: prevalidated }, { status: 400 });
+        }
+        model = prevalidated.model;
+        reasoningEffort = prevalidated.reasoningEffort;
+      }
+
+      const deaiCost = calculateTextDeaiCost({
+        model,
+        totalChars: chars,
+        reasoningEffort,
+      });
+
+      const auth = await requireAuth(deaiCost);
+      if (auth instanceof NextResponse) return auth;
+
+      const { supabase, user, profile } = auth;
+
+      let reply: string;
 
       if (chatConfig.provider === "anthropic") {
-        const reply = await callAnthropic(chatConfig, messages);
-        await recordUsage(supabase, user.id, slug, "chat");
-        const usage = await getUsageSummary(supabase, user.id, profile.plan);
-        return NextResponse.json({ reply, usage });
+        reply = await callAnthropic(chatConfig, messages);
+      } else {
+        const validated = validateOpenAIOptions(openai);
+        if (typeof validated === "string") {
+          return NextResponse.json({ error: validated }, { status: 400 });
+        }
+        const { parsedSchema, ...openaiOptions } = validated;
+        reply = await callOpenAI(chatConfig, messages, openaiOptions, parsedSchema);
       }
 
-      const validated = validateOpenAIOptions(openai);
-      if (typeof validated === "string") {
-        return NextResponse.json({ error: validated }, { status: 400 });
+      const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
+      if (!deducted.success) {
+        return NextResponse.json(
+          { error: getInsufficientDeaiMessage(deaiCost), code: "INSUFFICIENT_DEAI" },
+          { status: 429 },
+        );
       }
 
-      const { parsedSchema, ...openaiOptions } = validated;
-      const reply = await callOpenAI(
-        chatConfig,
-        messages,
-        openaiOptions,
-        parsedSchema,
-      );
+      await recordDeaiUsage(supabase, user.id, slug, "chat", deaiCost);
+      const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 
-      await recordUsage(supabase, user.id, slug, "chat");
-      const usage = await getUsageSummary(supabase, user.id, profile.plan);
-
-      return NextResponse.json({ reply, usage });
+      return NextResponse.json({ reply, deai, deaiCost });
     }
 
     if (embed.type === "video") {
@@ -186,6 +235,17 @@ export async function POST(request: Request) {
       }
 
       const videoConfig = embed as VideoEmbedConfig;
+      const deaiCost = calculateVideoDeaiCost({
+        model: videoConfig.model,
+        promptLength: prompt.length,
+        duration: videoConfig.duration,
+      });
+
+      const auth = await requireAuth(deaiCost);
+      if (auth instanceof NextResponse) return auth;
+
+      const { supabase, user, profile } = auth;
+
       const runwayTaskId = await startRunwayVideo(
         prompt,
         videoConfig.model,
@@ -193,10 +253,18 @@ export async function POST(request: Request) {
         videoConfig.ratio ?? "16:9",
       );
 
-      await recordUsage(supabase, user.id, slug, "video");
-      const usage = await getUsageSummary(supabase, user.id, profile.plan);
+      const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
+      if (!deducted.success) {
+        return NextResponse.json(
+          { error: getInsufficientDeaiMessage(deaiCost), code: "INSUFFICIENT_DEAI" },
+          { status: 429 },
+        );
+      }
 
-      return NextResponse.json({ taskId: runwayTaskId, status: "PENDING", usage });
+      await recordDeaiUsage(supabase, user.id, slug, "video", deaiCost);
+      const deai = await getDeaiSummary(supabase, user.id, profile.plan);
+
+      return NextResponse.json({ taskId: runwayTaskId, status: "PENDING", deai, deaiCost });
     }
 
     return NextResponse.json({ error: "Неподдерживаемый тип." }, { status: 400 });

@@ -20,7 +20,7 @@ import { EmbeddedTool } from "@/components/tools/embedded/EmbeddedTool";
 import { LoginPrompt } from "@/components/tools/embedded/LoginPrompt";
 import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
-import { getUsageSummary } from "@/lib/subscription/usage";
+import { getDeaiSummary } from "@/lib/subscription/deai";
 import { getEmbedConfig } from "@/lib/tools/embed";
 
 type PageProps = {
@@ -76,9 +76,9 @@ export default async function ToolPage({ params }: PageProps) {
   const supabase = await createClient();
   const user = supabase ? await getSessionUser(supabase) : null;
   const profile = user && supabase ? await ensureProfile(supabase, user) : null;
-  const usage =
+  const deai =
     user && supabase && profile
-      ? await getUsageSummary(supabase, user.id, profile.plan)
+      ? await getDeaiSummary(supabase, user.id, profile.plan)
       : null;
 
   return (
@@ -155,12 +155,12 @@ export default async function ToolPage({ params }: PageProps) {
 
           {embedConfig && (
             <section id="use-tool" className="mb-12 scroll-mt-24">
-              {user && usage ? (
+              {user && deai ? (
                 <EmbeddedTool
                   slug={tool.slug}
                   toolName={tool.name}
                   config={embedConfig}
-                  usage={usage}
+                  deai={deai}
                 />
               ) : (
                 <LoginPrompt toolName={tool.name} />

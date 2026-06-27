@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import {
-  FREE_DAILY_LIMIT,
+  DEAI_PRICING_HINT,
+  FREE_STARTING_DEAI,
   PRO_PRICE_LABEL,
 } from "@/lib/subscription/constants";
 
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   description: "Free и Pro тарифы DeltaplanAI — агрегатор нейросетей.",
 };
 
-const tools = ["ChatGPT", "Claude", "Runway"];
+const proTools = ["ChatGPT", "Claude", "Runway"];
 
 export default function PricingPage() {
   return (
@@ -20,7 +21,7 @@ export default function PricingPage() {
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-3xl font-bold text-silver sm:text-4xl">Тарифы</h1>
         <p className="mt-4 text-silver-dim">
-          Генерация прямо на сайте — без перехода на сторонние сервисы
+          Оплата запросов токенами Deai — прямо на сайте
         </p>
       </div>
 
@@ -29,10 +30,10 @@ export default function PricingPage() {
           <h2 className="text-xl font-semibold text-silver">Free</h2>
           <p className="mt-2 text-3xl font-bold text-gold-light">0 ₽</p>
           <ul className="mt-6 space-y-3 text-sm text-silver-dim">
-            <li>{FREE_DAILY_LIMIT} запросов в день</li>
-            {tools.map((tool) => (
-              <li key={tool}>{tool}</li>
-            ))}
+            <li>{FREE_STARTING_DEAI} Deai при регистрации</li>
+            <li>Текст / код — {DEAI_PRICING_HINT.text}</li>
+            <li>Изображения — {DEAI_PRICING_HINT.image}</li>
+            <li>Видео — {DEAI_PRICING_HINT.video}</li>
           </ul>
           <Button href="/signup" className="mt-8 w-full">
             Начать бесплатно
@@ -46,10 +47,11 @@ export default function PricingPage() {
           <h2 className="text-xl font-semibold text-silver">Pro</h2>
           <p className="mt-2 text-3xl font-bold text-gold-light">{PRO_PRICE_LABEL}</p>
           <ul className="mt-6 space-y-3 text-sm text-silver-dim">
-            <li>Без дневного лимита</li>
-            {tools.map((tool) => (
+            <li>Deai без лимита</li>
+            {proTools.map((tool) => (
               <li key={tool}>{tool}</li>
             ))}
+            <li>Все модели ChatGPT</li>
             <li>Приоритетная генерация (скоро)</li>
           </ul>
           <Button href="/account" variant="outline" className="mt-8 w-full">

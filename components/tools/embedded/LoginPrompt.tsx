@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { FREE_DAILY_LIMIT } from "@/lib/subscription/constants";
+import { DEAI_PRICING_HINT, FREE_STARTING_DEAI } from "@/lib/subscription/constants";
 
 type LoginPromptProps = {
   toolName: string;
@@ -12,7 +12,8 @@ export function LoginPrompt({ toolName }: LoginPromptProps) {
       <h2 className="text-xl font-semibold text-silver">{toolName} на DeltaplanAI</h2>
       <p className="mt-3 max-w-md text-sm leading-relaxed text-silver-dim">
         Войдите или зарегистрируйтесь, чтобы генерировать запросы прямо на сайте.
-        Free — {FREE_DAILY_LIMIT} запросов в день.
+        Free — {FREE_STARTING_DEAI} Deai: текст {DEAI_PRICING_HINT.text}, изображения{" "}
+        {DEAI_PRICING_HINT.image}, видео {DEAI_PRICING_HINT.video}.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button href="/login">Войти</Button>

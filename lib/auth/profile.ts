@@ -1,11 +1,13 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { Plan } from "@/lib/subscription/constants";
+import { FREE_STARTING_DEAI } from "@/lib/subscription/deai-cost";
 
 export type Profile = {
   id: string;
   email: string | null;
   plan: Plan;
+  deaiBalance: number;
 };
 
 export async function getProfile(
@@ -14,7 +16,7 @@ export async function getProfile(
 ): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, plan")
+    .select("id, email, plan, deai_balance")
     .eq("id", userId)
     .maybeSingle();
 
@@ -29,6 +31,7 @@ export async function getProfile(
     id: data.id,
     email: data.email,
     plan: data.plan as Plan,
+    deaiBalance: Number(data.deai_balance ?? FREE_STARTING_DEAI),
   };
 }
 
@@ -45,8 +48,9 @@ export async function ensureProfile(
       id: user.id,
       email: user.email ?? null,
       plan: "free",
+      deai_balance: FREE_STARTING_DEAI,
     })
-    .select("id, email, plan")
+    .select("id, email, plan, deai_balance")
     .single();
 
   if (error || !data) {
@@ -54,6 +58,7 @@ export async function ensureProfile(
       id: user.id,
       email: user.email ?? null,
       plan: "free",
+      deaiBalance: FREE_STARTING_DEAI,
     };
   }
 
@@ -61,6 +66,7 @@ export async function ensureProfile(
     id: data.id,
     email: data.email,
     plan: data.plan as Plan,
+    deaiBalance: Number(data.deai_balance ?? FREE_STARTING_DEAI),
   };
 }
 

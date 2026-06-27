@@ -98,6 +98,7 @@ export type Database = {
           id: string;
           email: string | null;
           plan: string;
+          deai_balance: number;
           stripe_customer_id: string | null;
           created_at: string;
           updated_at: string;
@@ -106,6 +107,7 @@ export type Database = {
           id: string;
           email?: string | null;
           plan?: string;
+          deai_balance?: number;
           stripe_customer_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -114,6 +116,7 @@ export type Database = {
           id?: string;
           email?: string | null;
           plan?: string;
+          deai_balance?: number;
           stripe_customer_id?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -126,6 +129,7 @@ export type Database = {
           user_id: string;
           tool_slug: string;
           request_type: string;
+          deai_cost: number | null;
           created_at: string;
         };
         Insert: {
@@ -133,6 +137,7 @@ export type Database = {
           user_id: string;
           tool_slug: string;
           request_type: string;
+          deai_cost?: number | null;
           created_at?: string;
         };
         Update: {
@@ -140,13 +145,19 @@ export type Database = {
           user_id?: string;
           tool_slug?: string;
           request_type?: string;
+          deai_cost?: number | null;
           created_at?: string;
         };
         Relationships: [];
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      deduct_deai: {
+        Args: { p_amount: number };
+        Returns: number;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

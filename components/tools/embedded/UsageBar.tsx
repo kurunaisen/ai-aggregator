@@ -1,34 +1,29 @@
 import Link from "next/link";
-import type { UsageSummary } from "@/lib/subscription/usage";
+import { formatDeai } from "@/lib/subscription/deai-cost";
+import type { DeaiSummary } from "@/lib/subscription/deai";
 
 type UsageBarProps = {
-  usage: UsageSummary;
+  deai: DeaiSummary;
 };
 
-export function UsageBar({ usage }: UsageBarProps) {
-  if (usage.plan === "pro") {
+export function UsageBar({ deai }: UsageBarProps) {
+  if (deai.unlimited) {
     return (
-      <p className="text-xs text-silver-dim">
-        Pro · сегодня {usage.usedToday} запросов ·{" "}
+      <div className="space-y-1 text-xs text-silver-dim">
+        <p>Pro · Deai без лимита</p>
         <Link href="/account" className="text-gold-light hover:underline">
           аккаунт
         </Link>
-      </p>
+      </div>
     );
   }
 
   return (
-    <p className="text-xs text-silver-dim">
-      Free · осталось {usage.remaining ?? 0} из {usage.dailyLimit} запросов сегодня ·{" "}
-      {usage.remaining === 0 ? (
-        <Link href="/pricing" className="text-gold-light hover:underline">
-          Pro 990 ₽/мес
-        </Link>
-      ) : (
-        <Link href="/account" className="text-gold-light hover:underline">
-          аккаунт
-        </Link>
-      )}
-    </p>
+    <div className="space-y-1 text-xs text-silver-dim">
+      <p>На балансе {formatDeai(deai.balance)} Deai</p>
+      <Link href="/account" className="text-gold-light hover:underline">
+        профиль
+      </Link>
+    </div>
   );
 }

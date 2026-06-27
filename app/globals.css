@@ -180,3 +180,29 @@ body {
 .shadow-gold {
   box-shadow: 0 8px 32px rgb(201 169 98 / 0.08);
 }
+
+.deai-badge-glow {
+  box-shadow:
+    0 0 12px rgb(201 169 98 / 0.35),
+    0 0 28px rgb(201 169 98 / 0.15),
+    inset 0 0 12px rgb(201 169 98 / 0.08);
+  animation: deai-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes deai-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    box-shadow:
+      0 0 10px rgb(201 169 98 / 0.3),
+      0 0 22px rgb(201 169 98 / 0.12),
+      inset 0 0 10px rgb(201 169 98 / 0.06);
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      0 0 16px rgb(226 212 168 / 0.55),
+      0 0 36px rgb(201 169 98 / 0.25),
+      inset 0 0 14px rgb(201 169 98 / 0.12);
+  }
+}

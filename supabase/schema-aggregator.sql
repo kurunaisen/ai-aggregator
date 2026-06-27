@@ -5,6 +5,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   plan text not null default 'free' check (plan in ('free', 'pro')),
+  deai_balance numeric(6, 1) not null default 25,
   stripe_customer_id text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -14,7 +15,8 @@ create table if not exists public.usage_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles (id) on delete cascade,
   tool_slug text not null,
-  request_type text not null check (request_type in ('chat', 'video')),
+  request_type text not null check (request_type in ('chat', 'video', 'image')),
+  deai_cost numeric(6, 1),
   created_at timestamptz not null default now()
 );
 
@@ -51,8 +53,8 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, plan)
-  values (new.id, new.email, 'free')
+  insert into public.profiles (id, email, plan, deai_balance)
+  values (new.id, new.email, 'free', 25)
   on conflict (id) do nothing;
   return new;
 end;

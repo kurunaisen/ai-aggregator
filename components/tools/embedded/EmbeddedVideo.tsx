@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { VideoEmbedConfig } from "@/data/embed-tools";
-import type { UsageSummary } from "@/lib/subscription/usage";
+import { calculateVideoDeaiCost } from "@/lib/subscription/deai-cost";
+import type { DeaiSummary } from "@/lib/subscription/deai";
 import { Button } from "@/components/ui/Button";
+import { DeaiCostHint } from "@/components/tools/embedded/DeaiCostHint";
 import { UsageBar } from "@/components/tools/embedded/UsageBar";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
 import { useProviderConfigured } from "@/components/tools/embedded/useProviderConfigured";
@@ -13,14 +15,14 @@ type EmbeddedVideoProps = {
   slug: string;
   toolName: string;
   config: VideoEmbedConfig;
-  initialUsage: UsageSummary;
+  initialDeai: DeaiSummary;
 };
 
 export function EmbeddedVideo({
   slug,
   toolName,
   config,
-  initialUsage,
+  initialDeai,
 }: EmbeddedVideoProps) {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,10 +30,20 @@ export function EmbeddedVideo({
   const [error, setError] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
-  const [usage, setUsage] = useState(initialUsage);
+  const [deai, setDeai] = useState(initialDeai);
   const providerConfigured = useProviderConfigured(config);
 
-  const limitReached = usage.plan === "free" && (usage.remaining ?? 0) <= 0;
+  const estimatedCost = useMemo(
+    () =>
+      calculateVideoDeaiCost({
+        model: config.model,
+        promptLength: prompt.trim().length || 40,
+        duration: config.duration,
+      }),
+    [config.duration, config.model, prompt],
+  );
+
+  const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
 
   async function pollTask(taskId: string) {
     setPolling(true);
@@ -77,7 +89,7 @@ export function EmbeddedVideo({
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const text = prompt.trim();
-    if (!text || loading || polling || limitReached || providerConfigured !== true) return;
+    if (!text || loading || polling || insufficientDeai || providerConfigured !== true) return;
 
     setLoading(true);
     setError(null);
@@ -94,15 +106,15 @@ export function EmbeddedVideo({
         taskId?: string;
         error?: string;
         code?: string;
-        usage?: UsageSummary;
+        deai?: DeaiSummary;
       };
 
       if (!response.ok) {
-        if (data.usage) setUsage(data.usage);
+        if (data.deai) setDeai(data.deai);
         throw new Error(data.error ?? "Не удалось запустить генерацию");
       }
 
-      if (data.usage) setUsage(data.usage);
+      if (data.deai) setDeai(data.deai);
       if (!data.taskId) throw new Error("Нет taskId");
 
       setLoading(false);
@@ -119,9 +131,9 @@ export function EmbeddedVideo({
   return (
     <div className="carbon-panel flex min-h-[520px] flex-col overflow-hidden rounded-2xl">
       <div className="border-b divider-metallic px-5 py-4 sm:px-6">
-        <h2 className="text-lg font-semibold text-silver">{toolName} — на сайте</h2>
+        <h2 className="text-lg font-semibold text-silver">{toolName}</h2>
         <div className="mt-1">
-          <UsageBar usage={usage} />
+          <UsageBar deai={deai} />
         </div>
       </div>
 
@@ -148,14 +160,12 @@ export function EmbeddedVideo({
               </video>
             )}
 
-            {statusText && (
-              <p className="text-sm text-gold-light">{statusText}</p>
-            )}
+            {statusText && <p className="text-sm text-gold-light">{statusText}</p>}
 
             {error && (
               <p className="text-sm text-red-300">
                 {error}
-                {limitReached && (
+                {insufficientDeai && (
                   <>
                     {" "}
                     <Link href="/pricing" className="text-gold-light underline">
@@ -173,16 +183,23 @@ export function EmbeddedVideo({
               onChange={(e) => setPrompt(e.target.value)}
               placeholder={config.placeholder}
               rows={3}
-              disabled={loading || polling || limitReached}
+              disabled={loading || polling || insufficientDeai}
               className="input-theme mb-3 w-full resize-none rounded-xl px-4 py-3 text-sm"
             />
-            <Button
-              type="submit"
-              disabled={loading || polling || limitReached || !prompt.trim()}
-              className="w-full sm:w-auto"
-            >
-              {loading || polling ? "Генерация..." : "Сгенерировать видео"}
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <DeaiCostHint
+                cost={estimatedCost}
+                balance={deai.balance}
+                unlimited={deai.unlimited}
+              />
+              <Button
+                type="submit"
+                disabled={loading || polling || insufficientDeai || !prompt.trim()}
+                className="w-full sm:w-auto"
+              >
+                {loading || polling ? "Генерация..." : "Сгенерировать видео"}
+              </Button>
+            </div>
             <p className="mt-2 text-xs text-silver-dim/70">
               Генерация может занять 1–2 минуты
             </p>

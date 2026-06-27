@@ -1,5 +1,5 @@
 import type { EmbedConfig } from "@/data/embed-tools";
-import type { UsageSummary } from "@/lib/subscription/usage";
+import type { DeaiSummary } from "@/lib/subscription/deai";
 import { EmbeddedChat } from "@/components/tools/embedded/EmbeddedChat";
 import { EmbeddedOpenAIChat } from "@/components/tools/embedded/EmbeddedOpenAIChat";
 import { EmbeddedVideo } from "@/components/tools/embedded/EmbeddedVideo";
@@ -8,22 +8,17 @@ type EmbeddedToolProps = {
   slug: string;
   toolName: string;
   config: EmbedConfig;
-  usage: UsageSummary;
+  deai: DeaiSummary;
 };
 
-export function EmbeddedTool({
-  slug,
-  toolName,
-  config,
-  usage,
-}: EmbeddedToolProps) {
+export function EmbeddedTool({ slug, toolName, config, deai }: EmbeddedToolProps) {
   if (config.type === "video") {
     return (
       <EmbeddedVideo
         slug={slug}
         toolName={toolName}
         config={config}
-        initialUsage={usage}
+        initialDeai={deai}
       />
     );
   }
@@ -34,7 +29,7 @@ export function EmbeddedTool({
         slug={slug}
         toolName={toolName}
         config={config}
-        initialUsage={usage}
+        initialDeai={deai}
       />
     );
   }
@@ -44,7 +39,7 @@ export function EmbeddedTool({
       slug={slug}
       toolName={toolName}
       config={config}
-      initialUsage={usage}
+      initialDeai={deai}
     />
   );
 }

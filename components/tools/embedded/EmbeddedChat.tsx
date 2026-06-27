@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChatEmbedConfig } from "@/data/embed-tools";
-import type { UsageSummary } from "@/lib/subscription/usage";
+import { calculateTextDeaiCost } from "@/lib/subscription/deai-cost";
+import type { DeaiSummary } from "@/lib/subscription/deai";
 import { Button } from "@/components/ui/Button";
+import { DeaiCostHint } from "@/components/tools/embedded/DeaiCostHint";
 import { UsageBar } from "@/components/tools/embedded/UsageBar";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
 import { useProviderConfigured } from "@/components/tools/embedded/useProviderConfigured";
@@ -18,23 +20,34 @@ type EmbeddedChatProps = {
   slug: string;
   toolName: string;
   config: ChatEmbedConfig;
-  initialUsage: UsageSummary;
+  initialDeai: DeaiSummary;
 };
 
 export function EmbeddedChat({
   slug,
   toolName,
   config,
-  initialUsage,
+  initialDeai,
 }: EmbeddedChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [usage, setUsage] = useState(initialUsage);
+  const [deai, setDeai] = useState(initialDeai);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const providerConfigured = useProviderConfigured(config);
+
+  const estimatedCost = useMemo(() => {
+    const draft = input.trim();
+    const chars =
+      messages.reduce((sum, message) => sum + message.content.length, 0) + draft.length;
+
+    return calculateTextDeaiCost({
+      model: config.model,
+      totalChars: Math.max(chars, draft.length || 40),
+    });
+  }, [config.model, input, messages]);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
@@ -44,6 +57,7 @@ export function EmbeddedChat({
     event?.preventDefault();
     const text = input.trim();
     if (!text || loading || providerConfigured !== true) return;
+    if (!deai.unlimited && deai.balance < estimatedCost) return;
 
     const userMessage: ChatMessage = { role: "user", content: text };
     const nextMessages = [...messages, userMessage];
@@ -64,13 +78,13 @@ export function EmbeddedChat({
         reply?: string;
         error?: string;
         code?: string;
-        usage?: UsageSummary;
+        deai?: DeaiSummary;
       };
 
       if (!response.ok) {
-        if (data.code === "LIMIT_REACHED") {
-          setError(data.error ?? "Лимит исчерпан");
-          if (data.usage) setUsage(data.usage);
+        if (data.code === "INSUFFICIENT_DEAI") {
+          setError(data.error ?? "Недостаточно Deai");
+          if (data.deai) setDeai(data.deai);
           setMessages(messages);
           return;
         }
@@ -78,7 +92,7 @@ export function EmbeddedChat({
       }
 
       if (!data.reply) throw new Error("Пустой ответ");
-      if (data.usage) setUsage(data.usage);
+      if (data.deai) setDeai(data.deai);
 
       setMessages([...nextMessages, { role: "assistant", content: data.reply }]);
     } catch (err) {
@@ -97,14 +111,14 @@ export function EmbeddedChat({
     }
   }
 
-  const limitReached = usage.plan === "free" && (usage.remaining ?? 0) <= 0;
+  const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
 
   return (
     <div className="carbon-panel flex min-h-[520px] flex-col overflow-hidden rounded-2xl">
       <div className="border-b divider-metallic px-5 py-4 sm:px-6">
-        <h2 className="text-lg font-semibold text-silver">{toolName} — на сайте</h2>
+        <h2 className="text-lg font-semibold text-silver">{toolName}</h2>
         <div className="mt-1">
-          <UsageBar usage={usage} />
+          <UsageBar deai={deai} />
         </div>
       </div>
 
@@ -150,7 +164,7 @@ export function EmbeddedChat({
           {error && (
             <p className="border-t divider-metallic px-5 py-2 text-sm text-red-300 sm:px-6">
               {error}
-              {limitReached && (
+              {insufficientDeai && (
                 <>
                   {" "}
                   <Link href="/pricing" className="text-gold-light underline">
@@ -170,16 +184,23 @@ export function EmbeddedChat({
                 onKeyDown={handleKeyDown}
                 placeholder={config.placeholder ?? "Напишите сообщение..."}
                 rows={2}
-                disabled={loading || limitReached}
+                disabled={loading || insufficientDeai}
                 className="input-theme min-h-[52px] flex-1 resize-none rounded-xl px-4 py-3 text-sm"
               />
-              <Button
-                type="submit"
-                disabled={loading || limitReached || !input.trim()}
-                className="shrink-0 sm:min-w-[120px]"
-              >
-                {loading ? "..." : "Отправить"}
-              </Button>
+              <div className="flex shrink-0 flex-col items-stretch gap-2 sm:min-w-[140px] sm:items-end">
+                <DeaiCostHint
+                  cost={estimatedCost}
+                  balance={deai.balance}
+                  unlimited={deai.unlimited}
+                />
+                <Button
+                  type="submit"
+                  disabled={loading || insufficientDeai || !input.trim()}
+                  className="w-full sm:min-w-[120px]"
+                >
+                  {loading ? "..." : "Отправить"}
+                </Button>
+              </div>
             </div>
           </form>
         </>

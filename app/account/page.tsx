@@ -6,15 +6,17 @@ import { Button } from "@/components/ui/Button";
 import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import {
-  FREE_DAILY_LIMIT,
+  DEAI_PRICING_HINT,
+  FREE_STARTING_DEAI,
   PRO_PRICE_LABEL,
 } from "@/lib/subscription/constants";
-import { getUsageSummary } from "@/lib/subscription/usage";
+import { formatDeai } from "@/lib/subscription/deai-cost";
+import { getDeaiSummary } from "@/lib/subscription/deai";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
 export const metadata: Metadata = {
   title: "Аккаунт",
-  description: "Ваш тариф и использование DeltaplanAI.",
+  description: "Ваш тариф и баланс Deai на DeltaplanAI.",
 };
 
 export default async function AccountPage() {
@@ -25,7 +27,7 @@ export default async function AccountPage() {
   if (!user) redirect("/login");
 
   const profile = await ensureProfile(supabase, user);
-  const usage = await getUsageSummary(supabase, user.id, profile.plan);
+  const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 
   return (
     <Container className="py-16">
@@ -43,25 +45,38 @@ export default async function AccountPage() {
             </p>
             {profile.plan === "free" && (
               <p className="mt-1 text-sm text-silver-dim">
-                Pro — {PRO_PRICE_LABEL}, без лимита (скоро)
+                Pro — {PRO_PRICE_LABEL}, Deai без лимита (скоро)
               </p>
             )}
           </div>
 
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-gold/70">
-              Использование сегодня
+              Баланс Deai
             </h2>
-            {usage.plan === "pro" ? (
-              <p className="mt-2 text-silver">{usage.usedToday} запросов · без лимита</p>
+            {deai.unlimited ? (
+              <p className="mt-2 text-silver">Без лимита</p>
             ) : (
-              <p className="mt-2 text-silver">
-                {usage.usedToday} / {FREE_DAILY_LIMIT} запросов
-                {usage.remaining !== null && (
-                  <span className="text-silver-dim"> · осталось {usage.remaining}</span>
-                )}
+              <p className="mt-2 text-3xl font-bold text-gold-light">
+                {formatDeai(deai.balance)} Deai
               </p>
             )}
+            {profile.plan === "free" && (
+              <p className="mt-2 text-sm text-silver-dim">
+                Стартовый баланс — {FREE_STARTING_DEAI} Deai при регистрации
+              </p>
+            )}
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gold/70">
+              Стоимость запросов
+            </h2>
+            <ul className="mt-3 space-y-2 text-sm text-silver-dim">
+              <li>Текст / код — {DEAI_PRICING_HINT.text}</li>
+              <li>Изображения — {DEAI_PRICING_HINT.image}</li>
+              <li>Видео — {DEAI_PRICING_HINT.video}</li>
+            </ul>
           </div>
 
           <div className="flex flex-wrap gap-3 pt-2">

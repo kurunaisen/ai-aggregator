@@ -2,12 +2,14 @@ import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { ToolUpdatesMarquee } from "@/components/layout/ToolUpdatesMarquee";
 import { UserMenu } from "@/components/layout/UserMenu";
-import { getSessionUser } from "@/lib/auth/profile";
+import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 
 export async function Header() {
   const supabase = await createClient();
   const user = supabase ? await getSessionUser(supabase) : null;
+  const profile =
+    user && supabase ? await ensureProfile(supabase, user) : null;
 
   return (
     <header className="sticky top-0 z-50 border-b divider-metallic bg-black/75 backdrop-blur-md">
@@ -44,7 +46,11 @@ export async function Header() {
           <ToolUpdatesMarquee />
 
           <div className="relative z-10 ml-auto shrink-0 pl-2">
-            <UserMenu user={user} />
+            <UserMenu
+              user={user}
+              deaiBalance={profile?.deaiBalance ?? 0}
+              plan={profile?.plan ?? "free"}
+            />
           </div>
         </div>
       </Container>
