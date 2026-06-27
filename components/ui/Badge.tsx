@@ -6,8 +6,8 @@ type BadgeProps = {
 export function Badge({ children, variant = "default" }: BadgeProps) {
   const styles =
     variant === "accent"
-      ? "bg-violet-500/10 text-violet-300 border-violet-500/20"
-      : "bg-zinc-800 text-zinc-400 border-zinc-700";
+      ? "bg-gold/10 text-gold-light border-gold/30"
+      : "bg-white/5 text-silver-dim border-white/10";
 
   return (
     <span

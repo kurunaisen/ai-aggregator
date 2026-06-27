@@ -14,7 +14,7 @@ export function SearchBar({
   return (
     <div className="relative">
       <svg
-        className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-500"
+        className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gold/60"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -33,7 +33,7 @@ export function SearchBar({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label="Поиск инструментов"
-        className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 py-3.5 pl-12 pr-4 text-base text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-violet-500/50 focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 sm:text-sm"
+        className="input-theme w-full rounded-2xl py-3.5 pl-12 pr-4 text-base sm:text-sm"
       />
     </div>
   );

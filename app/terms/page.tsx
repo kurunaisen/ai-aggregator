@@ -10,16 +10,16 @@ export default function TermsPage() {
   return (
     <Container className="py-12">
       <article className="mx-auto max-w-2xl">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-50">
+        <h1 className="text-3xl font-bold tracking-tight text-silver">
           Условия использования
         </h1>
-        <p className="mt-3 text-sm text-zinc-500">
+        <p className="mt-3 text-sm text-silver-dim">
           Последнее обновление: {new Date().toLocaleDateString("ru-RU")}
         </p>
 
-        <div className="mt-8 space-y-6 text-zinc-400 leading-relaxed">
+        <div className="carbon-panel mt-8 space-y-6 rounded-2xl p-8 text-silver-dim leading-relaxed">
           <section>
-            <h2 className="mb-2 text-lg font-semibold text-zinc-200">
+            <h2 className="mb-2 text-lg font-semibold text-silver">
               1. Общие положения
             </h2>
             <p>
@@ -30,7 +30,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-2 text-lg font-semibold text-zinc-200">
+            <h2 className="mb-2 text-lg font-semibold text-silver">
               2. Контент
             </h2>
             <p>
@@ -41,7 +41,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="mb-2 text-lg font-semibold text-zinc-200">
+            <h2 className="mb-2 text-lg font-semibold text-silver">
               3. Ссылки на сторонние сайты
             </h2>
             <p>

@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { createAnonClient } from "@/lib/supabase/anon";
 import type { ToolRow } from "@/lib/supabase/database.types";
 import type { PricingModel, Tool } from "@/types/tool";
@@ -20,6 +21,7 @@ function mapToolRow(row: ToolRow): Tool {
 }
 
 export async function getPublishedTools(): Promise<Tool[]> {
+  noStore();
   const supabase = createAnonClient();
   if (!supabase) return [];
 

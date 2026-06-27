@@ -1,12 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --muted: #71717a;
-  --border: #27272a;
-  --card: #18181b;
-  --accent: #8b5cf6;
+  --background: #050505;
+  --foreground: #e8eaed;
+  --muted: #8b919a;
+  --border: rgba(192, 196, 204, 0.14);
+  --card: #0c0c0c;
+  --silver: #c0c4cc;
+  --silver-dim: #8a919d;
+  --gold: #c9a962;
+  --gold-light: #e2d4a8;
+  --gold-dim: #9a7b3a;
+  --accent: var(--gold);
 }
 
 @theme inline {
@@ -15,32 +20,163 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-card: var(--card);
-  --color-accent: var(--accent);
+  --color-silver: var(--silver);
+  --color-silver-dim: var(--silver-dim);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-dim: var(--gold-dim);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
 ::selection {
-  background: rgb(139 92 246 / 0.3);
+  background: rgb(201 169 98 / 0.35);
+  color: #fff;
+}
+
+/* Carbon fiber base texture */
+.carbon-bg {
+  background-color: #050505;
+  background-image:
+    linear-gradient(
+      27deg,
+      transparent 48%,
+      rgba(255, 255, 255, 0.018) 49%,
+      rgba(255, 255, 255, 0.018) 51%,
+      transparent 52%
+    ),
+    linear-gradient(
+      -27deg,
+      transparent 48%,
+      rgba(255, 255, 255, 0.012) 49%,
+      rgba(255, 255, 255, 0.012) 51%,
+      transparent 52%
+    ),
+    linear-gradient(180deg, #050505 0%, #0a0a0a 50%, #050505 100%);
+  background-size: 8px 8px, 8px 8px, 100% 100%;
+}
+
+.carbon-panel {
+  background-color: rgba(12, 12, 12, 0.85);
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(192, 196, 204, 0.04) 0%,
+      transparent 40%,
+      rgba(201, 169, 98, 0.03) 100%
+    ),
+    linear-gradient(
+      27deg,
+      transparent 48%,
+      rgba(255, 255, 255, 0.015) 49%,
+      rgba(255, 255, 255, 0.015) 51%,
+      transparent 52%
+    );
+  background-size: 100% 100%, 6px 6px;
+  border: 1px solid rgba(192, 196, 204, 0.12);
+}
+
+.carbon-card {
+  background-color: rgba(10, 10, 10, 0.9);
+  background-image:
+    linear-gradient(
+      145deg,
+      rgba(192, 196, 204, 0.06) 0%,
+      transparent 45%,
+      rgba(201, 169, 98, 0.04) 100%
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.012) 3px,
+      rgba(255, 255, 255, 0.012) 4px
+    );
+  border: 1px solid rgba(192, 196, 204, 0.1);
 }
 
 .hero-glow {
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgb(139 92 246 / 0.18), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 50%, rgb(6 182 212 / 0.08), transparent);
+    radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      rgb(201 169 98 / 0.12),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 80% 50%,
+      rgb(192 196 204 / 0.06),
+      transparent
+    );
 }
 
 .card-glow {
   background: linear-gradient(
     135deg,
-    rgb(139 92 246 / 0.08) 0%,
+    rgb(201 169 98 / 0.06) 0%,
     transparent 50%,
-    rgb(6 182 212 / 0.05) 100%
+    rgb(192 196  204 / 0.04) 100%
   );
+}
+
+.text-gradient-metallic {
+  background: linear-gradient(
+    135deg,
+    var(--gold-light) 0%,
+    var(--gold) 45%,
+    var(--silver) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.border-metallic {
+  border-color: rgba(192, 196, 204, 0.14);
+}
+
+.input-theme {
+  border: 1px solid rgba(192, 196, 204, 0.14);
+  background: rgba(8, 8, 8, 0.9);
+  color: var(--foreground);
+}
+
+.input-theme::placeholder {
+  color: var(--silver-dim);
+}
+
+.input-theme:focus {
+  border-color: rgb(201 169 98 / 0.45);
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(201 169 98 / 0.15);
+}
+
+.chip-active {
+  border-color: rgb(201 169 98 / 0.45);
+  background: rgb(201 169 98 / 0.1);
+  color: var(--gold-light);
+}
+
+.chip-inactive {
+  border: 1px solid rgba(192, 196, 204, 0.12);
+  background: rgba(12, 12, 12, 0.6);
+  color: var(--silver-dim);
+}
+
+.chip-inactive:hover {
+  border-color: rgba(192, 196, 204, 0.22);
+  color: var(--silver);
+}
+
+.divider-metallic {
+  border-color: rgba(192, 196, 204, 0.1);
+}
+
+.shadow-gold {
+  box-shadow: 0 8px 32px rgb(201 169 98 / 0.08);
 }

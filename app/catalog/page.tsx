@@ -1,58 +1,106 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { unstable_noStore as noStore } from "next/cache";
 import { getPublishedTools } from "@/lib/tools/queries";
+import {
+  filterAndSortTools,
+  parseCatalogFilters,
+} from "@/lib/catalog/filters";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { buildCatalogItemListSchema } from "@/lib/seo/schema";
-import { CatalogContent } from "@/components/catalog/CatalogContent";
+import { CatalogFiltersBar } from "@/components/catalog/CatalogFiltersBar";
 import { Container } from "@/components/layout/Container";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { ToolGrid } from "@/components/tools/ToolGrid";
 
-export async function generateMetadata(): Promise<Metadata> {
+export const dynamic = "force-dynamic";
+
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  noStore();
+  const params = await searchParams;
   const tools = await getPublishedTools();
+  const filters = parseCatalogFilters(params);
+  const filtered = filterAndSortTools(tools, filters);
 
   return buildPageMetadata({
     title: "Каталог нейросетей",
-    description: `Полный каталог AI-инструментов — ${tools.length} сервисов для текста, изображений, кода, видео и аудио. Поиск, фильтры и описания.`,
+    description: `${filtered.length} AI-инструментов для текста, изображений, кода, видео и аудио. Поиск, фильтры и описания.`,
     path: "/catalog",
   });
 }
 
-export const revalidate = 60;
-
-function CatalogFallback() {
-  return (
-    <div className="animate-pulse space-y-6">
-      <div className="h-12 rounded-2xl bg-zinc-900" />
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-48 rounded-2xl bg-zinc-900" />
-        ))}
-      </div>
-    </div>
-  );
+function formatToolCount(count: number): string {
+  if (count === 1) return "1 инструмент";
+  if (count >= 2 && count <= 4) return `${count} инструмента`;
+  return `${count} инструментов`;
 }
 
-export default async function CatalogPage() {
+export default async function CatalogPage({ searchParams }: PageProps) {
+  noStore();
+  const params = await searchParams;
   const tools = await getPublishedTools();
+  const filters = parseCatalogFilters(params);
+  const filtered = filterAndSortTools(tools, filters);
 
   return (
     <>
-      <JsonLd data={buildCatalogItemListSchema(tools)} />
+      <JsonLd data={buildCatalogItemListSchema(filtered)} />
 
       <Container className="py-10 sm:py-16">
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl">
+        <div className="mb-8 sm:mb-10">
+          <h1 className="text-3xl font-bold tracking-tight text-silver sm:text-4xl">
             Каталог нейросетей
           </h1>
-          <p className="mt-3 max-w-2xl text-base text-zinc-400 sm:mt-4 sm:text-lg">
-            {tools.length} инструментов. Используйте поиск и фильтры — ссылку с
-            выбранными параметрами можно отправить коллеге.
+          <p className="mt-3 max-w-2xl text-base text-silver-dim sm:mt-4 sm:text-lg">
+            {tools.length === 0 ? (
+              <>
+                Пока нет опубликованных инструментов. Проверьте подключение к
+                Supabase и поле{" "}
+                <code className="rounded border border-gold/20 bg-black/60 px-1.5 py-0.5 text-sm text-gold-light">
+                  is_published
+                </code>
+                .
+              </>
+            ) : (
+              <>
+                {formatToolCount(filtered.length)}
+                {filtered.length !== tools.length && (
+                  <span className="text-silver-dim/60"> из {tools.length}</span>
+                )}
+                . Выберите категорию или найдите нужный сервис через поиск.
+              </>
+            )}
           </p>
         </div>
 
-        <Suspense fallback={<CatalogFallback />}>
-          <CatalogContent tools={tools} />
-        </Suspense>
+        {tools.length > 0 && (
+          <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,280px)_1fr] lg:items-start lg:gap-10">
+            <div className="order-2 lg:order-1 lg:sticky lg:top-24 lg:self-start">
+              <CatalogFiltersBar tools={tools} filters={filters} />
+            </div>
+
+            <div className="order-1 min-w-0 lg:order-2">
+              <ToolGrid
+                tools={filtered}
+                emptyTitle="Ничего не найдено"
+                emptyDescription="Попробуйте другую категорию или сбросьте фильтры."
+              />
+            </div>
+          </div>
+        )}
+
+        {tools.length === 0 && (
+          <ToolGrid
+            tools={[]}
+            emptyTitle="Каталог пуст"
+            emptyDescription="Добавьте инструменты в Supabase и установите is_published = true, либо отправьте заявку через форму на сайте."
+          />
+        )}
       </Container>
     </>
   );

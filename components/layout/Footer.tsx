@@ -11,12 +11,14 @@ const footerLinks = [
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-zinc-800 bg-zinc-950">
+    <footer className="mt-auto border-t divider-metallic bg-black/90">
       <Container className="py-10">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-zinc-300">DeltaplanAI</p>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="text-sm font-medium text-silver">
+              Deltaplan<span className="text-gold">AI</span>
+            </p>
+            <p className="mt-1 text-sm text-silver-dim">
               Каталог нейросетей и AI-инструментов
             </p>
           </div>
@@ -26,7 +28,7 @@ export function Footer() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-zinc-500 transition-colors hover:text-zinc-300"
+                className="text-sm text-silver-dim transition-colors hover:text-gold-light"
               >
                 {link.label}
               </Link>
@@ -34,7 +36,7 @@ export function Footer() {
           </nav>
         </div>
 
-        <p className="mt-8 text-xs text-zinc-600">
+        <p className="mt-8 text-xs text-silver-dim/60">
           © {new Date().getFullYear()} DeltaplanAI. Все права защищены.
         </p>
       </Container>

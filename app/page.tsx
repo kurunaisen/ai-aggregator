@@ -37,19 +37,17 @@ export default async function HomePage() {
     <>
       <JsonLd data={buildWebSiteSchema()} />
 
-      <section className="hero-glow border-b border-zinc-800/80">
+      <section className="hero-glow border-b divider-metallic">
         <Container className="py-24 sm:py-32">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="mb-5 inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-1.5 text-sm font-medium text-violet-300">
+            <p className="mb-5 inline-flex items-center rounded-full border border-gold/25 bg-gold/10 px-4 py-1.5 text-sm font-medium text-gold-light">
               Каталог AI-инструментов
             </p>
-            <h1 className="text-4xl font-bold tracking-tight text-zinc-50 sm:text-6xl sm:leading-tight">
+            <h1 className="text-4xl font-bold tracking-tight text-silver sm:text-6xl sm:leading-tight">
               Найдите нейросеть{" "}
-              <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                для любой задачи
-              </span>
+              <span className="text-gradient-metallic">для любой задачи</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-zinc-400">
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-silver-dim">
               Текст, изображения, код, видео и аудио — собрали лучшие
               AI-инструменты в одном месте с описаниями и категориями.
             </p>
@@ -65,9 +63,9 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      <section className="border-b border-zinc-800/80">
+      <section className="border-b divider-metallic">
         <Container className="py-20">
-          <h2 className="mb-10 text-center text-sm font-semibold uppercase tracking-widest text-zinc-500">
+          <h2 className="mb-10 text-center text-sm font-semibold uppercase tracking-widest text-gold/70">
             Категории
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -75,10 +73,10 @@ export default async function HomePage() {
               <Link
                 key={category.id}
                 href={`/catalog?category=${category.slug}`}
-                className="card-glow rounded-2xl border border-zinc-800/80 bg-zinc-900/40 px-5 py-6 text-center transition-colors hover:border-zinc-700"
+                className="carbon-card card-glow rounded-2xl px-5 py-6 text-center transition-all hover:border-gold/30 hover:shadow-gold"
               >
-                <p className="font-medium text-zinc-200">{category.name}</p>
-                <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                <p className="font-medium text-silver">{category.name}</p>
+                <p className="mt-2 text-xs leading-relaxed text-silver-dim">
                   {category.description}
                 </p>
               </Link>
@@ -91,10 +89,10 @@ export default async function HomePage() {
         <Container className="py-20">
           <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-zinc-100 sm:text-3xl">
+              <h2 className="text-2xl font-semibold text-silver sm:text-3xl">
                 Популярные инструменты
               </h2>
-              <p className="mt-2 text-zinc-500">
+              <p className="mt-2 text-silver-dim">
                 Топ нейросетей, которые стоит попробовать
               </p>
             </div>
