@@ -30,7 +30,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/profile`,
           },
         });
         if (error) throw error;
@@ -38,7 +38,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push("/account");
+        router.push("/profile");
         router.refresh();
       }
     } catch (err) {
@@ -54,7 +54,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/account`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
       },
     });
     if (error) {

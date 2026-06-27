@@ -118,7 +118,7 @@ export function EmbeddedChat({
       <div className="border-b divider-metallic px-5 py-4 sm:px-6">
         <h2 className="text-lg font-semibold text-silver">{toolName}</h2>
         <div className="mt-1">
-          <UsageBar deai={deai} />
+          <UsageBar deai={deai} billingMode="token" />
         </div>
       </div>
 
@@ -192,6 +192,7 @@ export function EmbeddedChat({
                   cost={estimatedCost}
                   balance={deai.balance}
                   unlimited={deai.unlimited}
+                  mode="token"
                 />
                 <Button
                   type="submit"

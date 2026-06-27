@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/layout/Container";
+import { DeaiWalletLegend } from "@/components/deai/DeaiWalletLegend";
 import { Button } from "@/components/ui/Button";
 import {
   DEAI_PRICING_HINT,
@@ -21,7 +22,7 @@ export default function PricingPage() {
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-3xl font-bold text-silver sm:text-4xl">Тарифы</h1>
         <p className="mt-4 text-silver-dim">
-          Оплата запросов токенами Deai — прямо на сайте
+          Единая валюта Deai: текст и код — по токенам, изображения и видео — по кредитам
         </p>
       </div>
 
@@ -31,7 +32,7 @@ export default function PricingPage() {
           <p className="mt-2 text-3xl font-bold text-gold-light">0 ₽</p>
           <ul className="mt-6 space-y-3 text-sm text-silver-dim">
             <li>{FREE_STARTING_DEAI} Deai при регистрации</li>
-            <li>Текст / код — {DEAI_PRICING_HINT.text}</li>
+            <li>Код — {DEAI_PRICING_HINT.code}</li>
             <li>Изображения — {DEAI_PRICING_HINT.image}</li>
             <li>Видео — {DEAI_PRICING_HINT.video}</li>
           </ul>
@@ -54,13 +55,17 @@ export default function PricingPage() {
             <li>Все модели ChatGPT</li>
             <li>Приоритетная генерация (скоро)</li>
           </ul>
-          <Button href="/account" variant="outline" className="mt-8 w-full">
+          <Button href="/profile" variant="outline" className="mt-8 w-full">
             Оформить Pro — скоро
           </Button>
           <p className="mt-3 text-center text-xs text-silver-dim">
             Оплата через Stripe — этап 2
           </p>
         </div>
+      </div>
+
+      <div className="mx-auto mt-10 max-w-2xl">
+        <DeaiWalletLegend />
       </div>
 
       <p className="mt-10 text-center text-sm text-silver-dim">

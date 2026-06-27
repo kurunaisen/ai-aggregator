@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { VideoEmbedConfig } from "@/data/embed-tools";
-import { calculateVideoDeaiCost } from "@/lib/subscription/deai-cost";
+import {
+  calculateVideoDeaiCost,
+  MEDIA_QUALITY_OPTIONS,
+  VIDEO_DURATION_OPTIONS,
+  type MediaQuality,
+  type VideoDuration,
+} from "@/lib/subscription/deai-cost";
 import type { DeaiSummary } from "@/lib/subscription/deai";
 import { Button } from "@/components/ui/Button";
 import { DeaiCostHint } from "@/components/tools/embedded/DeaiCostHint";
@@ -18,6 +24,8 @@ type EmbeddedVideoProps = {
   initialDeai: DeaiSummary;
 };
 
+const selectClassName = "input-theme w-full rounded-xl px-3 py-2.5 text-sm";
+
 export function EmbeddedVideo({
   slug,
   toolName,
@@ -25,6 +33,10 @@ export function EmbeddedVideo({
   initialDeai,
 }: EmbeddedVideoProps) {
   const [prompt, setPrompt] = useState("");
+  const [duration, setDuration] = useState<VideoDuration>(
+    (config.duration === 10 || config.duration === 15 ? config.duration : 5) as VideoDuration,
+  );
+  const [quality, setQuality] = useState<MediaQuality>("1k");
   const [loading, setLoading] = useState(false);
   const [polling, setPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +49,10 @@ export function EmbeddedVideo({
     () =>
       calculateVideoDeaiCost({
         model: config.model,
-        promptLength: prompt.trim().length || 40,
-        duration: config.duration,
+        duration,
+        quality,
       }),
-    [config.duration, config.model, prompt],
+    [config.model, duration, quality],
   );
 
   const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
@@ -99,7 +111,11 @@ export function EmbeddedVideo({
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, prompt: text }),
+        body: JSON.stringify({
+          slug,
+          prompt: text,
+          video: { duration, quality },
+        }),
       });
 
       const data = (await response.json()) as {
@@ -133,8 +149,11 @@ export function EmbeddedVideo({
       <div className="border-b divider-metallic px-5 py-4 sm:px-6">
         <h2 className="text-lg font-semibold text-silver">{toolName}</h2>
         <div className="mt-1">
-          <UsageBar deai={deai} />
+          <UsageBar deai={deai} billingMode="credit" />
         </div>
+        <p className="mt-2 text-xs text-silver-dim/80">
+          Единый баланс Deai · этот инструмент списывает кредиты
+        </p>
       </div>
 
       {!providerConfigured ? (
@@ -178,6 +197,39 @@ export function EmbeddedVideo({
           </div>
 
           <form onSubmit={handleSubmit} className="border-t divider-metallic p-4 sm:p-5">
+            <div className="mb-3 grid gap-3 sm:grid-cols-2">
+              <label className="block space-y-1.5">
+                <span className="text-xs text-silver-dim">Длительность</span>
+                <select
+                  value={duration}
+                  onChange={(event) => setDuration(Number(event.target.value) as VideoDuration)}
+                  disabled={loading || polling}
+                  className={selectClassName}
+                >
+                  {VIDEO_DURATION_OPTIONS.map((seconds) => (
+                    <option key={seconds} value={seconds}>
+                      {seconds} сек
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-xs text-silver-dim">Качество</span>
+                <select
+                  value={quality}
+                  onChange={(event) => setQuality(event.target.value as MediaQuality)}
+                  disabled={loading || polling}
+                  className={selectClassName}
+                >
+                  {MEDIA_QUALITY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
@@ -191,6 +243,7 @@ export function EmbeddedVideo({
                 cost={estimatedCost}
                 balance={deai.balance}
                 unlimited={deai.unlimited}
+                mode="credit"
               />
               <Button
                 type="submit"

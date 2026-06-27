@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DeaiWalletLegend } from "@/components/deai/DeaiWalletLegend";
 import { Button } from "@/components/ui/Button";
 import { DEAI_PRICING_HINT, FREE_STARTING_DEAI } from "@/lib/subscription/constants";
 
@@ -15,6 +16,9 @@ export function LoginPrompt({ toolName }: LoginPromptProps) {
         Free — {FREE_STARTING_DEAI} Deai: текст {DEAI_PRICING_HINT.text}, изображения{" "}
         {DEAI_PRICING_HINT.image}, видео {DEAI_PRICING_HINT.video}.
       </p>
+      <div className="mt-4 max-w-md">
+        <DeaiWalletLegend compact />
+      </div>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button href="/login">Войти</Button>
         <Button href="/signup" variant="outline">

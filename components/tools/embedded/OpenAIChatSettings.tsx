@@ -1,5 +1,6 @@
 "use client";
 
+import { DeaiModeTag } from "@/components/deai/DeaiModeTag";
 import {
   DEFAULT_JSON_SCHEMA,
   modelSupportsReasoning,
@@ -74,11 +75,14 @@ export function OpenAIChatSettings({
 
   return (
     <div className="space-y-3 border-b divider-metallic px-5 py-4 sm:px-6">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gold/70">
-        Настройки ChatGPT
-      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gold/70">
+          Настройки ChatGPT
+        </p>
+        <DeaiModeTag mode="token" />
+      </div>
       <p className="text-xs text-silver-dim/80">
-        Сравнивайте модели по Deai в списке — цена обновляется от объёма текста и настроек
+        0.5–2 Deai · зависит от модели и объёма текста (≈4 символа = 1 токен)
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Некорректный запрос." }, { status: 400 });
   }
 
-  const { slug, messages, prompt, action, taskId, openai } = body as {
+  const { slug, messages, prompt, action, taskId, openai, video } = body as {
     slug?: string;
     messages?: ChatMessage[];
     prompt?: string;
@@ -117,6 +117,10 @@ export async function POST(request: Request) {
       responseFormat?: "text" | "json_object" | "json_schema";
       reasoningEffort?: "low" | "medium" | "high";
       jsonSchema?: string;
+    };
+    video?: {
+      duration?: number;
+      quality?: "1k" | "2k" | "4k";
     };
   };
 
@@ -219,7 +223,7 @@ export async function POST(request: Request) {
         );
       }
 
-      await recordDeaiUsage(supabase, user.id, slug, "chat", deaiCost);
+      await recordDeaiUsage(supabase, user.id, slug, "chat", deaiCost, model);
       const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 
       return NextResponse.json({ reply, deai, deaiCost });
@@ -235,10 +239,13 @@ export async function POST(request: Request) {
       }
 
       const videoConfig = embed as VideoEmbedConfig;
+      const duration = video?.duration ?? videoConfig.duration ?? 5;
+      const quality = video?.quality ?? "1k";
+
       const deaiCost = calculateVideoDeaiCost({
         model: videoConfig.model,
-        promptLength: prompt.length,
-        duration: videoConfig.duration,
+        duration,
+        quality,
       });
 
       const auth = await requireAuth(deaiCost);
@@ -249,7 +256,7 @@ export async function POST(request: Request) {
       const runwayTaskId = await startRunwayVideo(
         prompt,
         videoConfig.model,
-        videoConfig.duration ?? 5,
+        duration,
         videoConfig.ratio ?? "16:9",
       );
 
@@ -261,7 +268,14 @@ export async function POST(request: Request) {
         );
       }
 
-      await recordDeaiUsage(supabase, user.id, slug, "video", deaiCost);
+      await recordDeaiUsage(
+        supabase,
+        user.id,
+        slug,
+        "video",
+        deaiCost,
+        videoConfig.model,
+      );
       const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 
       return NextResponse.json({ taskId: runwayTaskId, status: "PENDING", deai, deaiCost });

@@ -2,7 +2,25 @@ import type { ReasoningEffort } from "@/data/openai-models";
 
 export const FREE_STARTING_DEAI = 25;
 
+/** Единая валюта Deai; внутри — разные «режимы» списания */
+export type DeaiBillingMode = "token" | "credit";
+
 export type DeaiCategory = "text" | "image" | "video";
+
+/** Разрешение / качество для медиа (1K–4K) */
+export type MediaQuality = "1k" | "2k" | "4k";
+
+export const MEDIA_QUALITY_OPTIONS: { value: MediaQuality; label: string }[] = [
+  { value: "1k", label: "1K (стандарт)" },
+  { value: "2k", label: "2K (HD)" },
+  { value: "4k", label: "4K (Ultra)" },
+];
+
+export const VIDEO_DURATION_OPTIONS = [5, 10, 15] as const;
+export type VideoDuration = (typeof VIDEO_DURATION_OPTIONS)[number];
+
+export const IMAGE_OUTPUT_OPTIONS = [1, 2, 3, 4] as const;
+export type ImageOutputCount = (typeof IMAGE_OUTPUT_OPTIONS)[number];
 
 function roundDeai(value: number): number {
   return Math.round(value * 2) / 2;
@@ -10,6 +28,21 @@ function roundDeai(value: number): number {
 
 function clampDeai(value: number, min: number, max: number): number {
   return roundDeai(Math.min(max, Math.max(min, value)));
+}
+
+function clampInt(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+function qualityMultiplier(quality: MediaQuality): number {
+  if (quality === "2k") return 1.25;
+  if (quality === "4k") return 1.55;
+  return 1;
+}
+
+/** ~4 символа ≈ 1 токен (грубая оценка для UI и биллинга) */
+export function estimateTokensFromChars(totalChars: number): number {
+  return Math.ceil(Math.max(totalChars, 1) / 4);
 }
 
 function textModelBase(model: string): number {
@@ -40,9 +73,10 @@ function textModelBase(model: string): number {
   return 2;
 }
 
-function textVolumeFactor(totalChars: number): number {
-  if (totalChars <= 400) return 1;
-  if (totalChars <= 1200) return 1.25;
+/** Множитель объёма по эквиваленту токенов (вход + контекст) */
+function textTokenVolumeFactor(estimatedTokens: number): number {
+  if (estimatedTokens <= 500) return 1;
+  if (estimatedTokens <= 1500) return 1.25;
   return 1.5;
 }
 
@@ -53,44 +87,79 @@ function reasoningSurcharge(effort?: ReasoningEffort): number {
   return 0;
 }
 
-/** Текст / код: 0.5–2 Deai */
+function imageModelMultiplier(model: string): number {
+  if (/pro|ultra|large|v[56]/i.test(model)) return 1.2;
+  if (/hd|quality|plus/i.test(model)) return 1.1;
+  return 1;
+}
+
+function videoModelMultiplier(model: string): number {
+  if (/gen4|gen-4/i.test(model)) return 1.25;
+  if (/turbo/i.test(model)) return 1;
+  return 1.1;
+}
+
+/**
+ * Текст и код — режим «токены».
+ * Код на платформе тарифицируется как текст (Cursor — отдельный продукт по подписке).
+ * 0.5–2 Deai за запрос.
+ */
 export function calculateTextDeaiCost(params: {
   model: string;
   totalChars: number;
   reasoningEffort?: ReasoningEffort;
 }): number {
+  const tokens = estimateTokensFromChars(params.totalChars);
   const cost =
-    textModelBase(params.model) * textVolumeFactor(params.totalChars) +
+    textModelBase(params.model) * textTokenVolumeFactor(tokens) +
     reasoningSurcharge(params.reasoningEffort);
 
   return clampDeai(cost, 0.5, 2);
 }
 
-/** Изображение: 2–3 Deai */
+/**
+ * Изображения — режим «кредиты».
+ * Зависит от числа выходных картинок (1–4), качества (1K–4K) и tier модели.
+ * 1.5–8 Deai за генерацию.
+ */
 export function calculateImageDeaiCost(params: {
   model: string;
-  promptLength: number;
+  outputCount?: number;
+  quality?: MediaQuality;
 }): number {
-  let cost = 2;
+  const outputs = clampInt(params.outputCount ?? 1, 1, 4);
+  const quality = params.quality ?? "1k";
 
-  if (params.promptLength > 250) cost += 0.5;
-  if (/pro|ultra|hd|large/i.test(params.model)) cost += 0.5;
+  const cost =
+    0.75 *
+    outputs *
+    qualityMultiplier(quality) *
+    imageModelMultiplier(params.model);
 
-  return clampDeai(cost, 2, 3);
+  return clampDeai(cost, 1.5, 8);
 }
 
-/** Видео: 3–5 Deai */
+/**
+ * Видео — режим «кредиты».
+ * Зависит от длительности (5–15 с), качества (1K–4K) и tier модели.
+ * 2–10 Deai за генерацию.
+ */
 export function calculateVideoDeaiCost(params: {
   model: string;
-  promptLength: number;
   duration?: number;
+  quality?: MediaQuality;
 }): number {
-  let cost = params.model.includes("turbo") ? 3 : 3.5;
+  const duration = clampInt(params.duration ?? 5, 5, 15);
+  const quality = params.quality ?? "1k";
 
-  if (params.promptLength > 350) cost += 0.5;
-  if ((params.duration ?? 5) > 5) cost += 1;
+  const cost =
+    0.4 * duration * qualityMultiplier(quality) * videoModelMultiplier(params.model);
 
-  return clampDeai(cost, 3, 5);
+  return clampDeai(cost, 2, 10);
+}
+
+export function getDeaiBillingMode(category: DeaiCategory): DeaiBillingMode {
+  return category === "text" ? "token" : "credit";
 }
 
 export function formatDeai(amount: number): string {
@@ -101,4 +170,19 @@ export function resolveDeaiCategory(toolType: string): DeaiCategory {
   if (toolType === "image") return "image";
   if (toolType === "video") return "video";
   return "text";
+}
+
+export function billingModeFromRequestType(requestType: string): DeaiBillingMode {
+  return requestType === "chat" ? "token" : "credit";
+}
+
+/** Подпись для UI: что именно списывается */
+export function formatDeaiBillingHint(category: DeaiCategory): string {
+  if (category === "text") {
+    return "токены · текст и код";
+  }
+  if (category === "image") {
+    return "кредиты · 1–4 изображения · 1K–4K";
+  }
+  return "кредиты · 5–15 с · 1K–4K";
 }

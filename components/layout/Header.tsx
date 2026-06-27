@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/layout/Container";
 import { ToolUpdatesMarquee } from "@/components/layout/ToolUpdatesMarquee";
 import { UserMenu } from "@/components/layout/UserMenu";
-import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
+import { ensureProfile, getProfileDisplayName, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 
 export async function Header() {
@@ -10,6 +10,8 @@ export async function Header() {
   const user = supabase ? await getSessionUser(supabase) : null;
   const profile =
     user && supabase ? await ensureProfile(supabase, user) : null;
+  const displayName =
+    user && profile ? getProfileDisplayName(profile, user) : "Профиль";
 
   return (
     <header className="sticky top-0 z-50 border-b divider-metallic bg-black/75 backdrop-blur-md">
@@ -48,6 +50,8 @@ export async function Header() {
           <div className="relative z-10 ml-auto shrink-0 pl-2">
             <UserMenu
               user={user}
+              displayName={displayName}
+              avatarId={profile?.avatarId}
               deaiBalance={profile?.deaiBalance ?? 0}
               plan={profile?.plan ?? "free"}
             />

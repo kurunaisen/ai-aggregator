@@ -96,12 +96,14 @@ export async function recordDeaiUsage(
   toolSlug: string,
   requestType: "chat" | "video" | "image",
   deaiCost: number,
+  model: string,
 ): Promise<void> {
   const { error } = await supabase.from("usage_logs").insert({
     user_id: userId,
     tool_slug: toolSlug,
     request_type: requestType,
     deai_cost: deaiCost,
+    model,
   });
 
   if (error) {

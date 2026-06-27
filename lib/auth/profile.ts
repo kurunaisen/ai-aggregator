@@ -1,14 +1,48 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import {
+  DEFAULT_PROFILE_AVATAR_ID,
+  isProfileAvatarId,
+  resolveProfileAvatarId,
+  type ProfileAvatarId,
+} from "@/data/profile-avatars";
 import type { Plan } from "@/lib/subscription/constants";
 import { FREE_STARTING_DEAI } from "@/lib/subscription/deai-cost";
 
 export type Profile = {
   id: string;
   email: string | null;
+  displayName: string | null;
+  avatarId: ProfileAvatarId;
   plan: Plan;
   deaiBalance: number;
 };
+
+const PROFILE_FIELDS = "id, email, display_name, avatar_id, plan, deai_balance" as const;
+
+function mapProfileRow(data: {
+  id: string;
+  email: string | null;
+  display_name: string | null;
+  avatar_id: string | null;
+  plan: string;
+  deai_balance: number;
+}): Profile {
+  return {
+    id: data.id,
+    email: data.email,
+    displayName: data.display_name,
+    avatarId: resolveProfileAvatarId(data.avatar_id),
+    plan: data.plan as Plan,
+    deaiBalance: Number(data.deai_balance ?? FREE_STARTING_DEAI),
+  };
+}
+
+export function getProfileDisplayName(profile: Profile, user: User): string {
+  if (profile.displayName?.trim()) return profile.displayName.trim();
+  if (user.email) return user.email.split("@")[0] ?? "Профиль";
+  return "Профиль";
+}
 
 export async function getProfile(
   supabase: SupabaseClient<Database>,
@@ -16,7 +50,7 @@ export async function getProfile(
 ): Promise<Profile | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, plan, deai_balance")
+    .select(PROFILE_FIELDS)
     .eq("id", userId)
     .maybeSingle();
 
@@ -27,12 +61,7 @@ export async function getProfile(
 
   if (!data) return null;
 
-  return {
-    id: data.id,
-    email: data.email,
-    plan: data.plan as Plan,
-    deaiBalance: Number(data.deai_balance ?? FREE_STARTING_DEAI),
-  };
+  return mapProfileRow(data);
 }
 
 export async function ensureProfile(
@@ -49,25 +78,73 @@ export async function ensureProfile(
       email: user.email ?? null,
       plan: "free",
       deai_balance: FREE_STARTING_DEAI,
+      avatar_id: DEFAULT_PROFILE_AVATAR_ID,
     })
-    .select("id, email, plan, deai_balance")
+    .select(PROFILE_FIELDS)
     .single();
 
   if (error || !data) {
     return {
       id: user.id,
       email: user.email ?? null,
+      displayName: null,
+      avatarId: DEFAULT_PROFILE_AVATAR_ID,
       plan: "free",
       deaiBalance: FREE_STARTING_DEAI,
     };
   }
 
-  return {
-    id: data.id,
-    email: data.email,
-    plan: data.plan as Plan,
-    deaiBalance: Number(data.deai_balance ?? FREE_STARTING_DEAI),
-  };
+  return mapProfileRow(data);
+}
+
+export async function updateProfileDisplayName(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  displayName: string,
+): Promise<{ ok: true; displayName: string } | { ok: false; error: string }> {
+  const trimmed = displayName.trim();
+
+  if (trimmed.length < 2 || trimmed.length > 32) {
+    return { ok: false, error: "Имя: от 2 до 32 символов." };
+  }
+
+  if (!/^[\p{L}\p{N} _.-]+$/u.test(trimmed)) {
+    return { ok: false, error: "Допустимы буквы, цифры, пробел, дефис и точка." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ display_name: trimmed, updated_at: new Date().toISOString() })
+    .eq("id", userId);
+
+  if (error) {
+    console.error("updateProfileDisplayName:", error.message);
+    return { ok: false, error: "Не удалось сохранить имя." };
+  }
+
+  return { ok: true, displayName: trimmed };
+}
+
+export async function updateProfileAvatar(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  avatarId: string,
+): Promise<{ ok: true; avatarId: ProfileAvatarId } | { ok: false; error: string }> {
+  if (!isProfileAvatarId(avatarId)) {
+    return { ok: false, error: "Недопустимая иконка." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_id: avatarId, updated_at: new Date().toISOString() })
+    .eq("id", userId);
+
+  if (error) {
+    console.error("updateProfileAvatar:", error.message);
+    return { ok: false, error: "Не удалось сохранить иконку." };
+  }
+
+  return { ok: true, avatarId };
 }
 
 export async function getSessionUser(

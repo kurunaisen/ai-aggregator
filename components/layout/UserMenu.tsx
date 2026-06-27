@@ -4,14 +4,23 @@ import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import type { Plan } from "@/lib/subscription/constants";
 import { DeaiBadge } from "@/components/layout/DeaiBadge";
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 
 type UserMenuProps = {
   user: User | null;
+  displayName?: string;
+  avatarId?: string | null;
   deaiBalance?: number;
   plan?: Plan;
 };
 
-export function UserMenu({ user, deaiBalance = 0, plan = "free" }: UserMenuProps) {
+export function UserMenu({
+  user,
+  displayName = "Профиль",
+  avatarId,
+  deaiBalance = 0,
+  plan = "free",
+}: UserMenuProps) {
   if (!user) {
     return (
       <div className="flex items-center gap-2 sm:gap-3">
@@ -35,11 +44,12 @@ export function UserMenu({ user, deaiBalance = 0, plan = "free" }: UserMenuProps
     <div className="flex items-center gap-2 sm:gap-3">
       <DeaiBadge balance={deaiBalance} unlimited={plan === "pro"} />
       <Link
-        href="/account"
-        className="hidden max-w-[140px] truncate rounded-lg border divider-metallic px-3 py-1.5 text-xs text-silver transition-colors hover:border-gold/40 hover:text-gold-light sm:inline sm:max-w-[180px] sm:text-sm"
-        title={user.email ?? "Аккаунт"}
+        href="/profile"
+        aria-label={`Профиль: ${displayName}`}
+        title={displayName}
+        className="inline-flex rounded-full transition-transform hover:scale-105"
       >
-        {user.email ?? "Аккаунт"}
+        <ProfileAvatar avatarId={avatarId} name={displayName} size="sm" />
       </Link>
     </div>
   );

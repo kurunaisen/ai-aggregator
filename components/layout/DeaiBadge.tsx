@@ -13,8 +13,8 @@ export function DeaiBadge({ balance, unlimited = false }: DeaiBadgeProps) {
 
   return (
     <Link
-      href="/account"
-      title="Баланс Deai"
+      href="/profile"
+      title="Единый баланс Deai · списание токенами (текст/код) или кредитами (медиа)"
       className="deai-badge group relative inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-black/60 px-2.5 py-1 text-xs font-semibold text-gold-light transition-colors hover:border-gold/70 hover:text-gold sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm"
     >
       <span className="deai-badge-glow pointer-events-none absolute inset-0 rounded-full" aria-hidden />

@@ -4,6 +4,8 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
+  display_name text,
+  avatar_id text default 'star',
   plan text not null default 'free' check (plan in ('free', 'pro')),
   deai_balance numeric(6, 1) not null default 25,
   stripe_customer_id text,
@@ -17,6 +19,7 @@ create table if not exists public.usage_logs (
   tool_slug text not null,
   request_type text not null check (request_type in ('chat', 'video', 'image')),
   deai_cost numeric(6, 1),
+  model text,
   created_at timestamptz not null default now()
 );
 

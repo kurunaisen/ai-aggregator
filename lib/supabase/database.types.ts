@@ -97,6 +97,8 @@ export type Database = {
         Row: {
           id: string;
           email: string | null;
+          display_name: string | null;
+          avatar_id: string | null;
           plan: string;
           deai_balance: number;
           stripe_customer_id: string | null;
@@ -106,6 +108,8 @@ export type Database = {
         Insert: {
           id: string;
           email?: string | null;
+          display_name?: string | null;
+          avatar_id?: string | null;
           plan?: string;
           deai_balance?: number;
           stripe_customer_id?: string | null;
@@ -115,6 +119,8 @@ export type Database = {
         Update: {
           id?: string;
           email?: string | null;
+          display_name?: string | null;
+          avatar_id?: string | null;
           plan?: string;
           deai_balance?: number;
           stripe_customer_id?: string | null;
@@ -130,6 +136,7 @@ export type Database = {
           tool_slug: string;
           request_type: string;
           deai_cost: number | null;
+          model: string | null;
           created_at: string;
         };
         Insert: {
@@ -138,6 +145,7 @@ export type Database = {
           tool_slug: string;
           request_type: string;
           deai_cost?: number | null;
+          model?: string | null;
           created_at?: string;
         };
         Update: {
@@ -146,6 +154,7 @@ export type Database = {
           tool_slug?: string;
           request_type?: string;
           deai_cost?: number | null;
+          model?: string | null;
           created_at?: string;
         };
         Relationships: [];
