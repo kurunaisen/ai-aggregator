@@ -9,6 +9,9 @@ export function formatModelLabel(model: string | null, toolSlug: string): string
   if (openai) return openai.label;
 
   if (model.includes("claude")) {
+    if (model.includes("opus")) return "Claude Opus 4.8";
+    if (model.includes("sonnet")) return "Claude Sonnet 4.6";
+    if (model.includes("haiku")) return "Claude Haiku 4.5";
     return model
       .replace(/^claude-/, "Claude ")
       .replace(/-/g, " ")

@@ -56,12 +56,12 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
   claude: {
     type: "chat",
     provider: "anthropic",
-    model: "claude-3-5-haiku-latest",
+    model: "claude-haiku-4-5-20251001",
     systemPrompt:
-      "Ты Claude — полезный AI-ассистент от Anthropic. Отвечай на русском, если пользователь пишет по-русски.",
+      "Ты Claude — полезный AI-ассистент от Anthropic. Отвечай на русском, если пользователь пишет по-русски. Если пользователь прислал изображение — внимательно проанализируй диаграмму, график или скриншот и отвечай по существу.",
     welcomeMessage:
-      "Claude на DeltaplanAI. Анализ, тексты, код и рассуждения — прямо здесь.",
-    placeholder: "Сообщение для Claude...",
+      "Claude на DeltaplanAI — выберите модель под задачу. Haiku 4.5 быстро анализирует диаграммы и графики; Sonnet и Opus — для сложных текстов и кода. Прикрепите изображение кнопкой «Изображение» или вставкой Ctrl+V.",
+    placeholder: "Сообщение или опишите прикреплённую диаграмму...",
   },
   grok: {
     type: "chat",

@@ -28,7 +28,7 @@ insert into public.tools (
     'claude',
     'Claude',
     'AI-ассистент от Anthropic',
-    'Claude на DeltaplanAI — надёжный помощник для длинных текстов, анализа и кода. Работает через API Anthropic на сайте.',
+    'Claude на DeltaplanAI — модели Haiku, Sonnet и Opus. Анализ диаграмм и графиков через загрузку изображений.',
     'Текст',
     'text',
     'freemium',

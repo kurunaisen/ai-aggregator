@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { ensureProfile, getSessionUser, type Profile } from "@/lib/auth/profile";
-import {
-  callAnthropic,
-} from "@/lib/providers/ai";
+import { callClaude } from "@/lib/providers/claude-chat";
 import { pollImageGeneration, startImageGeneration } from "@/lib/providers/image";
 import { pollVideoGeneration, startVideoGeneration } from "@/lib/providers/video";
 import {
@@ -22,7 +20,13 @@ import {
 import type { KlingGenerationRequest } from "@/data/kling-options";
 import { callOpenAI } from "@/lib/providers/openai-chat";
 import { callXai } from "@/lib/providers/xai-chat";
+import { validateClaudeOptions } from "@/lib/providers/validate-claude-options";
 import { validateOpenAIOptions } from "@/lib/providers/validate-openai-options";
+import type { ClaudeChatMessage, ClaudeChatRequestOptions } from "@/data/claude-models";
+import {
+  estimateAttachmentChars,
+  validateClaudeAttachments,
+} from "@/lib/chat/claude-attachments";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 import {
@@ -51,6 +55,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+  attachments?: ClaudeChatMessage["attachments"];
 };
 
 const MAX_MESSAGES = 20;
@@ -88,7 +93,57 @@ async function resolveToolMeta(slug: string) {
 }
 
 function totalMessageChars(messages: ChatMessage[]): number {
-  return messages.reduce((sum, message) => sum + message.content.length, 0);
+  return messages.reduce((sum, message) => {
+    const attachmentChars = estimateAttachmentChars(message.attachments?.length ?? 0);
+    return sum + message.content.length + attachmentChars;
+  }, 0);
+}
+
+function validateChatMessages(
+  messages: ChatMessage[],
+  options: { allowAttachments: boolean },
+): string | null {
+  if (messages.length > MAX_MESSAGES) {
+    return `Макс. ${MAX_MESSAGES} сообщений.`;
+  }
+
+  for (const message of messages) {
+    if (
+      !message ||
+      (message.role !== "user" && message.role !== "assistant") ||
+      typeof message.content !== "string" ||
+      message.content.length > MAX_CONTENT_LENGTH
+    ) {
+      return "Некорректные сообщения.";
+    }
+
+    if (message.role === "assistant" && message.attachments?.length) {
+      return "Вложения поддерживаются только в сообщениях пользователя.";
+    }
+
+    if (message.attachments?.length) {
+      if (!options.allowAttachments) {
+        return "Вложения недоступны для этого инструмента.";
+      }
+
+      const validated = validateClaudeAttachments(message.attachments);
+      if (!Array.isArray(validated)) {
+        return validated.error;
+      }
+    }
+
+    if (message.role === "user") {
+      const hasText = message.content.trim().length > 0;
+      const hasAttachments = (message.attachments?.length ?? 0) > 0;
+      if (!hasText && !hasAttachments) {
+        return "Сообщение пользователя пустое.";
+      }
+    } else if (!message.content.trim()) {
+      return "Некорректные сообщения.";
+    }
+  }
+
+  return null;
 }
 
 async function requireAuth(
@@ -137,7 +192,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Некорректный запрос." }, { status: 400 });
   }
 
-  const { slug, messages, prompt, action, taskId, openai, video, image, editorCode, language } =
+  const { slug, messages, prompt, action, taskId, openai, claude, video, image, editorCode, language } =
     body as {
     slug?: string;
     messages?: ChatMessage[];
@@ -152,6 +207,7 @@ export async function POST(request: Request) {
       reasoningEffort?: "low" | "medium" | "high";
       jsonSchema?: string;
     };
+    claude?: Partial<ClaudeChatRequestOptions>;
     video?: {
       duration?: number;
       quality?: "1k" | "2k" | "4k";
@@ -222,23 +278,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Сообщения не переданы." }, { status: 400 });
       }
 
-      if (messages.length > MAX_MESSAGES) {
-        return NextResponse.json({ error: `Макс. ${MAX_MESSAGES} сообщений.` }, { status: 400 });
-      }
-
-      for (const message of messages) {
-        if (
-          !message ||
-          (message.role !== "user" && message.role !== "assistant") ||
-          typeof message.content !== "string" ||
-          !message.content.trim() ||
-          message.content.length > MAX_CONTENT_LENGTH
-        ) {
-          return NextResponse.json({ error: "Некорректные сообщения." }, { status: 400 });
-        }
-      }
-
       const chatConfig = embed as ChatEmbedConfig | CodeEmbedConfig;
+      const allowAttachments =
+        embed.type === "chat" && chatConfig.provider === "anthropic";
+
+      const messagesError = validateChatMessages(messages, { allowAttachments });
+      if (messagesError) {
+        return NextResponse.json({ error: messagesError }, { status: 400 });
+      }
+
       const codeSnapshot =
         embed.type === "code" && typeof editorCode === "string" ? editorCode : "";
       const codeLanguage =
@@ -273,7 +321,13 @@ export async function POST(request: Request) {
       let model = chatConfig.model;
       let reasoningEffort: "low" | "medium" | "high" | undefined;
 
-      if (chatConfig.provider === "openai") {
+      if (chatConfig.provider === "anthropic") {
+        const validatedClaude = validateClaudeOptions(claude);
+        if (typeof validatedClaude === "string") {
+          return NextResponse.json({ error: validatedClaude }, { status: 400 });
+        }
+        model = validatedClaude.model;
+      } else if (chatConfig.provider === "openai") {
         const prevalidated = validateOpenAIOptions(openai);
         if (typeof prevalidated === "string") {
           return NextResponse.json({ error: prevalidated }, { status: 400 });
@@ -296,7 +350,11 @@ export async function POST(request: Request) {
       let reply: string;
 
       if (chatConfig.provider === "anthropic") {
-        reply = await callAnthropic(chatConfig as ChatEmbedConfig, apiMessages);
+        reply = await callClaude(
+          chatConfig as ChatEmbedConfig,
+          model,
+          apiMessages as ClaudeChatMessage[],
+        );
       } else if (chatConfig.provider === "xai") {
         reply = await callXai(chatConfig as ChatEmbedConfig, apiMessages);
       } else {

@@ -14,7 +14,7 @@ create index if not exists usage_logs_user_model_day_idx
 update public.usage_logs ul
 set model = case ul.tool_slug
   when 'chatgpt' then 'gpt-4o-mini'
-  when 'claude' then 'claude-3-5-haiku-latest'
+  when 'claude' then 'claude-haiku-4-5-20251001'
   when 'grok' then 'grok-3'
   when 'nanobanana' then 'gemini-2.5-flash-image'
   when 'flux' then 'flux-2-klein-4b'

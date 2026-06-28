@@ -28,7 +28,15 @@ export function getTextModelRatesUsd(model: string): TokenRatesUsd {
   }
 
   if (id.includes("haiku")) {
-    return { inputPerMTok: 0.8, outputPerMTok: 4.0 };
+    return { inputPerMTok: 1, outputPerMTok: 5 };
+  }
+
+  if (id.includes("claude") && id.includes("sonnet")) {
+    return { inputPerMTok: 3, outputPerMTok: 15 };
+  }
+
+  if (id.includes("claude") && id.includes("opus")) {
+    return { inputPerMTok: 5, outputPerMTok: 25 };
   }
 
   if (id.includes("grok")) {

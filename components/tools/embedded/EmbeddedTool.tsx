@@ -1,6 +1,7 @@
 "use client";
 
 import type { EmbedConfig } from "@/data/embed-tools";
+import { EmbeddedClaudeChat } from "@/components/tools/embedded/EmbeddedClaudeChat";
 import { EmbeddedChat } from "@/components/tools/embedded/EmbeddedChat";
 import { EmbeddedImage } from "@/components/tools/embedded/EmbeddedImage";
 import { EmbeddedKlingVideo } from "@/components/tools/embedded/EmbeddedKlingVideo";
@@ -65,6 +66,17 @@ export function EmbeddedTool({ slug, toolName, config, deai }: EmbeddedToolProps
   if (config.type === "code") {
     return (
       <EmbeddedMonacoCode
+        slug={slug}
+        toolName={toolName}
+        config={config}
+        initialDeai={deai}
+      />
+    );
+  }
+
+  if (config.type === "chat" && config.provider === "anthropic") {
+    return (
+      <EmbeddedClaudeChat
         slug={slug}
         toolName={toolName}
         config={config}
