@@ -91,13 +91,13 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
   grok: {
     type: "chat",
     provider: "xai",
-    model: "grok-3",
+    model: "grok-4.3",
     systemPrompt:
       "Ты Grok — AI-ассистент от xAI. Отвечай на русском, если пользователь пишет по-русски. Будь прямым и полезным.",
     headerDescription:
       "Чат-ассистент xAI на DeltaplanAI — прямые ответы, рассуждения и помощь в повседневных и рабочих задачах: тексты, идеи, код и анализ в одном диалоговом окне на сайте.",
     headerHighlights: [
-      "Модель Grok 3 от xAI",
+      "Модель Grok 4.3 от xAI",
       "Тексты, идеи, код и анализ без лишних формальностей",
       "Генерация изображений — отдельный инструмент Grok Imagine",
       "Списание Deai по объёму запроса",

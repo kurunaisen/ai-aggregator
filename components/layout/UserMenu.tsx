@@ -21,6 +21,7 @@ export function UserMenu({
   if (!user) {
     return (
       <div className="flex items-center gap-2 sm:gap-3">
+        <DeaiBadge href="/pricing" />
         <Link
           href="/pricing"
           className="hidden text-xs text-silver-dim transition-colors hover:text-gold-light sm:inline"

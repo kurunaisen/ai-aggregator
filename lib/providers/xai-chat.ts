@@ -1,23 +1,21 @@
 import type { ChatEmbedConfig } from "@/data/embed-tools";
+import {
+  extractXaiErrorBody,
+  formatXaiApiError,
+  parseXaiJsonResponse,
+} from "@/lib/providers/xai-errors";
 
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
 };
 
-function formatProviderError(message: string): string {
-  const lower = message.toLowerCase();
-
-  if (lower.includes("invalid api key") || lower.includes("incorrect api key")) {
-    return `xAI: неверный API-ключ. Проверьте XAI_API_KEY.`;
-  }
-
-  if (lower.includes("rate limit")) {
-    return "xAI: слишком много запросов. Подождите минуту.";
-  }
-
-  return `xAI: ${message}`;
-}
+type XaiChatResponse = {
+  error?: { message?: string; code?: string; type?: string } | string;
+  detail?: string;
+  message?: string;
+  choices?: { message?: { content?: string } }[];
+};
 
 export function isXaiConfigured(): boolean {
   return Boolean(process.env.XAI_API_KEY?.trim());
@@ -28,7 +26,9 @@ export async function callXai(
   messages: ChatMessage[],
 ): Promise<string> {
   const apiKey = process.env.XAI_API_KEY?.trim();
-  if (!apiKey) throw new Error("xAI API не настроен");
+  if (!apiKey) {
+    throw new Error("xAI API не настроен. Добавьте XAI_API_KEY на Vercel.");
+  }
 
   const response = await fetch("https://api.x.ai/v1/chat/completions", {
     method: "POST",
@@ -46,16 +46,16 @@ export async function callXai(
         })),
       ],
       max_tokens: 2048,
+      stream: false,
     }),
   });
 
-  const data = (await response.json()) as {
-    error?: { message?: string };
-    choices?: { message?: { content?: string } }[];
-  };
+  const data = await parseXaiJsonResponse<XaiChatResponse>(response, "chat");
 
   if (!response.ok) {
-    throw new Error(formatProviderError(data.error?.message ?? "Ошибка xAI API"));
+    throw new Error(
+      formatXaiApiError(extractXaiErrorBody(data, response.status, response.statusText), "chat"),
+    );
   }
 
   const text = data.choices?.[0]?.message?.content?.trim();
