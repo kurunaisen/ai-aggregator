@@ -1,4 +1,4 @@
-import { DEAI_PRICING_HINT } from "@/lib/subscription/constants";
+import { DEAI_EXCHANGE_HINT, DEAI_PRICING_HINT } from "@/lib/subscription/constants";
 import { DeaiModeTag } from "@/components/deai/DeaiModeTag";
 
 type DeaiWalletLegendProps = {
@@ -20,7 +20,8 @@ export function DeaiWalletLegend({ compact = false }: DeaiWalletLegendProps) {
     <div className="rounded-xl border divider-metallic bg-black/30 p-4">
       <p className="text-sm font-medium text-silver">Один кошелёк Deai</p>
       <p className="mt-2 text-xs leading-relaxed text-silver-dim">
-        Все инструменты списывают с одного баланса. Режим зависит от типа задачи:
+        {DEAI_EXCHANGE_HINT}. Все инструменты списывают с одного баланса. Режим зависит от
+        типа задачи:
       </p>
       <ul className="mt-3 space-y-2 text-xs text-silver-dim">
         <li className="flex flex-wrap items-center gap-2">

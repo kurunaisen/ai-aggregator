@@ -1,4 +1,10 @@
 import type { ReasoningEffort } from "@/data/openai-models";
+import {
+  getImageBaseUsd,
+  getTextModelRatesUsd,
+  getVideoUsdPerSecond,
+  usdToDeai,
+} from "@/lib/subscription/deai-rates";
 
 export const FREE_STARTING_DEAI = 25;
 
@@ -11,9 +17,9 @@ export type DeaiCategory = "text" | "image" | "video";
 export type MediaQuality = "1k" | "2k" | "4k";
 
 export const MEDIA_QUALITY_OPTIONS: { value: MediaQuality; label: string }[] = [
-  { value: "1k", label: "1K (стандарт)" },
-  { value: "2k", label: "2K (HD)" },
-  { value: "4k", label: "4K (Ultra)" },
+  { value: "1k", label: "1K (720p)" },
+  { value: "2k", label: "2K (1080p)" },
+  { value: "4k", label: "4K" },
 ];
 
 export const VIDEO_DURATION_OPTIONS = [5, 10, 15] as const;
@@ -21,6 +27,10 @@ export type VideoDuration = (typeof VIDEO_DURATION_OPTIONS)[number];
 
 export const IMAGE_OUTPUT_OPTIONS = [1, 2, 3, 4] as const;
 export type ImageOutputCount = (typeof IMAGE_OUTPUT_OPTIONS)[number];
+
+/** Типичный объём для оценки диапазонов в UI */
+const TYPICAL_TEXT_CHARS = 1200;
+const LARGE_TEXT_CHARS = 4500;
 
 function roundDeai(value: number): number {
   return Math.round(value * 2) / 2;
@@ -34,97 +44,57 @@ function clampInt(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
-function qualityMultiplier(quality: MediaQuality): number {
-  if (quality === "2k") return 1.25;
-  if (quality === "4k") return 1.55;
-  return 1;
-}
-
 /** ~4 символа ≈ 1 токен (грубая оценка для UI и биллинга) */
 export function estimateTokensFromChars(totalChars: number): number {
   return Math.ceil(Math.max(totalChars, 1) / 4);
 }
 
-function textModelBase(model: string): number {
-  const id = model.toLowerCase();
-
-  if (
-    id.includes("nano") ||
-    id.includes("4o-mini") ||
-    id.includes("4.1-mini") ||
-    id.includes("haiku")
-  ) {
-    return 0.5;
-  }
-
-  if (
-    id.includes("4.1") ||
-    id.includes("4o") ||
-    id.includes("sonnet") ||
-    id.includes("3-mini")
-  ) {
-    return 1;
-  }
-
-  if (id.includes("5-mini") || id.includes("5-nano") || id.includes("o4-mini")) {
-    return 1.5;
-  }
-
-  return 2;
-}
-
-/** Множитель объёма по эквиваленту токенов (вход + контекст) */
-function textTokenVolumeFactor(estimatedTokens: number): number {
-  if (estimatedTokens <= 500) return 1;
-  if (estimatedTokens <= 1500) return 1.25;
-  return 1.5;
-}
-
-function reasoningSurcharge(effort?: ReasoningEffort): number {
-  if (effort === "low") return 0;
-  if (effort === "medium") return 0.25;
-  if (effort === "high") return 0.5;
-  return 0;
-}
-
-function imageModelMultiplier(model: string): number {
-  if (/pro|ultra|large|v[56]/i.test(model)) return 1.2;
-  if (/hd|quality|plus/i.test(model)) return 1.1;
+function reasoningOutputMultiplier(effort?: ReasoningEffort): number {
+  if (effort === "high") return 2.5;
+  if (effort === "medium") return 1.75;
+  if (effort === "low") return 1.25;
   return 1;
 }
 
-function videoModelMultiplier(model: string): number {
-  if (/veo-3\.1-fast|fast-generate/i.test(model)) return 1.15;
-  if (/veo-3\.1-lite|lite-generate/i.test(model)) return 0.95;
-  if (/veo-3/i.test(model)) return 1.3;
-  if (/veo/i.test(model)) return 1.2;
-  if (/gen4|gen-4/i.test(model)) return 1.25;
-  if (/turbo/i.test(model)) return 1;
-  return 1.1;
+function estimateTextTokenSplit(totalChars: number, reasoningEffort?: ReasoningEffort) {
+  const totalTokens = estimateTokensFromChars(totalChars);
+  const inputTokens = Math.round(totalTokens * 0.65 + 120);
+  let outputTokens = Math.round(Math.max(180, totalTokens * 0.35));
+  outputTokens = Math.round(outputTokens * reasoningOutputMultiplier(reasoningEffort));
+  return { inputTokens, outputTokens };
+}
+
+function textCostUsd(params: {
+  model: string;
+  totalChars: number;
+  reasoningEffort?: ReasoningEffort;
+}): number {
+  const rates = getTextModelRatesUsd(params.model);
+  const { inputTokens, outputTokens } = estimateTextTokenSplit(
+    params.totalChars,
+    params.reasoningEffort,
+  );
+
+  return (
+    (inputTokens * rates.inputPerMTok + outputTokens * rates.outputPerMTok) / 1_000_000
+  );
 }
 
 /**
  * Текст и код — режим «токены».
- * Код на платформе тарифицируется как текст (Monaco Editor + AI).
- * 0.5–2 Deai за запрос.
+ * 1 Deai = 1 ₽ ≈ $0.012977 (API + 20% наценка платформы).
  */
 export function calculateTextDeaiCost(params: {
   model: string;
   totalChars: number;
   reasoningEffort?: ReasoningEffort;
 }): number {
-  const tokens = estimateTokensFromChars(params.totalChars);
-  const cost =
-    textModelBase(params.model) * textTokenVolumeFactor(tokens) +
-    reasoningSurcharge(params.reasoningEffort);
-
-  return clampDeai(cost, 0.5, 2);
+  const deai = usdToDeai(textCostUsd(params));
+  return clampDeai(deai, 0.5, 20);
 }
 
 /**
  * Изображения — режим «кредиты».
- * Зависит от числа выходных картинок (1–4), качества (1K–4K) и tier модели.
- * 1.5–8 Deai за генерацию.
  */
 export function calculateImageDeaiCost(params: {
   model: string;
@@ -133,33 +103,64 @@ export function calculateImageDeaiCost(params: {
 }): number {
   const outputs = clampInt(params.outputCount ?? 1, 1, 4);
   const quality = params.quality ?? "1k";
-
-  const cost =
-    0.75 *
-    outputs *
-    qualityMultiplier(quality) *
-    imageModelMultiplier(params.model);
-
-  return clampDeai(cost, 1.5, 8);
+  const usd = getImageBaseUsd(params.model, quality) * outputs;
+  return clampDeai(usdToDeai(usd), 2, 30);
 }
 
 /**
  * Видео — режим «кредиты».
- * Зависит от длительности (5–15 с), качества (1K–4K) и tier модели.
- * 2–10 Deai за генерацию.
  */
 export function calculateVideoDeaiCost(params: {
   model: string;
   duration?: number;
   quality?: MediaQuality;
 }): number {
-  const duration = clampInt(params.duration ?? 5, 5, 15);
+  const duration = clampInt(params.duration ?? 5, 4, 15);
   const quality = params.quality ?? "1k";
+  const usd = getVideoUsdPerSecond(params.model, quality) * duration;
+  return clampDeai(usdToDeai(usd), 2, 300);
+}
 
-  const cost =
-    0.4 * duration * qualityMultiplier(quality) * videoModelMultiplier(params.model);
+/** Диапазоны для подсказок в UI (типичный запрос) */
+export function getTextDeaiRangeLabel(model = "gpt-4o-mini"): string {
+  const low = formatDeai(calculateTextDeaiCost({ model, totalChars: 400 }));
+  const high = formatDeai(
+    calculateTextDeaiCost({ model: "gpt-4.1", totalChars: LARGE_TEXT_CHARS }),
+  );
+  return `${low}–${high} Deai`;
+}
 
-  return clampDeai(cost, 2, 10);
+export function getVideoDeaiRangeLabel(): string {
+  const runway = formatDeai(
+    calculateVideoDeaiCost({ model: "gen3a_turbo", duration: 5, quality: "1k" }),
+  );
+  const veoLite = formatDeai(
+    calculateVideoDeaiCost({
+      model: "veo-3.1-lite-generate-preview",
+      duration: 8,
+      quality: "1k",
+    }),
+  );
+  const veoStd = formatDeai(
+    calculateVideoDeaiCost({
+      model: "veo-3.1-generate-preview",
+      duration: 8,
+      quality: "1k",
+    }),
+  );
+  return `${runway} (Runway 5с) · ${veoLite} (Veo Lite 8с) · ${veoStd} (Veo 3.1 8с)`;
+}
+
+export function getImageDeaiRangeLabel(): string {
+  const low = formatDeai(calculateImageDeaiCost({ model: "flux", quality: "1k" }));
+  const high = formatDeai(
+    calculateImageDeaiCost({ model: "flux-pro", quality: "4k", outputCount: 4 }),
+  );
+  return `${low}–${high} Deai`;
+}
+
+export function getTypicalTextDeaiCost(model = "gpt-4o-mini"): number {
+  return calculateTextDeaiCost({ model, totalChars: TYPICAL_TEXT_CHARS });
 }
 
 export function getDeaiBillingMode(category: DeaiCategory): DeaiBillingMode {
@@ -192,5 +193,5 @@ export function formatDeaiBillingHint(category: DeaiCategory): string {
   if (category === "image") {
     return "кредиты · 1–4 изображения · 1K–4K";
   }
-  return "кредиты · 5–15 с · 1K–4K";
+  return "кредиты · 4–15 с · 720p–4K";
 }
