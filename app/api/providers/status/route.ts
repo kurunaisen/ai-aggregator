@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isCanvaConfigured } from "@/lib/providers/canva-config";
 import { isFluxConfigured } from "@/lib/providers/flux";
 import { isKlingConfigured } from "@/lib/providers/kling-jwt";
 import { isGoogleApiConfigured } from "@/lib/providers/veo";
@@ -16,6 +15,5 @@ export async function GET() {
     google: isGoogleApiConfigured(),
     bfl: isFluxConfigured(),
     kling: isKlingConfigured(),
-    canva: isCanvaConfigured(),
   });
 }

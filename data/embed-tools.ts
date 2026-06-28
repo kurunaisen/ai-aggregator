@@ -35,19 +35,11 @@ export type VideoEmbedConfig = {
   ratio?: string;
 };
 
-export type DesignEmbedConfig = {
-  type: "design";
-  provider: "canva-connect";
-  welcomeMessage: string;
-  placeholder?: string;
-};
-
 export type EmbedConfig =
   | ChatEmbedConfig
   | CodeEmbedConfig
   | ImageEmbedConfig
-  | VideoEmbedConfig
-  | DesignEmbedConfig;
+  | VideoEmbedConfig;
 
 /** Встроенные инструменты агрегатора DeltaplanAI */
 export const EMBED_TOOLS: Record<string, EmbedConfig> = {
@@ -137,13 +129,6 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
     placeholder: "Например: кинематографичный кадр: город в дождливую ночь, неоновые отражения...",
     duration: 5,
     ratio: "16:9",
-  },
-  canva: {
-    type: "design",
-    provider: "canva-connect",
-    welcomeMessage:
-      "Canva AI на DeltaplanAI — подключите аккаунт Canva, создайте дизайн и откройте редактор с Magic Media, Magic Write и другими AI-инструментами Canva.",
-    placeholder: "Например: Презентация для стартапа",
   },
 };
 
