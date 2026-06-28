@@ -18,9 +18,13 @@ import {
 import { getOAuthEmail } from "@/lib/auth/oauth-metadata";
 import { createClient } from "@/lib/supabase/server";
 import {
+  BASE_DEAI_GRANT_LABEL,
+  DEAI_EXCHANGE_HINT,
   DEAI_PRICING_HINT,
   DEAI_STARTER_BUDGET_HINT,
+  PRO_DEAI_GRANT_LABEL,
 } from "@/lib/subscription/constants";
+import { hasProPlan, isPaidPlan } from "@/lib/subscription/plans";
 import { getDeaiUsageReport } from "@/lib/subscription/deai-analytics";
 import { formatDeai } from "@/lib/subscription/deai-cost";
 import { getDeaiSummary } from "@/lib/subscription/deai";
@@ -84,23 +88,32 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-gold/70">
               Баланс Deai
             </h2>
-            {deai.unlimited ? (
-              <p className="mt-3 text-silver">Без лимита (Pro)</p>
+            <p className="mt-3 text-3xl font-bold text-gold-light">
+              {formatDeai(deai.balance)} Deai
+            </p>
+            {hasProPlan(profile.plan) ? (
+              <p className="mt-2 text-sm text-silver-dim">
+                Pro: {PRO_DEAI_GRANT_LABEL} при оплате ({DEAI_EXCHANGE_HINT}).{" "}
+                <Link href="/studio/video" className="text-gold-light underline">
+                  Видео-студия
+                </Link>{" "}
+                доступна.
+              </p>
+            ) : isPaidPlan(profile.plan) ? (
+              <p className="mt-2 text-sm text-silver-dim">
+                Base: {BASE_DEAI_GRANT_LABEL} при оплате ({DEAI_EXCHANGE_HINT}). Студия — в тарифе
+                Pro ({PRO_DEAI_GRANT_LABEL}).
+              </p>
             ) : (
-              <>
-                <p className="mt-3 text-3xl font-bold text-gold-light">
-                  {formatDeai(deai.balance)} Deai
-                </p>
-                <p className="mt-2 text-sm text-silver-dim">
-                  {DEAI_STARTER_BUDGET_HINT}. Текст {DEAI_PRICING_HINT.text}, код{" "}
-                  {DEAI_PRICING_HINT.code}, изображения {DEAI_PRICING_HINT.image}, видео{" "}
-                  {DEAI_PRICING_HINT.video}.
-                </p>
-                <div className="mt-4">
-                  <DeaiWalletLegend />
-                </div>
-              </>
+              <p className="mt-2 text-sm text-silver-dim">
+                {DEAI_STARTER_BUDGET_HINT}. Текст {DEAI_PRICING_HINT.text}, код{" "}
+                {DEAI_PRICING_HINT.code}, изображения {DEAI_PRICING_HINT.image}, видео{" "}
+                {DEAI_PRICING_HINT.video}.
+              </p>
             )}
+            <div className="mt-4">
+              <DeaiWalletLegend />
+            </div>
           </section>
 
           <section className="carbon-panel rounded-2xl p-6 sm:p-8">

@@ -64,12 +64,7 @@ export function EmbeddedSubmitBar({
         disabled={disabled || loading || !value.trim()}
         className={embeddedSubmitButtonClassName}
       >
-        <DeaiCostHint
-          cost={cost}
-          balance={deai.balance}
-          unlimited={deai.unlimited}
-          inButton
-        />
+        <DeaiCostHint cost={cost} balance={deai.balance} inButton />
         {loading ? "..." : submitLabel}
       </Button>
     </div>

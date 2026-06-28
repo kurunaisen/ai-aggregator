@@ -119,7 +119,7 @@ export function EmbeddedClaudeChat({
     const hasAttachments = pendingAttachments.length > 0;
 
     if ((!text && !hasAttachments) || loading || providerConfigured !== true) return;
-    if (!deai.unlimited && deai.balance < estimatedCost) return;
+    if (deai.balance < estimatedCost) return;
 
     const userMessage: ClaudeChatMessage = {
       role: "user",
@@ -177,7 +177,7 @@ export function EmbeddedClaudeChat({
     }
   }
 
-  const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
+  const insufficientDeai = deai.balance < estimatedCost;
   const canSend = Boolean(input.trim() || pendingAttachments.length > 0);
 
   return (

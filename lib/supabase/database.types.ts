@@ -166,6 +166,10 @@ export type Database = {
         Args: { p_amount: number };
         Returns: number;
       };
+      add_deai: {
+        Args: { p_amount: number; p_user_id?: string };
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

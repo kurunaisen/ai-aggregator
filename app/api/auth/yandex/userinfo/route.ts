@@ -14,18 +14,26 @@ type YandexProfile = {
 
 function yandexAuthHeader(request: Request): string | null {
   const authorization = request.headers.get("authorization");
-  if (!authorization) return null;
+  if (authorization) {
+    if (/^oauth\s+/i.test(authorization)) {
+      return authorization;
+    }
 
-  if (/^oauth\s+/i.test(authorization)) {
+    const bearerMatch = authorization.match(/^Bearer\s+(.+)$/i);
+    if (bearerMatch?.[1]) {
+      return `OAuth ${bearerMatch[1]}`;
+    }
+
     return authorization;
   }
 
-  const bearerMatch = authorization.match(/^Bearer\s+(.+)$/i);
-  if (bearerMatch?.[1]) {
-    return `OAuth ${bearerMatch[1]}`;
+  const url = new URL(request.url);
+  const accessToken = url.searchParams.get("access_token");
+  if (accessToken) {
+    return `OAuth ${accessToken}`;
   }
 
-  return authorization;
+  return null;
 }
 
 /** Supabase calls this as userinfo_url; Yandex returns `id`, we expose OIDC-style `sub`. */
@@ -57,12 +65,12 @@ export async function GET(request: Request) {
   const email = profile.default_email ?? profile.emails?.[0] ?? undefined;
 
   return NextResponse.json({
-    sub: subject,
+    ...profile,
     id: subject,
+    sub: subject,
     email,
     email_verified: Boolean(email),
     name: profile.display_name ?? profile.real_name ?? profile.first_name ?? profile.login,
     preferred_username: profile.login,
-    ...profile,
   });
 }

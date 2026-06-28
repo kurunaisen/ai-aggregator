@@ -80,7 +80,7 @@ export function EmbeddedOpenAIChat({
     event?.preventDefault();
     const text = input.trim();
     if (!text || loading || providerConfigured !== true) return;
-    if (!deai.unlimited && deai.balance < estimatedCost) return;
+    if (deai.balance < estimatedCost) return;
 
     const userMessage: ChatMessage = { role: "user", content: text };
     const nextMessages = [...messages, userMessage];
@@ -131,7 +131,7 @@ export function EmbeddedOpenAIChat({
     }
   }
 
-  const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
+  const insufficientDeai = deai.balance < estimatedCost;
   const isJsonFormat = openAIOptions.responseFormat !== "text";
 
   return (

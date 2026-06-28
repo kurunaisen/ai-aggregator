@@ -8,6 +8,7 @@ import {
   type ProfileAvatarId,
 } from "@/data/profile-avatars";
 import type { Plan } from "@/lib/subscription/constants";
+import { normalizePlan } from "@/lib/subscription/plans";
 import { FREE_STARTING_DEAI } from "@/lib/subscription/deai-cost";
 
 export type Profile = {
@@ -34,7 +35,7 @@ function mapProfileRow(data: {
     email: data.email,
     displayName: data.display_name,
     avatarId: resolveProfileAvatarId(data.avatar_id),
-    plan: data.plan as Plan,
+    plan: normalizePlan(data.plan),
     deaiBalance: Number(data.deai_balance ?? FREE_STARTING_DEAI),
   };
 }

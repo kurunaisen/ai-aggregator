@@ -1,3 +1,4 @@
+import type { EmbedConfig } from "@/data/embed-tools";
 import type { ReasoningEffort } from "@/data/openai-models";
 import {
   getImageBaseUsd,
@@ -183,6 +184,39 @@ export function billingModeFromRequestType(requestType: string): DeaiBillingMode
 
 export function billingModeFromToolType(toolType: string): DeaiBillingMode {
   return resolveDeaiCategory(toolType) === "text" ? "token" : "credit";
+}
+
+/** Минимальная стоимость одного запуска для проверки доступа по балансу */
+export function getMinimumEmbedDeaiCost(config: EmbedConfig): number {
+  if (config.type === "chat" || config.type === "code") {
+    return calculateTextDeaiCost({ model: config.model, totalChars: 400 });
+  }
+
+  if (config.type === "image") {
+    return calculateImageDeaiCost({ model: config.model, quality: "1k", outputCount: 1 });
+  }
+
+  if (config.provider === "kling") {
+    return calculateVideoDeaiCost({
+      model: config.model,
+      duration: config.duration ?? 5,
+      quality: "1k",
+    });
+  }
+
+  if (config.provider === "google-veo") {
+    return calculateVideoDeaiCost({
+      model: "veo-3.1-lite-generate-preview",
+      duration: 4,
+      quality: "1k",
+    });
+  }
+
+  return calculateVideoDeaiCost({
+    model: config.model,
+    duration: config.duration ?? 5,
+    quality: "1k",
+  });
 }
 
 /** Подпись для UI: что именно списывается */

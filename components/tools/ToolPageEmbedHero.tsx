@@ -1,5 +1,6 @@
 import type { EmbedHeaderContent } from "@/data/embed-tools";
 import { ToolLogo } from "@/components/tools/ToolLogo";
+import { ToolPreviewVideo } from "@/components/tools/ToolPreviewVideo";
 
 type ToolPageEmbedHeroProps = {
   slug: string;
@@ -49,14 +50,9 @@ export function ToolPageEmbedHero({
 
       <div className="w-full shrink-0 sm:mx-auto sm:max-w-lg lg:mx-0 lg:w-80 xl:w-96 2xl:w-[28rem]">
         {header.previewVideoUrl ? (
-          <video
-            className="aspect-video w-full rounded-xl border divider-metallic bg-black/40 object-cover"
+          <ToolPreviewVideo
             src={header.previewVideoUrl}
-            muted
-            loop
-            playsInline
-            autoPlay
-            preload="metadata"
+            label={`Демо ${name}`}
           />
         ) : (
           <div

@@ -2,11 +2,19 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { FREE_STARTING_DEAI } from "@/lib/subscription/deai-cost";
 import type { Plan } from "@/lib/subscription/constants";
+import {
+  BASE_DEAI_GRANT_LABEL,
+  BASE_PRICE_LABEL,
+  PRO_DEAI_GRANT_LABEL,
+  PRO_PRICE_LABEL,
+  getBaseMonthlyDeai,
+  getProMonthlyDeai,
+} from "@/lib/subscription/constants";
+import { getMonthlyDeaiGrant } from "@/lib/subscription/plans";
 
 export type DeaiSummary = {
   plan: Plan;
   balance: number;
-  unlimited: boolean;
 };
 
 export async function getDeaiSummary(
@@ -28,31 +36,28 @@ export async function getDeaiSummary(
 
   return {
     plan,
-    balance: plan === "pro" ? balance : Math.max(0, balance),
-    unlimited: plan === "pro",
+    balance: Math.max(0, balance),
   };
 }
 
 export function canAffordDeai(summary: DeaiSummary, cost: number): boolean {
-  if (summary.unlimited) return true;
   return summary.balance >= cost;
 }
 
 export function getInsufficientDeaiMessage(cost: number): string {
-  return `Недостаточно Deai (нужно ${cost}). Оформите Pro за 990 ₽/мес.`;
+  return (
+    `Недостаточно Deai (нужно ${cost}). ` +
+    `Base — ${BASE_DEAI_GRANT_LABEL} за ${BASE_PRICE_LABEL}, ` +
+    `Pro — ${PRO_DEAI_GRANT_LABEL} за ${PRO_PRICE_LABEL}.`
+  );
 }
 
 export async function deductDeai(
   supabase: SupabaseClient<Database>,
   userId: string,
   cost: number,
-  plan: Plan,
+  _plan: Plan,
 ): Promise<{ success: boolean; balance: number }> {
-  if (plan === "pro") {
-    const summary = await getDeaiSummary(supabase, userId, plan);
-    return { success: true, balance: summary.balance };
-  }
-
   const { data, error } = await supabase.rpc("deduct_deai", { p_amount: cost });
 
   if (!error && data !== null) {
@@ -88,6 +93,50 @@ export async function deductDeai(
   }
 
   return { success: true, balance: Number(updated.deai_balance) };
+}
+
+/** Начисление Deai (webhook оплаты подписки) */
+export async function grantDeai(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  amount: number,
+): Promise<number | null> {
+  const { data, error } = await supabase.rpc("add_deai", {
+    p_amount: amount,
+    p_user_id: userId,
+  });
+
+  if (!error && data !== null) {
+    return Number(data);
+  }
+
+  if (error) {
+    console.error("grantDeai rpc:", error.message);
+  }
+
+  return null;
+}
+
+export async function grantPlanMonthlyDeai(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  plan: Exclude<Plan, "free">,
+): Promise<number | null> {
+  return grantDeai(supabase, userId, getMonthlyDeaiGrant(plan));
+}
+
+export async function grantBaseMonthlyDeai(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<number | null> {
+  return grantDeai(supabase, userId, getBaseMonthlyDeai());
+}
+
+export async function grantProMonthlyDeai(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<number | null> {
+  return grantDeai(supabase, userId, getProMonthlyDeai());
 }
 
 export async function recordDeaiUsage(

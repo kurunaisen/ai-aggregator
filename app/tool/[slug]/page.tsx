@@ -22,6 +22,8 @@ import { LoginPrompt } from "@/components/tools/embedded/LoginPrompt";
 import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import { getDeaiSummary } from "@/lib/subscription/deai";
+import { getMinimumEmbedDeaiCost } from "@/lib/subscription/deai-cost";
+import { getToolAccessStatus } from "@/lib/subscription/tool-access";
 import { billingModeFromToolType } from "@/lib/subscription/deai-cost";
 import { ToolPageEmbedHero } from "@/components/tools/ToolPageEmbedHero";
 import { getEmbedConfig } from "@/lib/tools/embed";
@@ -84,6 +86,17 @@ export default async function ToolPage({ params }: PageProps) {
   const deai =
     user && supabase && profile
       ? await getDeaiSummary(supabase, user.id, profile.plan)
+      : null;
+  const toolAccess =
+    user && supabase && profile && embedConfig
+      ? await getToolAccessStatus(
+          supabase,
+          user.id,
+          profile.plan,
+          slug,
+          deai?.balance ?? 0,
+          getMinimumEmbedDeaiCost(embedConfig),
+        )
       : null;
 
   return (
@@ -178,6 +191,7 @@ export default async function ToolPage({ params }: PageProps) {
                   toolName={tool.name}
                   config={embedConfig}
                   deai={deai}
+                  toolAccess={toolAccess ?? undefined}
                 />
               ) : (
                 <LoginPrompt toolName={tool.name} />

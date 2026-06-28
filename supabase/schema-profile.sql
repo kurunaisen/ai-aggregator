@@ -20,7 +20,7 @@ set model = case ul.tool_slug
   when 'nanobanana' then 'gemini-2.5-flash-image'
   when 'flux' then 'flux-2-klein-4b'
   when 'kling' then 'kling-v2-6'
-  when 'runway' then 'gen3a_turbo'
+  when 'runway' then 'gen4.5'
   else ul.tool_slug
 end
 where ul.model is null;

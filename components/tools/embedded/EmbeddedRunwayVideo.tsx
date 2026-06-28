@@ -22,13 +22,24 @@ import { fileToImagePayload } from "@/lib/utils/image-base64";
 import { EmbeddedSubmitBar } from "@/components/tools/embedded/EmbeddedSubmitBar";
 import { EmbeddedToolHeader } from "@/components/tools/embedded/EmbeddedToolHeader";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
+import { BaseTrialHint } from "@/components/tools/embedded/BaseTrialGateMessage";
 import { useProviderConfigured } from "@/components/tools/embedded/useProviderConfigured";
+import type { ToolAccessStatus } from "@/lib/subscription/tool-access";
 
 type EmbeddedRunwayVideoProps = {
   slug: string;
   toolName: string;
   config: VideoEmbedConfig;
   initialDeai: DeaiSummary;
+  toolAccess?: ToolAccessStatus;
+};
+
+const DEFAULT_TOOL_ACCESS: ToolAccessStatus = {
+  allowed: true,
+  trialsUsed: 0,
+  trialsLimit: null,
+  isBaseTrialTool: false,
+  minDeaiCost: 0,
 };
 
 const selectClassName = "input-theme w-full rounded-xl px-3 py-2.5 text-sm";
@@ -38,6 +49,7 @@ export function EmbeddedRunwayVideo({
   toolName,
   config,
   initialDeai,
+  toolAccess = DEFAULT_TOOL_ACCESS,
 }: EmbeddedRunwayVideoProps) {
   const [prompt, setPrompt] = useState("");
   const [mode, setMode] = useState<RunwayGenerationMode>("text-to-video");
@@ -88,7 +100,7 @@ export function EmbeddedRunwayVideo({
     [model, duration],
   );
 
-  const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
+  const insufficientDeai = deai.balance < estimatedCost;
 
   async function pollTask(taskId: string) {
     setPolling(true);
@@ -214,6 +226,7 @@ export function EmbeddedRunwayVideo({
       ) : (
         <>
           <div className="flex-1 space-y-4 px-5 py-5 sm:px-6">
+            <BaseTrialHint access={toolAccess} />
             <p className="text-sm text-silver-dim">{config.welcomeMessage}</p>
 
             {videoUrl && (

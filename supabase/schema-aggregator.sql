@@ -6,7 +6,7 @@ create table if not exists public.profiles (
   email text,
   display_name text,
   avatar_id text default 'star',
-  plan text not null default 'free' check (plan in ('free', 'pro')),
+  plan text not null default 'free' check (plan in ('free', 'base', 'pro')),
   deai_balance numeric(6, 1) not null default 50,
   stripe_customer_id text,
   created_at timestamptz not null default now(),

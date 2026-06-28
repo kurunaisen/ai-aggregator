@@ -1,14 +1,22 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import type { Plan } from "@/lib/subscription/constants";
-import { PRO_PRICE_LABEL } from "@/lib/subscription/constants";
+import {
+  BASE_DEAI_GRANT_LABEL,
+  BASE_PRICE_LABEL,
+  PRO_DEAI_GRANT_LABEL,
+  PRO_PRICE_LABEL,
+} from "@/lib/subscription/constants";
+import { getPlanLabel, hasProPlan, isPaidPlan } from "@/lib/subscription/plans";
 
 type SubscriptionPanelProps = {
   plan: Plan;
 };
 
 export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
-  const isPro = plan === "pro";
+  const label = getPlanLabel(plan);
+  const paid = isPaidPlan(plan);
+  const pro = hasProPlan(plan);
 
   return (
     <div className="space-y-4">
@@ -17,43 +25,62 @@ export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
           <p className="text-xs font-semibold uppercase tracking-wider text-gold/70">
             Подписка
           </p>
-          <p className="mt-2 text-2xl font-semibold text-silver">
-            {isPro ? "Pro" : "Free"}
-          </p>
+          <p className="mt-2 text-2xl font-semibold text-silver">{label}</p>
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${
-            isPro
-              ? "border border-gold/40 bg-gold/15 text-gold-light"
-              : "border divider-metallic bg-black/40 text-silver-dim"
+            pro
+              ? "border border-gold/50 bg-gold/20 text-gold-light"
+              : paid
+                ? "border border-gold/40 bg-gold/15 text-gold-light"
+                : "border divider-metallic bg-black/40 text-silver-dim"
           }`}
         >
-          {isPro ? "Активна" : "Бесплатный тариф"}
+          {pro ? "Pro активен" : paid ? "Base активен" : "Бесплатный тариф"}
         </span>
       </div>
 
-      {isPro ? (
+      {pro ? (
         <div className="space-y-3 text-sm text-silver-dim">
-          <p>Deai без лимита · все модели · приоритет (скоро).</p>
+          <p>
+            {PRO_DEAI_GRANT_LABEL} начисляются при каждой оплате. Все инструменты — по балансу
+            Deai; Runway и Veo без лимита проб. Доступна{" "}
+            <Link href="/studio/video" className="text-gold-light underline">
+              видео-студия
+            </Link>
+            .
+          </p>
           <Button href="/pricing" variant="outline">
             Управление подпиской — скоро
           </Button>
-          <p className="text-xs text-silver-dim/70">
-            Отмена и смена карты через Stripe Customer Portal (этап 2).
+        </div>
+      ) : paid ? (
+        <div className="space-y-3 text-sm text-silver-dim">
+          <p>
+            Base — {BASE_PRICE_LABEL}: {BASE_DEAI_GRANT_LABEL} на баланс при оплате. Kling, FLUX,
+            чаты и остальной каталог — по балансу Deai; Runway и Veo — по 1 пробной генерации.
+            Полный доступ к Runway/Veo и студия — в тарифе Pro.
           </p>
+          <div className="flex flex-wrap gap-3">
+            <Button href="/pricing">Перейти на Pro</Button>
+            <Button href="/pricing" variant="outline">
+              Управление Base — скоро
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-3 text-sm text-silver-dim">
           <p>
-            Pro — {PRO_PRICE_LABEL}: Deai без лимита и расширенные возможности.
+            Base — {BASE_PRICE_LABEL} ({BASE_DEAI_GRANT_LABEL}). Pro — {PRO_PRICE_LABEL} (
+            {PRO_DEAI_GRANT_LABEL}) + видео-студия.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button href="/pricing">Перейти на Pro</Button>
+            <Button href="/pricing">Сравнить тарифы</Button>
             <Link
               href="/pricing"
               className="inline-flex items-center text-gold-light hover:underline"
             >
-              Сравнить тарифы
+              Подробнее о Base и Pro
             </Link>
           </div>
         </div>

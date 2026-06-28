@@ -63,7 +63,7 @@ export function EmbeddedKlingVideo({
     [model, duration, mode],
   );
 
-  const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
+  const insufficientDeai = deai.balance < estimatedCost;
 
   async function pollTask(taskId: string) {
     setPolling(true);

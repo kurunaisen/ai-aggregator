@@ -42,7 +42,7 @@ export function UserMenu({
 
   return (
     <div className="flex items-center gap-2 sm:gap-3">
-      <DeaiBadge balance={deaiBalance} unlimited={plan === "pro"} />
+      <DeaiBadge balance={deaiBalance} />
       <Link
         href="/profile"
         aria-label={`Профиль: ${displayName}`}

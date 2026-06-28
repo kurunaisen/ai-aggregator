@@ -3,18 +3,14 @@ import { formatDeai } from "@/lib/subscription/deai-cost";
 type DeaiCostHintProps = {
   cost: number;
   balance?: number;
-  unlimited?: boolean;
   inButton?: boolean;
 };
 
 export function DeaiCostHint({
   cost,
   balance,
-  unlimited = false,
   inButton = false,
 }: DeaiCostHintProps) {
-  if (unlimited) return null;
-
   const canAfford = balance === undefined || balance >= cost;
 
   const textClass = inButton

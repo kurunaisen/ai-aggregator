@@ -15,7 +15,7 @@ type LoginPageProps = {
 function buildAuthErrorMessage(error?: string, reason?: string): string | null {
   if (error !== "auth") return null;
   if (reason?.includes("missing provider id")) {
-    return "Supabase не получил ID пользователя от Яндекса. Задеплойте сайт и перезапустите scripts/run-yandex-oauth-fix.cmd (userinfo proxy).";
+    return "Supabase не видит sub от Яндекса. 1) Откройте /api/auth/yandex/userinfo — должен быть 401. 2) Запустите scripts\\run-yandex-oauth-fix.cmd. 3) Проверка: scripts\\check-yandex-oauth.cmd";
   }
   if (reason?.includes("email from external provider")) {
     return "Яндекс не передал email в формате Supabase. В Supabase для custom:yandex включите email_optional и custom_claims_allowlist (scripts/update-yandex-oauth.ps1), затем войдите снова.";

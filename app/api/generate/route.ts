@@ -48,6 +48,7 @@ import {
 } from "@/lib/subscription/deai";
 import { getEmbedConfig } from "@/lib/tools/embed";
 import { getToolBySlug } from "@/lib/tools/queries";
+import { getToolAccessStatus } from "@/lib/subscription/tool-access";
 import type {
   ChatEmbedConfig,
   CodeEmbedConfig,
@@ -554,6 +555,18 @@ export async function POST(request: Request) {
       if (auth instanceof NextResponse) return auth;
 
       const { supabase, user, profile } = auth;
+
+      const toolAccess = await getToolAccessStatus(supabase, user.id, profile.plan, slug);
+      if (!toolAccess.allowed) {
+        return NextResponse.json(
+          {
+            error: toolAccess.reason,
+            code: "PLAN_TOOL_BLOCKED",
+            deai: auth.deai,
+          },
+          { status: 403 },
+        );
+      }
 
       const generationTaskId = await startVideoGeneration(
         videoConfig,

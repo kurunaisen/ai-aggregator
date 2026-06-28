@@ -9,16 +9,29 @@ import { EmbeddedMonacoCode } from "@/components/tools/embedded/EmbeddedMonacoCo
 import { EmbeddedOpenAIChat } from "@/components/tools/embedded/EmbeddedOpenAIChat";
 import { EmbeddedRunwayVideo } from "@/components/tools/embedded/EmbeddedRunwayVideo";
 import { EmbeddedVeoVideo } from "@/components/tools/embedded/EmbeddedVeoVideo";
+import { EmbeddedToolHeader } from "@/components/tools/embedded/EmbeddedToolHeader";
+import { ToolAccessGateMessage } from "@/components/tools/embedded/BaseTrialGateMessage";
 import type { DeaiSummary } from "@/lib/subscription/deai";
+import type { ToolAccessStatus } from "@/lib/subscription/tool-access";
 
 type EmbeddedToolProps = {
   slug: string;
   toolName: string;
   config: EmbedConfig;
   deai: DeaiSummary;
+  toolAccess?: ToolAccessStatus;
 };
 
-export function EmbeddedTool({ slug, toolName, config, deai }: EmbeddedToolProps) {
+export function EmbeddedTool({ slug, toolName, config, deai, toolAccess }: EmbeddedToolProps) {
+  if (toolAccess && !toolAccess.allowed) {
+    return (
+      <div className="carbon-panel flex min-h-[520px] flex-col overflow-hidden rounded-2xl">
+        <EmbeddedToolHeader toolName={toolName} deai={deai} />
+        <ToolAccessGateMessage toolName={toolName} access={toolAccess} />
+      </div>
+    );
+  }
+
   if (config.type === "image") {
     return (
       <EmbeddedImage
@@ -38,6 +51,7 @@ export function EmbeddedTool({ slug, toolName, config, deai }: EmbeddedToolProps
           toolName={toolName}
           config={config}
           initialDeai={deai}
+          toolAccess={toolAccess}
         />
       );
     }
@@ -59,6 +73,7 @@ export function EmbeddedTool({ slug, toolName, config, deai }: EmbeddedToolProps
         toolName={toolName}
         config={config}
         initialDeai={deai}
+        toolAccess={toolAccess}
       />
     );
   }

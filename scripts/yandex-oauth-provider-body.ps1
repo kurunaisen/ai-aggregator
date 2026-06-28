@@ -28,6 +28,7 @@ $payload = @{
     force_confirm = "yes"
   }
   custom_claims_allowlist = @(
+    "sub",
     "id",
     "default_email",
     "display_name",
@@ -37,6 +38,8 @@ $payload = @{
     "default_avatar_id"
   )
   attribute_mapping = @{
+    sub = "id"
+    email = "default_email"
     name = "display_name"
     preferred_username = "login"
   }

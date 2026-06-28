@@ -56,7 +56,7 @@ export function EmbeddedChat({
     event?.preventDefault();
     const text = input.trim();
     if (!text || loading || providerConfigured !== true) return;
-    if (!deai.unlimited && deai.balance < estimatedCost) return;
+    if (deai.balance < estimatedCost) return;
 
     const userMessage: ChatMessage = { role: "user", content: text };
     const nextMessages = [...messages, userMessage];
@@ -103,7 +103,7 @@ export function EmbeddedChat({
     }
   }
 
-  const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
+  const insufficientDeai = deai.balance < estimatedCost;
 
   return (
     <div className="carbon-panel flex min-h-[520px] flex-col overflow-hidden rounded-2xl">
