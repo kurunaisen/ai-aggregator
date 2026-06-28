@@ -16,7 +16,7 @@ export {
 
 export { DEAI_PLATFORM_MARKUP, DEAI_RUB, DEAI_USD } from "@/lib/subscription/deai-rates";
 
-/** Диапазоны: API + 20% · 1 Deai = 1 ₽ */
+/** Диапазоны стоимости в Deai · 1 Deai = 1 ₽ */
 export const DEAI_PRICING_HINT = {
   text: "от 0.5 Deai · GPT-4o Mini ~0.5–1 · GPT-4.1 до ~6",
   code: "как текст · по модели и объёму",
@@ -27,4 +27,4 @@ export const DEAI_PRICING_HINT = {
 
 export const DEAI_STARTER_BUDGET_HINT = `${STARTING_DEAI} Deai ≈ ${STARTING_DEAI} ₽: ~80–100 коротких текстовых запросов (GPT-4o Mini) или 2 видео Runway 5 с`;
 
-export const DEAI_EXCHANGE_HINT = "1 Deai = 1 ₽ · API + 20%";
+export const DEAI_EXCHANGE_HINT = "1 Deai = 1 ₽";

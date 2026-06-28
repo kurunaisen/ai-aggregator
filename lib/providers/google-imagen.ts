@@ -21,8 +21,7 @@ function formatGeminiImageError(message: string): string {
   ) {
     return (
       "Gemini Image API недоступен на бесплатном тарифе Google (лимит 0 для image-моделей). " +
-      "Подключите биллинг в Google AI Studio и используйте платный API-ключ, " +
-      "или переключитесь на FLUX (/tool/flux) с ключом BFL_API_KEY."
+      "Подключите биллинг в Google AI Studio или переключитесь на FLUX (/tool/flux)."
     );
   }
 
