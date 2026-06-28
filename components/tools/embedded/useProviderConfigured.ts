@@ -23,6 +23,7 @@ function isConfigured(config: EmbedConfig, status: ProviderStatus): boolean {
   if (config.type === "image") {
     if (config.provider === "google-imagen") return status.google;
     if (config.provider === "bfl-flux") return status.bfl;
+    if (config.provider === "xai-imagine") return status.xai;
   }
 
   if (config.type === "video") {
