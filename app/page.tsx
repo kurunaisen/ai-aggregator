@@ -16,8 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
     .join(", ");
 
   const description = names
-    ? `Каталог AI-инструментов: ${names} и другие нейросети для текста, изображений, кода и видео.`
-    : "Каталог нейросетей и AI-инструментов с описаниями, категориями и фильтрами.";
+    ? `Каталог AI-инструментов: ${names} и другие — чат, код и видео прямо на сайте.`
+    : "Каталог встроенных нейросетей: чат, код и видео на DeltaplanAI.";
 
   return buildPageMetadata({
     title: "Каталог нейросетей и AI-инструментов",
@@ -47,8 +47,8 @@ export default async function HomePage() {
               <span className="text-gradient-metallic">для любой задачи</span>
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-silver-dim">
-              Текст, изображения, код и видео — собрали лучшие
-              AI-инструменты в одном месте с описаниями и категориями.
+              Текст, изображения, код и видео — используйте лучшие нейросети прямо на
+              сайте, без перехода на сторонние сервисы.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button href="/catalog" className="min-w-[180px]">

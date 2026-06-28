@@ -1,11 +1,20 @@
 import { EMBED_TOOLS, type EmbedConfig } from "@/data/embed-tools";
+import { isFluxConfigured } from "@/lib/providers/flux";
+import { isKlingConfigured } from "@/lib/providers/kling-jwt";
+import { isGoogleApiConfigured } from "@/lib/providers/veo";
+import { isXaiConfigured } from "@/lib/providers/xai-chat";
+
+export const EMBEDDABLE_TOOL_SLUGS = Object.keys(EMBED_TOOLS);
+
+export function isEmbeddableCatalogSlug(slug: string): boolean {
+  return slug in EMBED_TOOLS;
+}
 
 export function getEmbedConfig(slug: string): EmbedConfig | null {
   if (slug in EMBED_TOOLS) {
     return EMBED_TOOLS[slug];
   }
 
-  // Старые ссылки /tool/cursor → Monaco
   if (slug === "cursor") {
     return EMBED_TOOLS.monaco;
   }
@@ -14,7 +23,7 @@ export function getEmbedConfig(slug: string): EmbedConfig | null {
 }
 
 export function isEmbedEnabled(slug: string): boolean {
-  return slug in EMBED_TOOLS || slug === "cursor";
+  return isEmbeddableCatalogSlug(slug) || slug === "cursor";
 }
 
 export function isProviderConfigured(config: EmbedConfig): boolean {
@@ -25,6 +34,18 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
     if (config.provider === "anthropic") {
       return Boolean(process.env.ANTHROPIC_API_KEY?.trim());
     }
+    if (config.provider === "xai") {
+      return isXaiConfigured();
+    }
+  }
+
+  if (config.type === "image") {
+    if (config.provider === "google-imagen") {
+      return isGoogleApiConfigured();
+    }
+    if (config.provider === "bfl-flux") {
+      return isFluxConfigured();
+    }
   }
 
   if (config.type === "video") {
@@ -32,9 +53,10 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
       return Boolean(process.env.RUNWAY_API_KEY?.trim());
     }
     if (config.provider === "google-veo") {
-      return Boolean(
-        process.env.GOOGLE_API_KEY?.trim() || process.env.GEMINI_API_KEY?.trim(),
-      );
+      return isGoogleApiConfigured();
+    }
+    if (config.provider === "kling") {
+      return isKlingConfigured();
     }
   }
 
@@ -45,11 +67,20 @@ export function getProviderEnvVar(config: EmbedConfig): string | null {
   if (config.type === "chat" || config.type === "code") {
     if (config.provider === "openai") return "OPENAI_API_KEY";
     if (config.provider === "anthropic") return "ANTHROPIC_API_KEY";
+    if (config.provider === "xai") return "XAI_API_KEY";
   }
-  if (config.type === "video" && config.provider === "runway") return "RUNWAY_API_KEY";
-  if (config.type === "video" && config.provider === "google-veo") {
-    return "GOOGLE_API_KEY";
+
+  if (config.type === "image") {
+    if (config.provider === "google-imagen") return "GOOGLE_API_KEY";
+    if (config.provider === "bfl-flux") return "BFL_API_KEY";
   }
+
+  if (config.type === "video") {
+    if (config.provider === "runway") return "RUNWAY_API_KEY";
+    if (config.provider === "google-veo") return "GOOGLE_API_KEY";
+    if (config.provider === "kling") return "KLING_ACCESS_KEY";
+  }
+
   return null;
 }
 

@@ -1,6 +1,6 @@
 export type ChatEmbedConfig = {
   type: "chat";
-  provider: "openai" | "anthropic";
+  provider: "openai" | "anthropic" | "xai";
   model: string;
   systemPrompt: string;
   welcomeMessage: string;
@@ -17,9 +17,17 @@ export type CodeEmbedConfig = {
   placeholder?: string;
 };
 
+export type ImageEmbedConfig = {
+  type: "image";
+  provider: "google-imagen" | "bfl-flux";
+  model: string;
+  welcomeMessage: string;
+  placeholder?: string;
+};
+
 export type VideoEmbedConfig = {
   type: "video";
-  provider: "runway" | "google-veo";
+  provider: "runway" | "google-veo" | "kling";
   model: string;
   welcomeMessage: string;
   placeholder?: string;
@@ -27,7 +35,11 @@ export type VideoEmbedConfig = {
   ratio?: string;
 };
 
-export type EmbedConfig = ChatEmbedConfig | CodeEmbedConfig | VideoEmbedConfig;
+export type EmbedConfig =
+  | ChatEmbedConfig
+  | CodeEmbedConfig
+  | ImageEmbedConfig
+  | VideoEmbedConfig;
 
 /** Встроенные инструменты агрегатора DeltaplanAI */
 export const EMBED_TOOLS: Record<string, EmbedConfig> = {
@@ -51,6 +63,16 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
       "Claude на DeltaplanAI. Анализ, тексты, код и рассуждения — прямо здесь.",
     placeholder: "Сообщение для Claude...",
   },
+  grok: {
+    type: "chat",
+    provider: "xai",
+    model: "grok-3",
+    systemPrompt:
+      "Ты Grok — AI-ассистент от xAI. Отвечай на русском, если пользователь пишет по-русски. Будь прямым и полезным.",
+    welcomeMessage:
+      "Grok на DeltaplanAI — чат с моделями xAI прямо на сайте.",
+    placeholder: "Сообщение для Grok...",
+  },
   monaco: {
     type: "code",
     provider: "openai",
@@ -61,6 +83,22 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
     welcomeMessage:
       "Monaco Editor — пишите код и спрашивайте AI: объяснение, исправление, рефакторинг, тесты.",
     placeholder: "Например: объясни этот код / найди ошибку / добавь типизацию...",
+  },
+  nanobanana: {
+    type: "image",
+    provider: "google-imagen",
+    model: "gemini-2.5-flash-image",
+    welcomeMessage:
+      "Nano Banana на DeltaplanAI — генерация изображений через Gemini API. Выберите модель и формат кадра.",
+    placeholder: "Например: минималистичный постер с космонавтом на фоне заката...",
+  },
+  flux: {
+    type: "image",
+    provider: "bfl-flux",
+    model: "flux-2-pro-preview",
+    welcomeMessage:
+      "FLUX на DeltaplanAI — фотореалистичные изображения через Black Forest Labs API.",
+    placeholder: "Например: студийный портрет, мягкий свет, 85mm, ultra detailed...",
   },
   runway: {
     type: "video",
@@ -82,4 +120,17 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
     duration: 8,
     ratio: "16:9",
   },
+  kling: {
+    type: "video",
+    provider: "kling",
+    model: "kling-v2-6",
+    welcomeMessage:
+      "Kling на DeltaplanAI — text-to-video через официальный API Kling AI.",
+    placeholder: "Например: кинематографичный кадр: город в дождливую ночь, неоновые отражения...",
+    duration: 5,
+    ratio: "16:9",
+  },
 };
+
+/** Slugs инструментов с встроенным виджетом на сайте */
+export const EMBED_TOOL_SLUGS = Object.keys(EMBED_TOOLS);

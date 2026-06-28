@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createAnonClient } from "@/lib/supabase/anon";
+import { isEmbeddableCatalogSlug } from "@/lib/tools/embed";
 import type { ToolRow } from "@/lib/supabase/database.types";
 import type { PricingModel, Tool } from "@/types/tool";
 
@@ -21,6 +22,10 @@ function mapToolRow(row: ToolRow): Tool {
   };
 }
 
+function filterEmbeddableTools(rows: ToolRow[]): Tool[] {
+  return rows.filter((row) => isEmbeddableCatalogSlug(row.slug)).map(mapToolRow);
+}
+
 export async function getPublishedTools(): Promise<Tool[]> {
   noStore();
   const supabase = createAnonClient();
@@ -37,7 +42,7 @@ export async function getPublishedTools(): Promise<Tool[]> {
     return [];
   }
 
-  return (data ?? []).map(mapToolRow);
+  return filterEmbeddableTools(data ?? []);
 }
 
 export async function getFeaturedTools(): Promise<Tool[]> {
@@ -56,7 +61,7 @@ export async function getFeaturedTools(): Promise<Tool[]> {
     return [];
   }
 
-  return (data ?? []).map(mapToolRow);
+  return filterEmbeddableTools(data ?? []);
 }
 
 export async function getToolBySlug(slug: string): Promise<Tool | null> {
@@ -75,7 +80,11 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
     return null;
   }
 
-  return data ? mapToolRow(data) : null;
+  if (!data || !isEmbeddableCatalogSlug(data.slug)) {
+    return null;
+  }
+
+  return mapToolRow(data);
 }
 
 export async function getPublishedToolSlugs(): Promise<string[]> {
@@ -92,7 +101,9 @@ export async function getPublishedToolSlugs(): Promise<string[]> {
     return [];
   }
 
-  return (data ?? []).map((row) => row.slug);
+  return (data ?? [])
+    .map((row) => row.slug)
+    .filter(isEmbeddableCatalogSlug);
 }
 
 export async function getRelatedTools(
@@ -117,7 +128,7 @@ export async function getRelatedTools(
     return [];
   }
 
-  return (data ?? []).map(mapToolRow);
+  return filterEmbeddableTools(data ?? []);
 }
 
 export type MarqueeToolItem = {
@@ -142,9 +153,12 @@ export async function getMarqueeTools(limit = 3): Promise<MarqueeToolItem[]> {
     return [];
   }
 
-  return (data ?? []).map((row) => ({
-    slug: row.slug,
-    name: row.name,
-    createdAt: row.created_at,
-  }));
+  return (data ?? [])
+    .filter((row) => isEmbeddableCatalogSlug(row.slug))
+    .slice(0, limit)
+    .map((row) => ({
+      slug: row.slug,
+      name: row.name,
+      createdAt: row.created_at,
+    }));
 }

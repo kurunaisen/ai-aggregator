@@ -6,7 +6,7 @@ import {
   usdToDeai,
 } from "@/lib/subscription/deai-rates";
 
-export const FREE_STARTING_DEAI = 25;
+export const FREE_STARTING_DEAI = 50;
 
 /** Единая валюта Deai; внутри — разные «режимы» списания */
 export type DeaiBillingMode = "token" | "credit";

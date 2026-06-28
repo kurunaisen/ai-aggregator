@@ -14,7 +14,17 @@ export const metadata: Metadata = {
   description: "Free и Pro тарифы DeltaplanAI — агрегатор нейросетей.",
 };
 
-const proTools = ["ChatGPT", "Claude", "Runway"];
+const proTools = [
+  "ChatGPT",
+  "Claude",
+  "Grok",
+  "Monaco Editor",
+  "Nano Banana",
+  "FLUX",
+  "Runway",
+  "Google Veo",
+  "Kling",
+];
 
 export default function PricingPage() {
   return (

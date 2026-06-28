@@ -7,7 +7,7 @@ create table if not exists public.profiles (
   display_name text,
   avatar_id text default 'star',
   plan text not null default 'free' check (plan in ('free', 'pro')),
-  deai_balance numeric(6, 1) not null default 25,
+  deai_balance numeric(6, 1) not null default 50,
   stripe_customer_id text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -57,7 +57,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (id, email, plan, deai_balance)
-  values (new.id, new.email, 'free', 25)
+  values (new.id, new.email, 'free', 50)
   on conflict (id) do nothing;
   return new;
 end;

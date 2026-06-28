@@ -6,16 +6,31 @@ import type { EmbedConfig } from "@/data/embed-tools";
 type ProviderStatus = {
   openai: boolean;
   anthropic: boolean;
+  xai: boolean;
   runway: boolean;
   google: boolean;
+  bfl: boolean;
+  kling: boolean;
 };
 
 function isConfigured(config: EmbedConfig, status: ProviderStatus): boolean {
-  if (config.type === "chat" || config.type === "code") return status[config.provider];
+  if (config.type === "chat" || config.type === "code") {
+    if (config.provider === "openai") return status.openai;
+    if (config.provider === "anthropic") return status.anthropic;
+    if (config.provider === "xai") return status.xai;
+  }
+
+  if (config.type === "image") {
+    if (config.provider === "google-imagen") return status.google;
+    if (config.provider === "bfl-flux") return status.bfl;
+  }
+
   if (config.type === "video") {
     if (config.provider === "runway") return status.runway;
     if (config.provider === "google-veo") return status.google;
+    if (config.provider === "kling") return status.kling;
   }
+
   return false;
 }
 

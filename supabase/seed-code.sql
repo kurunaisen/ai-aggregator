@@ -1,5 +1,5 @@
--- Категория «Код» — вставьте этот SQL в Supabase → SQL Editor → Run
--- (не путь к файлу, а содержимое запроса ниже)
+-- Категория «Код» — только встроенный Monaco Editor
+-- Supabase → SQL Editor → Run
 
 insert into public.tools (
   slug,
@@ -24,42 +24,6 @@ insert into public.tools (
     'https://microsoft.github.io/monaco-editor/',
     true,
     true
-  ),
-  (
-    'github-copilot',
-    'GitHub Copilot',
-    'AI-помощник для автодополнения кода в IDE',
-    'GitHub Copilot интегрируется в VS Code, JetBrains, Neovim и другие редакторы. Предлагает строки и функции по контексту проекта, помогает писать тесты и документацию.',
-    'Код',
-    'code',
-    'paid',
-    'https://github.com/features/copilot',
-    false,
-    true
-  ),
-  (
-    'codeium',
-    'Codeium',
-    'Бесплатное AI-автодополнение для кода',
-    'Codeium — помощник для разработчиков с автодополнением, чатом по кодовой базе и поддержкой множества языков. Есть бесплатный тариф для индивидуальных разработчиков и расширения для популярных IDE.',
-    'Код',
-    'code',
-    'freemium',
-    'https://codeium.com',
-    false,
-    true
-  ),
-  (
-    'tabnine',
-    'Tabnine',
-    'AI-автодополнение с поддержкой локальных моделей',
-    'Tabnine ускоряет написание кода за счёт контекстных подсказок в IDE. Поддерживает облачные и локальные модели, что удобно для команд с требованиями к приватности кода.',
-    'Код',
-    'code',
-    'freemium',
-    'https://www.tabnine.com',
-    false,
-    true
   )
 on conflict (slug) do update set
   name = excluded.name,
@@ -71,3 +35,7 @@ on conflict (slug) do update set
   website_url = excluded.website_url,
   featured = excluded.featured,
   is_published = excluded.is_published;
+
+update public.tools
+set is_published = false
+where slug in ('github-copilot', 'codeium', 'tabnine', 'cursor');

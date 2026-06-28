@@ -31,6 +31,10 @@ export function getTextModelRatesUsd(model: string): TokenRatesUsd {
     return { inputPerMTok: 0.8, outputPerMTok: 4.0 };
   }
 
+  if (id.includes("grok")) {
+    return { inputPerMTok: 3.0, outputPerMTok: 15.0 };
+  }
+
   if (
     id.includes("5-mini") ||
     id.includes("5-nano") ||
@@ -90,11 +94,24 @@ export function getVideoUsdPerSecond(model: string, quality: "1k" | "2k" | "4k")
     return 0.05;
   }
 
+  if (id.includes("kling")) {
+    if (quality === "2k" || quality === "4k") return 0.1;
+    return 0.06;
+  }
+
   return 0.05;
 }
 
 /** Базовая цена одного изображения ~1024px (USD) */
 export function getImageBaseUsd(model: string, quality: "1k" | "2k" | "4k"): number {
+  const id = model.toLowerCase();
+
+  if (id.includes("gemini-3-pro-image")) return 0.134;
+  if (id.includes("gemini-3.1-flash-image")) return 0.045;
+  if (id.includes("gemini-2.5-flash-image") || id.includes("nanobanana")) return 0.039;
+  if (id.includes("flux-2-pro") || id.includes("flux-pro")) return 0.07;
+  if (id.includes("klein")) return 0.02;
+
   let usd = 0.04;
 
   if (/pro|ultra|large|v[56]/i.test(model)) usd *= 1.35;

@@ -1,6 +1,8 @@
 import type { VideoEmbedConfig } from "@/data/embed-tools";
+import type { KlingGenerationRequest } from "@/data/kling-options";
 import type { VeoGenerationRequest } from "@/data/veo-options";
 import { pollRunwayTask, startRunwayVideo } from "@/lib/providers/ai";
+import { pollKlingTask, startKlingVideo } from "@/lib/providers/kling";
 import { pollVeoOperation, startVeoVideo } from "@/lib/providers/veo";
 
 export async function startVideoGeneration(
@@ -9,6 +11,7 @@ export async function startVideoGeneration(
   duration: number,
   ratio: string,
   veo?: VeoGenerationRequest,
+  kling?: KlingGenerationRequest,
 ): Promise<string> {
   if (config.provider === "runway") {
     return startRunwayVideo(prompt, config.model, duration, ratio);
@@ -19,6 +22,13 @@ export async function startVideoGeneration(
       throw new Error("Не переданы параметры Veo");
     }
     return startVeoVideo(prompt, veo);
+  }
+
+  if (config.provider === "kling") {
+    if (!kling) {
+      throw new Error("Не переданы параметры Kling");
+    }
+    return startKlingVideo(prompt, kling);
   }
 
   throw new Error("Неподдерживаемый видео-провайдер");
@@ -34,6 +44,10 @@ export async function pollVideoGeneration(
 
   if (config.provider === "google-veo") {
     return pollVeoOperation(taskId);
+  }
+
+  if (config.provider === "kling") {
+    return pollKlingTask(taskId);
   }
 
   throw new Error("Неподдерживаемый видео-провайдер");

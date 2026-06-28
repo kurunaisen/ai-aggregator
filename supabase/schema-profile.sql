@@ -15,6 +15,10 @@ update public.usage_logs ul
 set model = case ul.tool_slug
   when 'chatgpt' then 'gpt-4o-mini'
   when 'claude' then 'claude-3-5-haiku-latest'
+  when 'grok' then 'grok-3'
+  when 'nanobanana' then 'gemini-2.5-flash-image'
+  when 'flux' then 'flux-2-pro-preview'
+  when 'kling' then 'kling-v2-6'
   when 'runway' then 'gen3a_turbo'
   else ul.tool_slug
 end

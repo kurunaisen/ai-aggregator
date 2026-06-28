@@ -3,17 +3,30 @@ import { ensureProfile, getSessionUser, type Profile } from "@/lib/auth/profile"
 import {
   callAnthropic,
 } from "@/lib/providers/ai";
+import { pollImageGeneration, startImageGeneration } from "@/lib/providers/image";
 import { pollVideoGeneration, startVideoGeneration } from "@/lib/providers/video";
 import {
   validateVeoGenerationRequest,
   validateVeoPrompt,
 } from "@/lib/providers/validate-veo-options";
 import type { VeoGenerationRequest } from "@/data/veo-options";
+import type {
+  FluxGenerationRequest,
+  NanobananaGenerationRequest,
+} from "@/data/image-options";
+import { validateImagePrompt } from "@/data/image-options";
+import {
+  validateKlingGenerationRequest,
+  validateKlingPrompt,
+} from "@/data/kling-options";
+import type { KlingGenerationRequest } from "@/data/kling-options";
 import { callOpenAI } from "@/lib/providers/openai-chat";
+import { callXai } from "@/lib/providers/xai-chat";
 import { validateOpenAIOptions } from "@/lib/providers/validate-openai-options";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 import {
+  calculateImageDeaiCost,
   calculateTextDeaiCost,
   calculateVideoDeaiCost,
 } from "@/lib/subscription/deai-cost";
@@ -27,7 +40,12 @@ import {
 } from "@/lib/subscription/deai";
 import { getEmbedConfig } from "@/lib/tools/embed";
 import { getToolBySlug } from "@/lib/tools/queries";
-import type { ChatEmbedConfig, CodeEmbedConfig, VideoEmbedConfig } from "@/data/embed-tools";
+import type {
+  ChatEmbedConfig,
+  CodeEmbedConfig,
+  ImageEmbedConfig,
+  VideoEmbedConfig,
+} from "@/data/embed-tools";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type ChatMessage = {
@@ -44,10 +62,14 @@ const MAX_EDITOR_CODE = 30000;
 const EMBED_TOOL_TYPES: Record<string, string> = {
   chatgpt: "text",
   claude: "text",
+  grok: "text",
   monaco: "text",
   cursor: "text",
+  nanobanana: "image",
+  flux: "image",
   runway: "video",
   veo: "video",
+  kling: "video",
 };
 
 type AuthContext = {
@@ -115,7 +137,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Некорректный запрос." }, { status: 400 });
   }
 
-  const { slug, messages, prompt, action, taskId, openai, video, editorCode, language } =
+  const { slug, messages, prompt, action, taskId, openai, video, image, editorCode, language } =
     body as {
     slug?: string;
     messages?: ChatMessage[];
@@ -134,6 +156,12 @@ export async function POST(request: Request) {
       duration?: number;
       quality?: "1k" | "2k" | "4k";
       veo?: VeoGenerationRequest;
+      kling?: KlingGenerationRequest;
+    };
+    image?: {
+      quality?: "1k" | "2k" | "4k";
+      nanobanana?: NanobananaGenerationRequest;
+      flux?: FluxGenerationRequest;
     };
   };
 
@@ -160,6 +188,25 @@ export async function POST(request: Request) {
 
     try {
       const result = await pollVideoGeneration(embed as VideoEmbedConfig, taskId);
+      return NextResponse.json(result);
+    } catch (err) {
+      return NextResponse.json(
+        { error: err instanceof Error ? err.message : "Ошибка опроса статуса" },
+        { status: 502 },
+      );
+    }
+  }
+
+  if (action === "poll" && embed.type === "image") {
+    const auth = await requireAuth(0, true);
+    if (auth instanceof NextResponse) return auth;
+
+    if (!taskId) {
+      return NextResponse.json({ error: "Не указан taskId." }, { status: 400 });
+    }
+
+    try {
+      const result = await pollImageGeneration(embed as ImageEmbedConfig, taskId);
       return NextResponse.json(result);
     } catch (err) {
       return NextResponse.json(
@@ -250,6 +297,8 @@ export async function POST(request: Request) {
 
       if (chatConfig.provider === "anthropic") {
         reply = await callAnthropic(chatConfig as ChatEmbedConfig, apiMessages);
+      } else if (chatConfig.provider === "xai") {
+        reply = await callXai(chatConfig as ChatEmbedConfig, apiMessages);
       } else {
         const validated = validateOpenAIOptions(openai);
         if (typeof validated === "string") {
@@ -278,6 +327,69 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply, deai, deaiCost });
     }
 
+    if (embed.type === "image") {
+      const promptError = validateImagePrompt(prompt ?? "");
+      if (promptError) {
+        return NextResponse.json({ error: promptError }, { status: 400 });
+      }
+
+      const imageConfig = embed as ImageEmbedConfig;
+      const quality = image?.quality ?? "1k";
+
+      let imageModel = imageConfig.model;
+      let generationOptions: NanobananaGenerationRequest | FluxGenerationRequest;
+
+      if (imageConfig.provider === "google-imagen") {
+        generationOptions = {
+          model: image?.nanobanana?.model ?? (imageConfig.model as NanobananaGenerationRequest["model"]),
+          quality,
+          aspectRatio: image?.nanobanana?.aspectRatio ?? "1:1",
+        };
+        imageModel = generationOptions.model;
+      } else {
+        generationOptions = {
+          model: image?.flux?.model ?? (imageConfig.model as FluxGenerationRequest["model"]),
+          quality,
+        };
+        imageModel = generationOptions.model;
+      }
+
+      const deaiCost = calculateImageDeaiCost({
+        model: imageModel,
+        quality,
+        outputCount: 1,
+      });
+
+      const auth = await requireAuth(deaiCost);
+      if (auth instanceof NextResponse) return auth;
+
+      const { supabase, user, profile } = auth;
+
+      const result = await startImageGeneration(imageConfig, prompt!, generationOptions);
+
+      const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
+      if (!deducted.success) {
+        return NextResponse.json(
+          { error: getInsufficientDeaiMessage(deaiCost), code: "INSUFFICIENT_DEAI" },
+          { status: 429 },
+        );
+      }
+
+      await recordDeaiUsage(supabase, user.id, slug, "image", deaiCost, imageModel);
+      const deai = await getDeaiSummary(supabase, user.id, profile.plan);
+
+      if (result.imageUrl) {
+        return NextResponse.json({ imageUrl: result.imageUrl, deai, deaiCost });
+      }
+
+      return NextResponse.json({
+        taskId: result.taskId,
+        status: "PENDING",
+        deai,
+        deaiCost,
+      });
+    }
+
     if (embed.type === "video") {
       const promptError = validateVeoPrompt(prompt ?? "");
       if (promptError && (embed as VideoEmbedConfig).provider === "google-veo") {
@@ -297,6 +409,8 @@ export async function POST(request: Request) {
       const quality = video?.quality ?? "1k";
 
       let veoOptions: VeoGenerationRequest | undefined;
+      let klingOptions: KlingGenerationRequest | undefined;
+
       if (videoConfig.provider === "google-veo") {
         const validated = validateVeoGenerationRequest(prompt, video?.veo);
         if (typeof validated === "string") {
@@ -305,16 +419,33 @@ export async function POST(request: Request) {
         veoOptions = validated;
       }
 
+      if (videoConfig.provider === "kling") {
+        const promptError = validateKlingPrompt(prompt);
+        if (promptError) {
+          return NextResponse.json({ error: promptError }, { status: 400 });
+        }
+
+        const validated = validateKlingGenerationRequest(prompt, video?.kling);
+        if (typeof validated === "string") {
+          return NextResponse.json({ error: validated }, { status: 400 });
+        }
+        klingOptions = validated;
+      }
+
       const deaiCost = calculateVideoDeaiCost({
-        model: veoOptions?.model ?? videoConfig.model,
-        duration: veoOptions?.durationSeconds ?? duration,
-        quality: veoOptions
-          ? veoOptions.resolution === "4k"
-            ? "4k"
-            : veoOptions.resolution === "1080p"
-              ? "2k"
-              : "1k"
-          : quality,
+        model: klingOptions?.model ?? veoOptions?.model ?? videoConfig.model,
+        duration: klingOptions?.durationSeconds ?? veoOptions?.durationSeconds ?? duration,
+        quality: klingOptions
+          ? klingOptions.mode === "pro"
+            ? "2k"
+            : "1k"
+          : veoOptions
+            ? veoOptions.resolution === "4k"
+              ? "4k"
+              : veoOptions.resolution === "1080p"
+                ? "2k"
+                : "1k"
+            : quality,
       });
 
       const auth = await requireAuth(deaiCost);
@@ -322,12 +453,13 @@ export async function POST(request: Request) {
 
       const { supabase, user, profile } = auth;
 
-      const taskId = await startVideoGeneration(
+      const generationTaskId = await startVideoGeneration(
         videoConfig,
         prompt,
         duration,
         videoConfig.ratio ?? "16:9",
         veoOptions,
+        klingOptions,
       );
 
       const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
@@ -344,11 +476,11 @@ export async function POST(request: Request) {
         slug,
         "video",
         deaiCost,
-        veoOptions?.model ?? videoConfig.model,
+        klingOptions?.model ?? veoOptions?.model ?? videoConfig.model,
       );
       const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 
-      return NextResponse.json({ taskId, status: "PENDING", deai, deaiCost });
+      return NextResponse.json({ taskId: generationTaskId, status: "PENDING", deai, deaiCost });
     }
 
     return NextResponse.json({ error: "Неподдерживаемый тип." }, { status: 400 });

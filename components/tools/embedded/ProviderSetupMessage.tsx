@@ -8,8 +8,11 @@ type ProviderSetupProps = {
 const PROVIDER_LINKS: Partial<Record<string, string>> = {
   OPENAI_API_KEY: "https://platform.openai.com/api-keys",
   ANTHROPIC_API_KEY: "https://console.anthropic.com/settings/keys",
+  XAI_API_KEY: "https://console.x.ai/",
   RUNWAY_API_KEY: "https://dev.runwayml.com/",
   GOOGLE_API_KEY: "https://aistudio.google.com/apikey",
+  BFL_API_KEY: "https://api.bfl.ai/",
+  KLING_ACCESS_KEY: "https://app.klingai.com/global/dev/",
 };
 
 export function ProviderSetupMessage({ config }: ProviderSetupProps) {
@@ -21,7 +24,17 @@ export function ProviderSetupMessage({ config }: ProviderSetupProps) {
       <p>
         {envVar ? (
           <>
-            Переменная <code className="text-gold-light">{envVar}</code> не задана на сервере.
+            {envVar === "KLING_ACCESS_KEY" ? (
+              <>
+                Переменные{" "}
+                <code className="text-gold-light">KLING_ACCESS_KEY</code> и{" "}
+                <code className="text-gold-light">KLING_SECRET_KEY</code> не заданы на сервере.
+              </>
+            ) : (
+              <>
+                Переменная <code className="text-gold-light">{envVar}</code> не задана на сервере.
+              </>
+            )}
           </>
         ) : (
           "API провайдера не настроен на сервере."

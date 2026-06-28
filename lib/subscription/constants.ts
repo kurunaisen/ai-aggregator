@@ -1,3 +1,5 @@
+import { FREE_STARTING_DEAI as STARTING_DEAI } from "@/lib/subscription/deai-cost";
+
 export type Plan = "free" | "pro";
 
 export const PRO_PRICE_RUB = 990;
@@ -23,7 +25,6 @@ export const DEAI_PRICING_HINT = {
     "Runway 5с ~23 · Veo Lite 8с ~37 · Veo Fast 8с ~74 · Veo 3.1 8с ~296 Deai",
 } as const;
 
-export const DEAI_STARTER_BUDGET_HINT =
-  "25 Deai ≈ 25 ₽: ~40–50 коротких текстовых запросов (GPT-4o Mini) или 1 видео Runway 5 с";
+export const DEAI_STARTER_BUDGET_HINT = `${STARTING_DEAI} Deai ≈ ${STARTING_DEAI} ₽: ~80–100 коротких текстовых запросов (GPT-4o Mini) или 2 видео Runway 5 с`;
 
 export const DEAI_EXCHANGE_HINT = "1 Deai = 1 ₽ · API + 20%";

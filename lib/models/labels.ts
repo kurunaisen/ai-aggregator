@@ -16,6 +16,15 @@ export function formatModelLabel(model: string | null, toolSlug: string): string
       .trim();
   }
 
+  if (model.includes("grok")) return model.replace(/^grok-/i, "Grok ").replace(/-/g, " ");
+  if (model.includes("kling")) return model.replace(/^kling-/i, "Kling ").replace(/-/g, " ");
+  if (model.includes("flux")) return model.includes("klein") ? "FLUX.2 Klein" : "FLUX.2 Pro";
+  if (model.includes("gemini") && model.includes("image")) {
+    if (model.includes("3-pro")) return "Nano Banana Pro";
+    if (model.includes("3.1-flash")) return "Nano Banana 2";
+    return "Nano Banana";
+  }
+
   if (model.includes("gen3")) return "Runway Gen-3 Turbo";
   if (model.includes("gen4")) return "Runway Gen-4";
   if (model.includes("veo-3.1-fast")) return "Veo 3.1 Fast";
@@ -30,9 +39,13 @@ export function toolSlugLabel(slug: string): string {
   const labels: Record<string, string> = {
     chatgpt: "ChatGPT",
     claude: "Claude",
+    grok: "Grok",
+    nanobanana: "Nano Banana",
+    flux: "FLUX",
     runway: "Runway",
     veo: "Google Veo",
-    midjourney: "Midjourney",
+    kling: "Kling",
+    monaco: "Monaco Editor",
   };
 
   return labels[slug] ?? slug;

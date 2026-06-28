@@ -2,7 +2,7 @@
 -- Выполните в Supabase SQL Editor после schema-aggregator.sql
 
 alter table public.profiles
-  add column if not exists deai_balance numeric(6, 1) not null default 25;
+  add column if not exists deai_balance numeric(6, 1) not null default 50;
 
 update public.profiles
 set deai_balance = 25
@@ -67,7 +67,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (id, email, plan, deai_balance)
-  values (new.id, new.email, 'free', 25)
+  values (new.id, new.email, 'free', 50)
   on conflict (id) do nothing;
   return new;
 end;

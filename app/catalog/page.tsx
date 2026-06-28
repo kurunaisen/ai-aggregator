@@ -29,7 +29,7 @@ export async function generateMetadata({
 
   return buildPageMetadata({
     title: "Каталог нейросетей",
-    description: `${filtered.length} AI-инструментов для текста, изображений, кода и видео. Поиск, фильтры и описания.`,
+    description: `${filtered.length} встроенных AI-инструментов: чат, код и видео на DeltaplanAI.`,
     path: "/catalog",
   });
 }
