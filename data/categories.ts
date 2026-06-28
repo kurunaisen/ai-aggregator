@@ -25,6 +25,12 @@ export const categories: Category[] = [
     slug: "video",
     description: "Генерация и монтаж видео",
   },
+  {
+    id: "design",
+    name: "Дизайн",
+    slug: "design",
+    description: "Графический дизайн и AI-макеты",
+  },
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {

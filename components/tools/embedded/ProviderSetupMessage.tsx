@@ -13,6 +13,7 @@ const PROVIDER_LINKS: Partial<Record<string, string>> = {
   GOOGLE_API_KEY: "https://aistudio.google.com/apikey",
   BFL_API_KEY: "https://api.bfl.ai/",
   KLING_ACCESS_KEY: "https://app.klingai.com/global/dev/",
+  CANVA_CLIENT_ID: "https://www.canva.com/developers/",
 };
 
 export function ProviderSetupMessage({ config }: ProviderSetupProps) {
@@ -29,6 +30,12 @@ export function ProviderSetupMessage({ config }: ProviderSetupProps) {
                 Переменные{" "}
                 <code className="text-gold-light">KLING_ACCESS_KEY</code> и{" "}
                 <code className="text-gold-light">KLING_SECRET_KEY</code> не заданы на сервере.
+              </>
+            ) : envVar === "CANVA_CLIENT_ID" ? (
+              <>
+                Переменные{" "}
+                <code className="text-gold-light">CANVA_CLIENT_ID</code> и{" "}
+                <code className="text-gold-light">CANVA_CLIENT_SECRET</code> не заданы на сервере.
               </>
             ) : (
               <>

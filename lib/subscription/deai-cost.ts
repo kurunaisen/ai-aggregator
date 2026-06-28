@@ -172,7 +172,7 @@ export function formatDeai(amount: number): string {
 }
 
 export function resolveDeaiCategory(toolType: string): DeaiCategory {
-  if (toolType === "image") return "image";
+  if (toolType === "image" || toolType === "design") return "image";
   if (toolType === "video") return "video";
   return "text";
 }

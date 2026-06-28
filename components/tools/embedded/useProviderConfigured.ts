@@ -11,6 +11,7 @@ type ProviderStatus = {
   google: boolean;
   bfl: boolean;
   kling: boolean;
+  canva: boolean;
 };
 
 function isConfigured(config: EmbedConfig, status: ProviderStatus): boolean {
@@ -29,6 +30,10 @@ function isConfigured(config: EmbedConfig, status: ProviderStatus): boolean {
     if (config.provider === "runway") return status.runway;
     if (config.provider === "google-veo") return status.google;
     if (config.provider === "kling") return status.kling;
+  }
+
+  if (config.type === "design") {
+    if (config.provider === "canva-connect") return status.canva;
   }
 
   return false;

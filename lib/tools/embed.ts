@@ -1,4 +1,5 @@
 import { EMBED_TOOLS, type EmbedConfig } from "@/data/embed-tools";
+import { isCanvaConfigured } from "@/lib/providers/canva-config";
 import { isFluxConfigured } from "@/lib/providers/flux";
 import { isKlingConfigured } from "@/lib/providers/kling-jwt";
 import { isGoogleApiConfigured } from "@/lib/providers/veo";
@@ -60,6 +61,12 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
     }
   }
 
+  if (config.type === "design") {
+    if (config.provider === "canva-connect") {
+      return isCanvaConfigured();
+    }
+  }
+
   return false;
 }
 
@@ -79,6 +86,10 @@ export function getProviderEnvVar(config: EmbedConfig): string | null {
     if (config.provider === "runway") return "RUNWAY_API_KEY";
     if (config.provider === "google-veo") return "GOOGLE_API_KEY";
     if (config.provider === "kling") return "KLING_ACCESS_KEY";
+  }
+
+  if (config.type === "design") {
+    if (config.provider === "canva-connect") return "CANVA_CLIENT_ID";
   }
 
   return null;

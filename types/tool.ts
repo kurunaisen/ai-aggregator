@@ -36,4 +36,5 @@ export const toolTypeLabels: Record<string, string> = {
   image: "Изображения",
   code: "Код",
   video: "Видео",
+  design: "Дизайн",
 };

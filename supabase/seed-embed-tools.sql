@@ -119,6 +119,18 @@ insert into public.tools (
     'https://klingai.com',
     true,
     true
+  ),
+  (
+    'canva',
+    'Canva AI',
+    'Дизайн и AI-инструменты Canva',
+    'Canva AI на DeltaplanAI — подключите аккаунт Canva, создайте дизайн и откройте редактор с Magic Media, Magic Write и другими AI-функциями Canva.',
+    'Дизайн',
+    'design',
+    'freemium',
+    'https://www.canva.com/ai-assistant/',
+    true,
+    true
   )
 on conflict (slug) do update set
   name = excluded.name,
@@ -135,5 +147,5 @@ on conflict (slug) do update set
 update public.tools
 set is_published = false
 where slug not in (
-  'chatgpt', 'claude', 'grok', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling'
+  'chatgpt', 'claude', 'grok', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling', 'canva'
 );

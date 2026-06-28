@@ -1,5 +1,8 @@
 -- Стартовый баланс для новых пользователей: 50 Deai
 -- Выполните в Supabase SQL Editor на уже развёрнутой БД
+--
+-- Важно: migration-deai-starter-50.sql НЕ меняет уже созданные профили.
+-- Если баланс остался 25 — выполните migration-deai-starter-50-fix.sql
 
 alter table public.profiles
   alter column deai_balance set default 50;

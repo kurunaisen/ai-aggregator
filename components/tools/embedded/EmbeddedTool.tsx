@@ -1,6 +1,7 @@
 "use client";
 
 import type { EmbedConfig } from "@/data/embed-tools";
+import { EmbeddedCanva } from "@/components/tools/embedded/EmbeddedCanva";
 import { EmbeddedChat } from "@/components/tools/embedded/EmbeddedChat";
 import { EmbeddedImage } from "@/components/tools/embedded/EmbeddedImage";
 import { EmbeddedKlingVideo } from "@/components/tools/embedded/EmbeddedKlingVideo";
@@ -18,6 +19,17 @@ type EmbeddedToolProps = {
 };
 
 export function EmbeddedTool({ slug, toolName, config, deai }: EmbeddedToolProps) {
+  if (config.type === "design") {
+    return (
+      <EmbeddedCanva
+        slug={slug}
+        toolName={toolName}
+        config={config}
+        initialDeai={deai}
+      />
+    );
+  }
+
   if (config.type === "image") {
     return (
       <EmbeddedImage
