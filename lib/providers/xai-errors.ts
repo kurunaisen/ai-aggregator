@@ -64,8 +64,45 @@ function isInsufficientCreditsMessage(lower: string): boolean {
     lower.includes("out of credits") ||
     lower.includes("prepaid credit") ||
     lower.includes("not enough credit") ||
-    lower.includes("balance") && lower.includes("low")
+    (lower.includes("balance") && lower.includes("low")) ||
+    lower.includes("doesn't have any credits") ||
+    lower.includes("does not have any credits") ||
+    lower.includes("no credits or licenses") ||
+    lower.includes("newly created team")
   );
+}
+
+function extractXaiTeamBillingUrl(message: string): string | null {
+  const match = message.match(/https:\/\/console\.x\.ai\/team\/[^\s·]+/);
+  return match?.[0] ?? null;
+}
+
+function formatXaiBillingMessage(
+  message: string,
+  product: "chat" | "imagine" | "video",
+): string {
+  const teamUrl = extractXaiTeamBillingUrl(message);
+  const isNewTeam = message.toLowerCase().includes("newly created team");
+
+  let friendly =
+    isNewTeam
+      ? "xAI: API-ключ привязан к новой команде без кредитов и лицензий. "
+      : "xAI: на счёте команды xAI не хватает кредитов. ";
+
+  if (teamUrl) {
+    friendly += `Пополните баланс: ${teamUrl} `;
+  } else {
+    friendly += "Пополните console.x.ai → Billing. ";
+  }
+
+  friendly +=
+    "Если вы уже оплатили другую команду — создайте API-ключ в той команде и обновите XAI_API_KEY на Vercel.";
+
+  if (product === "video") {
+    friendly += " Видео списывается посекундно (~$0.05/с), картинки ~$0.02/кадр.";
+  }
+
+  return withApiDetail(friendly, message);
 }
 
 export function formatXaiApiError(
@@ -87,30 +124,17 @@ export function formatXaiApiError(
   }
 
   if (isInsufficientCreditsMessage(lower)) {
-    if (product === "video") {
-      return withApiDetail(
-        "xAI: на балансе не хватает средств для Grok Video. " +
-          "Картинки (Grok Imagine) и видео списываются с одного счёта xAI, " +
-          "но видео дороже: ~$0.05/сек (~$0.40 за 8 с в 720p против ~$0.02 за картинку). " +
-          "Пополните console.x.ai → Billing.",
-        message,
-      );
-    }
-
-    return withApiDetail(
-      "xAI: недостаточно кредитов на счёте xAI. Пополните console.x.ai → Billing.",
-      message,
-    );
+    return formatXaiBillingMessage(message, product);
   }
 
   if (
     lower.includes("does not exist") ||
     lower.includes("not found") ||
     lower.includes("not available") ||
-    lower.includes("access") ||
-    lower.includes("permission") ||
     lower.includes("not enabled") ||
-    lower.includes("unsupported")
+    lower.includes("unsupported") ||
+    (lower.includes("permission") && !lower.includes("permission-denied")) ||
+    (lower.includes("access") && !lower.includes("console.x.ai"))
   ) {
     if (product === "imagine") {
       return withApiDetail(
