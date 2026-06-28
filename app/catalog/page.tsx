@@ -79,19 +79,13 @@ export default async function CatalogPage({ searchParams }: PageProps) {
         </div>
 
         {tools.length > 0 && (
-          <div className="flex flex-col gap-10">
-            <section className="w-full">
-              <CatalogFiltersBar tools={tools} filters={filters} />
-            </section>
-
-            <section className="w-full">
-              <ToolGrid
-                tools={filtered}
-                emptyTitle="Ничего не найдено"
-                emptyDescription="Попробуйте другую категорию или сбросьте фильтры."
-              />
-            </section>
-          </div>
+          <CatalogFiltersBar tools={tools} filters={filters}>
+            <ToolGrid
+              tools={filtered}
+              emptyTitle="Ничего не найдено"
+              emptyDescription="Попробуйте другую категорию или сбросьте фильтры."
+            />
+          </CatalogFiltersBar>
         )}
 
         {tools.length === 0 && (

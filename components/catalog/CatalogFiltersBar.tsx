@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { categories, getToolCountByCategory } from "@/data/categories";
@@ -17,9 +18,10 @@ import { Button } from "@/components/ui/Button";
 type CatalogFiltersBarProps = {
   tools: Tool[];
   filters: CatalogFilters;
+  children: ReactNode;
 };
 
-export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
+export function CatalogFiltersBar({ tools, filters, children }: CatalogFiltersBarProps) {
   const router = useRouter();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(filters.q);
@@ -62,20 +64,7 @@ export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-3 sm:flex-row sm:justify-center xl:max-w-5xl 2xl:max-w-6xl">
-        <SearchBar
-          value={searchInput}
-          onChange={setSearchInput}
-          className="w-full min-w-0 flex-1"
-        />
-        {filtersActive && (
-          <Button variant="ghost" onClick={resetFilters} className="shrink-0 text-xs">
-            Сбросить
-          </Button>
-        )}
-      </div>
-
+    <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-5 lg:gap-6">
       <FilterPanel
         categories={categories}
         selectedCategory={filters.category}
@@ -87,6 +76,23 @@ export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
         onMobileToggle={() => setMobileFiltersOpen((v) => !v)}
         activeFilterCount={activeFilterCount}
       />
+
+      <div className="min-w-0 flex-1 space-y-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <SearchBar
+            value={searchInput}
+            onChange={setSearchInput}
+            className="w-full min-w-0 flex-1"
+          />
+          {filtersActive && (
+            <Button variant="ghost" onClick={resetFilters} className="shrink-0 text-xs">
+              Сбросить
+            </Button>
+          )}
+        </div>
+
+        {children}
+      </div>
     </div>
   );
 }

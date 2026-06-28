@@ -173,6 +173,26 @@ body {
   color: var(--silver);
 }
 
+.filter-popover {
+  background-color: rgb(8 8 8 / 0.98);
+  backdrop-filter: blur(12px);
+  border-color: rgba(192, 196, 204, 0.2);
+  box-shadow:
+    0 12px 40px rgb(0 0 0 / 0.6),
+    0 8px 32px rgb(201 169 98 / 0.1);
+}
+
+.filter-popover .chip-inactive {
+  background: rgba(16, 16, 16, 0.95);
+  border-color: rgba(192, 196, 204, 0.2);
+  color: var(--silver);
+}
+
+.filter-popover .chip-inactive:hover {
+  border-color: rgba(201, 169, 98, 0.35);
+  color: var(--gold-light);
+}
+
 .divider-metallic {
   border-color: rgba(192, 196, 204, 0.1);
 }
