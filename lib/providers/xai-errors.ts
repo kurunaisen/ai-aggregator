@@ -51,6 +51,23 @@ const PRODUCT_PREFIX: Record<"chat" | "imagine" | "video", string> = {
   video: "Grok Video",
 };
 
+function withApiDetail(friendly: string, raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed || friendly.includes(trimmed)) return friendly;
+  return `${friendly} Ответ API: ${trimmed}`;
+}
+
+function isInsufficientCreditsMessage(lower: string): boolean {
+  return (
+    lower.includes("insufficient") ||
+    lower.includes("exhausted") ||
+    lower.includes("out of credits") ||
+    lower.includes("prepaid credit") ||
+    lower.includes("not enough credit") ||
+    lower.includes("balance") && lower.includes("low")
+  );
+}
+
 export function formatXaiApiError(
   message: string,
   product: "chat" | "imagine" | "video" = "chat",
@@ -59,20 +76,31 @@ export function formatXaiApiError(
   const prefix = PRODUCT_PREFIX[product];
 
   if (lower.includes("invalid api key") || lower.includes("incorrect api key")) {
-    return "xAI: неверный API-ключ. Создайте ключ на console.x.ai и добавьте XAI_API_KEY на Vercel.";
+    return withApiDetail(
+      "xAI: неверный API-ключ. Создайте ключ на console.x.ai и добавьте XAI_API_KEY на Vercel.",
+      message,
+    );
   }
 
   if (lower.includes("rate limit") || lower.includes("too many requests")) {
-    return "xAI: слишком много запросов. Подождите минуту.";
+    return withApiDetail("xAI: слишком много запросов. Подождите минуту.", message);
   }
 
-  if (
-    lower.includes("insufficient") ||
-    lower.includes("credit") ||
-    lower.includes("billing") ||
-    lower.includes("payment")
-  ) {
-    return "xAI: недостаточно кредитов. Пополните баланс на console.x.ai → Billing.";
+  if (isInsufficientCreditsMessage(lower)) {
+    if (product === "video") {
+      return withApiDetail(
+        "xAI: на балансе не хватает средств для Grok Video. " +
+          "Картинки (Grok Imagine) и видео списываются с одного счёта xAI, " +
+          "но видео дороже: ~$0.05/сек (~$0.40 за 8 с в 720p против ~$0.02 за картинку). " +
+          "Пополните console.x.ai → Billing.",
+        message,
+      );
+    }
+
+    return withApiDetail(
+      "xAI: недостаточно кредитов на счёте xAI. Пополните console.x.ai → Billing.",
+      message,
+    );
   }
 
   if (
@@ -80,25 +108,30 @@ export function formatXaiApiError(
     lower.includes("not found") ||
     lower.includes("not available") ||
     lower.includes("access") ||
-    lower.includes("permission")
+    lower.includes("permission") ||
+    lower.includes("not enabled") ||
+    lower.includes("unsupported")
   ) {
     if (product === "imagine") {
-      return (
+      return withApiDetail(
         "xAI: модель Grok Imagine недоступна для вашего API-ключа. " +
-        "Включите Imagine в console.x.ai и проверьте биллинг."
+          "Проверьте доступ и биллинг в console.x.ai.",
+        message,
       );
     }
 
     if (product === "video") {
-      return (
-        "xAI: Grok Video недоступен для вашего API-ключа. " +
-        "Проверьте доступ к grok-imagine-video в console.x.ai и биллинг."
+      return withApiDetail(
+        "xAI: Grok Video недоступен для этого API-ключа или модели. " +
+          "Для text-to-video используйте grok-imagine-video. Проверьте console.x.ai → Billing.",
+        message,
       );
     }
 
-    return (
+    return withApiDetail(
       "xAI: модель Grok недоступна для вашего API-ключа. " +
-      "Проверьте доступ к grok-4.3 в console.x.ai и биллинг."
+        "Проверьте доступ к grok-4.3 в console.x.ai и биллинг.",
+      message,
     );
   }
 

@@ -21,6 +21,7 @@ import {
 } from "@/data/kling-options";
 import type { KlingGenerationRequest } from "@/data/kling-options";
 import {
+  grokVideoResolutionToQuality,
   validateGrokVideoGenerationRequest,
   validateGrokVideoPrompt,
 } from "@/data/grok-video-options";
@@ -562,11 +563,7 @@ export async function POST(request: Request) {
           veoOptions?.durationSeconds ??
           duration,
         quality: grokOptions
-          ? grokOptions.resolution === "1080p"
-            ? "4k"
-            : grokOptions.resolution === "720p"
-              ? "2k"
-              : "1k"
+          ? grokVideoResolutionToQuality(grokOptions.resolution)
           : klingOptions
           ? klingOptions.mode === "pro"
             ? "2k"

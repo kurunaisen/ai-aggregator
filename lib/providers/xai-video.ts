@@ -117,9 +117,11 @@ export async function pollGrokVideo(requestId: string): Promise<{
   if (status === "failed" || status === "expired") {
     return {
       status: "FAILED",
-      error:
+      error: formatXaiApiError(
         extractXaiErrorBody(data, response.status, response.statusText) ||
-        (status === "expired" ? "Время ожидания истекло" : "Генерация не удалась"),
+          (status === "expired" ? "Время ожидания истекло" : "Генерация не удалась"),
+        "video",
+      ),
     };
   }
 

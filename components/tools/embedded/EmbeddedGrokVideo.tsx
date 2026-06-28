@@ -50,13 +50,7 @@ export function EmbeddedGrokVideo({
   const [deai, setDeai] = useState(initialDeai);
   const providerConfigured = useProviderConfigured(config);
 
-  const resolutionOptions = useMemo(
-    () =>
-      GROK_VIDEO_RESOLUTION_OPTIONS.filter(
-        (option) => !option.models || option.models.includes(model),
-      ),
-    [model],
-  );
+  const resolutionOptions = GROK_VIDEO_RESOLUTION_OPTIONS;
 
   const estimatedCost = useMemo(
     () =>
@@ -213,16 +207,7 @@ export function EmbeddedGrokVideo({
                 <span className="text-xs text-silver-dim">Модель</span>
                 <select
                   value={model}
-                  onChange={(event) => {
-                    const nextModel = event.target.value as GrokVideoModelId;
-                    setModel(nextModel);
-                    if (
-                      nextModel !== "grok-imagine-video-1.5" &&
-                      resolution === "1080p"
-                    ) {
-                      setResolution("720p");
-                    }
-                  }}
+                  onChange={(event) => setModel(event.target.value as GrokVideoModelId)}
                   disabled={loading || polling}
                   className={selectClassName}
                 >
@@ -305,7 +290,8 @@ export function EmbeddedGrokVideo({
               enterToSubmit={false}
             />
             <p className="mt-2 text-xs text-silver-dim/70">
-              Grok Video · генерация может занять 3–10 минут
+              Grok Video · xAI списывает посекундно (~$0.05/с). 8 с ≈ $0.40 — дороже, чем
+              Grok Imagine (~$0.02/картинка). Генерация 3–10 минут.
             </p>
           </form>
         </>

@@ -1,8 +1,8 @@
-export type GrokVideoModelId = "grok-imagine-video" | "grok-imagine-video-1.5";
+export type GrokVideoModelId = "grok-imagine-video";
 
 export type GrokVideoAspectRatio = "16:9" | "9:16" | "1:1" | "4:3" | "3:4" | "3:2" | "2:3";
 
-export type GrokVideoResolution = "480p" | "720p" | "1080p";
+export type GrokVideoResolution = "480p" | "720p";
 
 export type GrokVideoDurationSeconds = 5 | 8 | 10 | 15;
 
@@ -14,8 +14,7 @@ export type GrokVideoGenerationRequest = {
 };
 
 export const GROK_VIDEO_MODEL_OPTIONS: { value: GrokVideoModelId; label: string }[] = [
-  { value: "grok-imagine-video", label: "Grok Video" },
-  { value: "grok-imagine-video-1.5", label: "Grok Video 1.5" },
+  { value: "grok-imagine-video", label: "Grok Video (text-to-video)" },
 ];
 
 export const GROK_VIDEO_DURATION_OPTIONS: GrokVideoDurationSeconds[] = [5, 8, 10, 15];
@@ -31,17 +30,14 @@ export const GROK_VIDEO_ASPECT_RATIO_OPTIONS: { value: GrokVideoAspectRatio; lab
 export const GROK_VIDEO_RESOLUTION_OPTIONS: {
   value: GrokVideoResolution;
   label: string;
-  models?: GrokVideoModelId[];
 }[] = [
-  { value: "480p", label: "480p · быстрее" },
+  { value: "480p", label: "480p · быстрее и дешевле" },
   { value: "720p", label: "720p · HD" },
-  { value: "1080p", label: "1080p · Full HD", models: ["grok-imagine-video-1.5"] },
 ];
 
 export function grokVideoResolutionToQuality(
   resolution: GrokVideoResolution,
-): "1k" | "2k" | "4k" {
-  if (resolution === "1080p") return "4k";
+): "1k" | "2k" {
   if (resolution === "720p") return "2k";
   return "1k";
 }
@@ -86,10 +82,6 @@ export function validateGrokVideoGenerationRequest(
   let resolution =
     GROK_VIDEO_RESOLUTION_OPTIONS.find((option) => option.value === raw?.resolution)?.value ??
     "720p";
-
-  if (resolution === "1080p" && model !== "grok-imagine-video-1.5") {
-    resolution = "720p";
-  }
 
   return {
     model,
