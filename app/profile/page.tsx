@@ -19,10 +19,12 @@ import { getOAuthEmail } from "@/lib/auth/oauth-metadata";
 import { createClient } from "@/lib/supabase/server";
 import {
   BASE_DEAI_GRANT_LABEL,
+  BASE_PLAN_DESCRIPTION,
   DEAI_EXCHANGE_HINT,
   DEAI_PRICING_HINT,
   DEAI_STARTER_BUDGET_HINT,
   PRO_DEAI_GRANT_LABEL,
+  PRO_PLAN_DESCRIPTION,
 } from "@/lib/subscription/constants";
 import { hasProPlan, isPaidPlan } from "@/lib/subscription/plans";
 import { getDeaiUsageReport } from "@/lib/subscription/deai-analytics";
@@ -93,7 +95,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </p>
             {hasProPlan(profile.plan) ? (
               <p className="mt-2 text-sm text-silver-dim">
-                Pro: {PRO_DEAI_GRANT_LABEL} при оплате ({DEAI_EXCHANGE_HINT}).{" "}
+                {PRO_PLAN_DESCRIPTION}. {PRO_DEAI_GRANT_LABEL} при оплате ({DEAI_EXCHANGE_HINT}).{" "}
                 <Link href="/studio/video" className="text-gold-light underline">
                   Видео-студия
                 </Link>{" "}
@@ -101,8 +103,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               </p>
             ) : isPaidPlan(profile.plan) ? (
               <p className="mt-2 text-sm text-silver-dim">
-                Base: {BASE_DEAI_GRANT_LABEL} при оплате ({DEAI_EXCHANGE_HINT}). Студия — в тарифе
-                Pro ({PRO_DEAI_GRANT_LABEL}).
+                {BASE_PLAN_DESCRIPTION}. {BASE_DEAI_GRANT_LABEL} при оплате ({DEAI_EXCHANGE_HINT}).
+                Pro: {PRO_PLAN_DESCRIPTION}
               </p>
             ) : (
               <p className="mt-2 text-sm text-silver-dim">

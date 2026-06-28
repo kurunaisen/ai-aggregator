@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/Button";
 import type { Plan } from "@/lib/subscription/constants";
 import {
   BASE_DEAI_GRANT_LABEL,
+  BASE_PLAN_DESCRIPTION,
   BASE_PRICE_LABEL,
   PRO_DEAI_GRANT_LABEL,
+  PRO_PLAN_DESCRIPTION,
   PRO_PRICE_LABEL,
 } from "@/lib/subscription/constants";
 import { getPlanLabel, hasProPlan, isPaidPlan } from "@/lib/subscription/plans";
@@ -43,10 +45,10 @@ export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
       {pro ? (
         <div className="space-y-3 text-sm text-silver-dim">
           <p>
-            {PRO_DEAI_GRANT_LABEL} начисляются при каждой оплате. Все инструменты — по балансу
-            Deai; Runway и Veo без лимита проб. Доступна{" "}
+            {PRO_PLAN_DESCRIPTION}. {PRO_DEAI_GRANT_LABEL} начисляются при оплате ({PRO_PRICE_LABEL}
+            ).{" "}
             <Link href="/studio/video" className="text-gold-light underline">
-              видео-студия
+              Видео-студия
             </Link>
             .
           </p>
@@ -57,9 +59,8 @@ export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
       ) : paid ? (
         <div className="space-y-3 text-sm text-silver-dim">
           <p>
-            Base — {BASE_PRICE_LABEL}: {BASE_DEAI_GRANT_LABEL} на баланс при оплате. Kling, FLUX,
-            чаты и остальной каталог — по балансу Deai; Runway и Veo — по 1 пробной генерации.
-            Полный доступ к Runway/Veo и студия — в тарифе Pro.
+            {BASE_PLAN_DESCRIPTION}. {BASE_DEAI_GRANT_LABEL} на баланс при оплате ({BASE_PRICE_LABEL}
+            ). Полный доступ — в тарифе Pro.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button href="/pricing">Перейти на Pro</Button>
@@ -71,8 +72,8 @@ export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
       ) : (
         <div className="space-y-3 text-sm text-silver-dim">
           <p>
-            Base — {BASE_PRICE_LABEL} ({BASE_DEAI_GRANT_LABEL}). Pro — {PRO_PRICE_LABEL} (
-            {PRO_DEAI_GRANT_LABEL}) + видео-студия.
+            Base — {BASE_PRICE_LABEL} ({BASE_DEAI_GRANT_LABEL}): {BASE_PLAN_DESCRIPTION} Pro —{" "}
+            {PRO_PRICE_LABEL} ({PRO_DEAI_GRANT_LABEL}): {PRO_PLAN_DESCRIPTION}
           </p>
           <div className="flex flex-wrap gap-3">
             <Button href="/pricing">Сравнить тарифы</Button>

@@ -5,7 +5,7 @@ import { Container } from "@/components/layout/Container";
 import { Button } from "@/components/ui/Button";
 import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
-import { PRO_DEAI_GRANT_LABEL, PRO_PRICE_LABEL } from "@/lib/subscription/constants";
+import { PRO_PLAN_DESCRIPTION, PRO_PRICE_LABEL } from "@/lib/subscription/constants";
 import { canAccessVideoStudio } from "@/lib/subscription/plans";
 
 export const metadata: Metadata = {
@@ -28,9 +28,7 @@ export default async function VideoStudioPage() {
         <div className="carbon-panel mx-auto max-w-lg rounded-2xl p-8 text-center">
           <h1 className="text-2xl font-bold text-silver">Видео-студия</h1>
           <p className="mt-4 text-sm leading-relaxed text-silver-dim">
-            Студия доступна только на тарифе <strong className="text-silver">Pro</strong> (
-            {PRO_DEAI_GRANT_LABEL} за {PRO_PRICE_LABEL}): генерация референса персонажа, сцен с
-            референсом и финального видео по кадрам.
+            {PRO_PLAN_DESCRIPTION} Тариф Pro — {PRO_PRICE_LABEL}.
           </p>
           <Button href="/pricing" className="mt-8">
             Перейти на Pro

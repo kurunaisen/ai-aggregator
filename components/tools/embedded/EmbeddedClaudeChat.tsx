@@ -10,6 +10,7 @@ import {
 } from "@/lib/chat/claude-attachments";
 import { calculateTextDeaiCost } from "@/lib/subscription/deai-cost";
 import type { DeaiSummary } from "@/lib/subscription/deai";
+import { PRO_PRICE_LABEL } from "@/lib/subscription/constants";
 import {
   ClaudeChatSettings,
   createInitialClaudeOptions,
@@ -245,7 +246,7 @@ export function EmbeddedClaudeChat({
                 <>
                   {" "}
                   <Link href="/pricing" className="text-gold-light underline">
-                    Pro 990 ₽/мес
+                    Pro {PRO_PRICE_LABEL}
                   </Link>
                 </>
               )}

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChatEmbedConfig } from "@/data/embed-tools";
 import { calculateTextDeaiCost } from "@/lib/subscription/deai-cost";
 import type { DeaiSummary } from "@/lib/subscription/deai";
+import { PRO_PRICE_LABEL } from "@/lib/subscription/constants";
 import { EmbeddedSubmitBar } from "@/components/tools/embedded/EmbeddedSubmitBar";
 import { EmbeddedToolHeader } from "@/components/tools/embedded/EmbeddedToolHeader";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
@@ -155,7 +156,7 @@ export function EmbeddedChat({
                 <>
                   {" "}
                   <Link href="/pricing" className="text-gold-light underline">
-                    Pro 990 ₽/мес
+                    Pro {PRO_PRICE_LABEL}
                   </Link>
                 </>
               )}

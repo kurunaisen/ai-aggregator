@@ -7,11 +7,11 @@ export const BASE_PRICE_RUB = 990;
 
 export const PRO_PRICE_RUB = 2000;
 
-export const BASE_PRICE_LABEL = `${BASE_PRICE_RUB} ₽/мес`;
+export const BASE_PRICE_LABEL = `${BASE_PRICE_RUB} ₽`;
 
-export const PRO_PRICE_LABEL = `${PRO_PRICE_RUB} ₽/мес`;
+export const PRO_PRICE_LABEL = `${PRO_PRICE_RUB} ₽`;
 
-/** Deai при оплате: цена подписки / стоимость 1 Deai (1 Deai = 1 ₽) */
+/** Deai при оплате: цена тарифа / стоимость 1 Deai (1 Deai = 1 ₽) */
 export function getBaseMonthlyDeai(): number {
   return BASE_PRICE_RUB / DEAI_RUB;
 }
@@ -24,9 +24,15 @@ export const BASE_MONTHLY_DEAI = getBaseMonthlyDeai();
 
 export const PRO_MONTHLY_DEAI = getProMonthlyDeai();
 
-export const BASE_DEAI_GRANT_LABEL = `${BASE_MONTHLY_DEAI} Deai/мес`;
+export const BASE_DEAI_GRANT_LABEL = `${BASE_MONTHLY_DEAI} Deai`;
 
-export const PRO_DEAI_GRANT_LABEL = `${PRO_MONTHLY_DEAI} Deai/мес`;
+export const PRO_DEAI_GRANT_LABEL = `${PRO_MONTHLY_DEAI} Deai`;
+
+export const BASE_PLAN_DESCRIPTION =
+  "Доступны все инструменты кроме Veo и Runway (1 пробная генерация)";
+
+export const PRO_PLAN_DESCRIPTION =
+  "Доступны все инструменты и студия создания видеороликов";
 
 export {
   FREE_STARTING_DEAI,

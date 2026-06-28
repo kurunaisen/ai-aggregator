@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { Plan } from "@/lib/subscription/constants";
-import { PRO_DEAI_GRANT_LABEL, PRO_PRICE_LABEL } from "@/lib/subscription/constants";
+import { PRO_PLAN_DESCRIPTION, PRO_PRICE_LABEL } from "@/lib/subscription/constants";
 import { getInsufficientDeaiMessage } from "@/lib/subscription/deai";
 
 export const BASE_TRIAL_VIDEO_TOOLS = ["runway", "veo"] as const;
@@ -33,7 +33,7 @@ function toolDisplayName(slug: BaseTrialVideoTool): string {
 export function getBaseTrialBlockedMessage(slug: BaseTrialVideoTool): string {
   return (
     `На тарифе Base доступна 1 пробная генерация в ${toolDisplayName(slug)}. ` +
-    `Перейдите на Pro (${PRO_DEAI_GRANT_LABEL}, ${PRO_PRICE_LABEL}) для полного доступа.`
+    `Перейдите на Pro (${PRO_PRICE_LABEL}): ${PRO_PLAN_DESCRIPTION}`
   );
 }
 

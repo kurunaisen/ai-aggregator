@@ -6,6 +6,7 @@ import type { ChatEmbedConfig } from "@/data/embed-tools";
 import type { OpenAIChatRequestOptions, ResponseFormatType } from "@/data/openai-models";
 import { calculateTextDeaiCost } from "@/lib/subscription/deai-cost";
 import type { DeaiSummary } from "@/lib/subscription/deai";
+import { PRO_PRICE_LABEL } from "@/lib/subscription/constants";
 import { EmbeddedSubmitBar } from "@/components/tools/embedded/EmbeddedSubmitBar";
 import { EmbeddedToolHeader } from "@/components/tools/embedded/EmbeddedToolHeader";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
@@ -199,7 +200,7 @@ export function EmbeddedOpenAIChat({
                 <>
                   {" "}
                   <Link href="/pricing" className="text-gold-light underline">
-                    Pro 990 ₽/мес
+                    Pro {PRO_PRICE_LABEL}
                   </Link>
                 </>
               )}

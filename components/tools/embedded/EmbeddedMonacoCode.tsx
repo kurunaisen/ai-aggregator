@@ -11,6 +11,7 @@ import {
 import type { OpenAIChatRequestOptions } from "@/data/openai-models";
 import { calculateTextDeaiCost } from "@/lib/subscription/deai-cost";
 import type { DeaiSummary } from "@/lib/subscription/deai";
+import { PRO_PRICE_LABEL } from "@/lib/subscription/constants";
 import { Button } from "@/components/ui/Button";
 import { EmbeddedSubmitBar } from "@/components/tools/embedded/EmbeddedSubmitBar";
 import { EmbeddedToolHeader } from "@/components/tools/embedded/EmbeddedToolHeader";
@@ -249,7 +250,7 @@ export function EmbeddedMonacoCode({
                     <>
                       {" "}
                       <Link href="/pricing" className="text-gold-light underline">
-                        Pro 990 ₽/мес
+                        Pro {PRO_PRICE_LABEL}
                       </Link>
                     </>
                   )}
