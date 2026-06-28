@@ -65,6 +65,7 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
       "Reasoning для GPT-5 и o-series — сложная логика, код и математика",
       "Диалоги на русском; списание Deai зависит от модели и объёма запроса",
     ],
+    previewVideoUrl: "/videos/chatgpt-preview.mp4",
     welcomeMessage:
       "Пробуй, стирай все и заново пробуй. Нет плохих идей, есть не раскрытый потенциал. Знай все получиться!!!",
     placeholder: "Напишите сообщение...",
@@ -175,12 +176,12 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
   runway: {
     type: "video",
     provider: "runway",
-    model: "gen3a_turbo",
+    model: "gen4.5",
     headerDescription:
-      "Runway Gen-3 Turbo на DeltaplanAI — генерация короткого видео из текстового описания. Опишите сцену, движение камеры и атмосферу — получите ролик прямо на сайте.",
+      "Runway Gen-4.5 на DeltaplanAI — генерация короткого видео из текстового описания. Опишите сцену, движение камеры и атмосферу — получите ролик прямо на сайте.",
     headerHighlights: [
-      "Генерация видео из текста (text-to-video)",
-      "Длительность до 5 секунд, формат 16:9",
+      "Text-to-video через Runway Gen-4.5",
+      "Длительность 5 или 10 секунд, формат 16:9",
       "Кинематографичные сцены по промпту на русском или английском",
       "Списание Deai за секунду сгенерированного видео",
     ],
@@ -188,7 +189,7 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
       "Опишите сцену — Runway сгенерирует короткое видео.",
     placeholder: "Например: закат над океаном, камера медленно приближается...",
     duration: 5,
-    ratio: "16:9",
+    ratio: "1280:720",
   },
   veo: {
     type: "video",

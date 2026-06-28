@@ -132,7 +132,7 @@ export function getTextDeaiRangeLabel(model = "gpt-4o-mini"): string {
 
 export function getVideoDeaiRangeLabel(): string {
   const runway = formatDeai(
-    calculateVideoDeaiCost({ model: "gen3a_turbo", duration: 5, quality: "1k" }),
+    calculateVideoDeaiCost({ model: "gen4.5", duration: 5, quality: "1k" }),
   );
   const veoLite = formatDeai(
     calculateVideoDeaiCost({
