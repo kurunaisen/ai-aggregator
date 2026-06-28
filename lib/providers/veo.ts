@@ -1,3 +1,8 @@
+import type {
+  VeoGenerationRequest,
+  VeoImagePayload,
+} from "@/data/veo-options";
+
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
 export function getGoogleApiKey(): string {
@@ -24,17 +29,58 @@ type VeoOperationResponse = {
   };
 };
 
-export async function startVeoVideo(prompt: string, model: string): Promise<string> {
-  const response = await fetch(`${GEMINI_BASE}/models/${model}:predictLongRunning`, {
-    method: "POST",
-    headers: {
-      "x-goog-api-key": getGoogleApiKey(),
-      "Content-Type": "application/json",
+function inlineImage(image: VeoImagePayload) {
+  return {
+    inlineData: {
+      mimeType: image.mimeType,
+      data: image.data,
     },
-    body: JSON.stringify({
-      instances: [{ prompt: prompt.trim() }],
-    }),
-  });
+  };
+}
+
+function buildVeoInstance(prompt: string, options: VeoGenerationRequest) {
+  const instance: Record<string, unknown> = {
+    prompt: prompt.trim(),
+  };
+
+  if (options.mode === "image-to-video" && options.image) {
+    instance.image = inlineImage(options.image);
+  }
+
+  if (options.mode === "ingredients-to-video" && options.referenceImages?.length) {
+    instance.referenceImages = options.referenceImages.map((image) => ({
+      image: inlineImage(image),
+      referenceType: "asset",
+    }));
+  }
+
+  return instance;
+}
+
+export async function startVeoVideo(
+  prompt: string,
+  options: VeoGenerationRequest,
+): Promise<string> {
+  const body = {
+    instances: [buildVeoInstance(prompt, options)],
+    parameters: {
+      aspectRatio: options.aspectRatio,
+      durationSeconds: String(options.durationSeconds),
+      resolution: options.resolution,
+    },
+  };
+
+  const response = await fetch(
+    `${GEMINI_BASE}/models/${options.model}:predictLongRunning`,
+    {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": getGoogleApiKey(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    },
+  );
 
   const data = (await response.json()) as VeoOperationResponse & {
     error?: { message?: string };

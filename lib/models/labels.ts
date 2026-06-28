@@ -18,6 +18,8 @@ export function formatModelLabel(model: string | null, toolSlug: string): string
 
   if (model.includes("gen3")) return "Runway Gen-3 Turbo";
   if (model.includes("gen4")) return "Runway Gen-4";
+  if (model.includes("veo-3.1-fast")) return "Veo 3.1 Fast";
+  if (model.includes("veo-3.1-lite")) return "Veo 3.1 Lite";
   if (model.includes("veo-3.1")) return "Veo 3.1";
   if (model.includes("veo")) return "Google Veo";
 

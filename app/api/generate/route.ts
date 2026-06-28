@@ -4,6 +4,11 @@ import {
   callAnthropic,
 } from "@/lib/providers/ai";
 import { pollVideoGeneration, startVideoGeneration } from "@/lib/providers/video";
+import {
+  validateVeoGenerationRequest,
+  validateVeoPrompt,
+} from "@/lib/providers/validate-veo-options";
+import type { VeoGenerationRequest } from "@/data/veo-options";
 import { callOpenAI } from "@/lib/providers/openai-chat";
 import { validateOpenAIOptions } from "@/lib/providers/validate-openai-options";
 import { createClient } from "@/lib/supabase/server";
@@ -128,6 +133,7 @@ export async function POST(request: Request) {
     video?: {
       duration?: number;
       quality?: "1k" | "2k" | "4k";
+      veo?: VeoGenerationRequest;
     };
   };
 
@@ -273,6 +279,11 @@ export async function POST(request: Request) {
     }
 
     if (embed.type === "video") {
+      const promptError = validateVeoPrompt(prompt ?? "");
+      if (promptError && (embed as VideoEmbedConfig).provider === "google-veo") {
+        return NextResponse.json({ error: promptError }, { status: 400 });
+      }
+
       if (!prompt?.trim()) {
         return NextResponse.json({ error: "Опишите сцену для видео." }, { status: 400 });
       }
@@ -285,10 +296,25 @@ export async function POST(request: Request) {
       const duration = video?.duration ?? videoConfig.duration ?? 5;
       const quality = video?.quality ?? "1k";
 
+      let veoOptions: VeoGenerationRequest | undefined;
+      if (videoConfig.provider === "google-veo") {
+        const validated = validateVeoGenerationRequest(prompt, video?.veo);
+        if (typeof validated === "string") {
+          return NextResponse.json({ error: validated }, { status: 400 });
+        }
+        veoOptions = validated;
+      }
+
       const deaiCost = calculateVideoDeaiCost({
-        model: videoConfig.model,
-        duration,
-        quality,
+        model: veoOptions?.model ?? videoConfig.model,
+        duration: veoOptions?.durationSeconds ?? duration,
+        quality: veoOptions
+          ? veoOptions.resolution === "4k"
+            ? "4k"
+            : veoOptions.resolution === "1080p"
+              ? "2k"
+              : "1k"
+          : quality,
       });
 
       const auth = await requireAuth(deaiCost);
@@ -296,11 +322,12 @@ export async function POST(request: Request) {
 
       const { supabase, user, profile } = auth;
 
-      const runwayTaskId = await startVideoGeneration(
+      const taskId = await startVideoGeneration(
         videoConfig,
         prompt,
         duration,
         videoConfig.ratio ?? "16:9",
+        veoOptions,
       );
 
       const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
@@ -317,11 +344,11 @@ export async function POST(request: Request) {
         slug,
         "video",
         deaiCost,
-        videoConfig.model,
+        veoOptions?.model ?? videoConfig.model,
       );
       const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 
-      return NextResponse.json({ taskId: runwayTaskId, status: "PENDING", deai, deaiCost });
+      return NextResponse.json({ taskId, status: "PENDING", deai, deaiCost });
     }
 
     return NextResponse.json({ error: "Неподдерживаемый тип." }, { status: 400 });

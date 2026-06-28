@@ -94,6 +94,8 @@ function imageModelMultiplier(model: string): number {
 }
 
 function videoModelMultiplier(model: string): number {
+  if (/veo-3\.1-fast|fast-generate/i.test(model)) return 1.15;
+  if (/veo-3\.1-lite|lite-generate/i.test(model)) return 0.95;
   if (/veo-3/i.test(model)) return 1.3;
   if (/veo/i.test(model)) return 1.2;
   if (/gen4|gen-4/i.test(model)) return 1.25;

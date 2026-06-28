@@ -77,7 +77,7 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
     provider: "google-veo",
     model: "veo-3.1-generate-preview",
     welcomeMessage:
-      "Google Veo на DeltaplanAI. Опишите сцену — AI сгенерирует короткое видео.",
+      "Google Veo на DeltaplanAI. Выберите модель и режим: текст, изображение или Ingredients to Video.",
     placeholder: "Например: дрон летит над горами на рассвете, кинематографичный кадр...",
     duration: 8,
     ratio: "16:9",
