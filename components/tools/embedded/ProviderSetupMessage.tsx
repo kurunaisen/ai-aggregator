@@ -9,6 +9,7 @@ const PROVIDER_LINKS: Partial<Record<string, string>> = {
   OPENAI_API_KEY: "https://platform.openai.com/api-keys",
   ANTHROPIC_API_KEY: "https://console.anthropic.com/settings/keys",
   RUNWAY_API_KEY: "https://dev.runwayml.com/",
+  GOOGLE_API_KEY: "https://aistudio.google.com/apikey",
 };
 
 export function ProviderSetupMessage({ config }: ProviderSetupProps) {

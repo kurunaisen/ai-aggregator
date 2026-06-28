@@ -60,8 +60,8 @@ export function EmbeddedVideo({
     setPolling(true);
     setStatusText("Генерация видео...");
 
-    for (let i = 0; i < 40; i++) {
-      await new Promise((r) => setTimeout(r, 3000));
+    for (let i = 0; i < 60; i++) {
+      await new Promise((r) => setTimeout(r, 5000));
 
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -235,7 +235,7 @@ export function EmbeddedVideo({
               enterToSubmit={false}
             />
             <p className="mt-2 text-xs text-silver-dim/70">
-              Генерация может занять 1–2 минуты
+              Генерация может занять 2–5 минут
             </p>
           </form>
         </>

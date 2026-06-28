@@ -7,11 +7,15 @@ type ProviderStatus = {
   openai: boolean;
   anthropic: boolean;
   runway: boolean;
+  google: boolean;
 };
 
 function isConfigured(config: EmbedConfig, status: ProviderStatus): boolean {
   if (config.type === "chat" || config.type === "code") return status[config.provider];
-  if (config.type === "video") return status.runway;
+  if (config.type === "video") {
+    if (config.provider === "runway") return status.runway;
+    if (config.provider === "google-veo") return status.google;
+  }
   return false;
 }
 

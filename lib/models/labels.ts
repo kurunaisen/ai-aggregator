@@ -18,6 +18,8 @@ export function formatModelLabel(model: string | null, toolSlug: string): string
 
   if (model.includes("gen3")) return "Runway Gen-3 Turbo";
   if (model.includes("gen4")) return "Runway Gen-4";
+  if (model.includes("veo-3.1")) return "Veo 3.1";
+  if (model.includes("veo")) return "Google Veo";
 
   return model;
 }
@@ -27,6 +29,7 @@ export function toolSlugLabel(slug: string): string {
     chatgpt: "ChatGPT",
     claude: "Claude",
     runway: "Runway",
+    veo: "Google Veo",
     midjourney: "Midjourney",
   };
 

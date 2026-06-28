@@ -42,9 +42,6 @@ export default async function HomePage() {
       <section className="hero-glow border-b divider-metallic">
         <Container className="py-20 sm:py-28">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="mb-5 inline-flex items-center rounded-full border border-gold/25 bg-gold/10 px-4 py-1.5 text-sm font-medium text-gold-light">
-              Каталог AI-инструментов
-            </p>
             <h1 className="text-4xl font-bold tracking-tight text-silver sm:text-6xl sm:leading-tight">
               Найдите нейросеть{" "}
               <span className="text-gradient-metallic">для любой задачи</span>

@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { ensureProfile, getSessionUser, type Profile } from "@/lib/auth/profile";
 import {
   callAnthropic,
-  pollRunwayTask,
-  startRunwayVideo,
 } from "@/lib/providers/ai";
+import { pollVideoGeneration, startVideoGeneration } from "@/lib/providers/video";
 import { callOpenAI } from "@/lib/providers/openai-chat";
 import { validateOpenAIOptions } from "@/lib/providers/validate-openai-options";
 import { createClient } from "@/lib/supabase/server";
@@ -43,6 +42,7 @@ const EMBED_TOOL_TYPES: Record<string, string> = {
   monaco: "text",
   cursor: "text",
   runway: "video",
+  veo: "video",
 };
 
 type AuthContext = {
@@ -153,11 +153,11 @@ export async function POST(request: Request) {
     }
 
     try {
-      const result = await pollRunwayTask(taskId);
+      const result = await pollVideoGeneration(embed as VideoEmbedConfig, taskId);
       return NextResponse.json(result);
     } catch (err) {
       return NextResponse.json(
-        { error: err instanceof Error ? err.message : "Ошибка Runway" },
+        { error: err instanceof Error ? err.message : "Ошибка опроса статуса" },
         { status: 502 },
       );
     }
@@ -296,9 +296,9 @@ export async function POST(request: Request) {
 
       const { supabase, user, profile } = auth;
 
-      const runwayTaskId = await startRunwayVideo(
+      const runwayTaskId = await startVideoGeneration(
+        videoConfig,
         prompt,
-        videoConfig.model,
         duration,
         videoConfig.ratio ?? "16:9",
       );

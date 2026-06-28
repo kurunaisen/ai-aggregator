@@ -19,7 +19,7 @@ export type CodeEmbedConfig = {
 
 export type VideoEmbedConfig = {
   type: "video";
-  provider: "runway";
+  provider: "runway" | "google-veo";
   model: string;
   welcomeMessage: string;
   placeholder?: string;
@@ -70,6 +70,16 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
       "Runway на DeltaplanAI. Опишите сцену — мы сгенерируем короткое видео.",
     placeholder: "Например: закат над океаном, камера медленно приближается...",
     duration: 5,
+    ratio: "16:9",
+  },
+  veo: {
+    type: "video",
+    provider: "google-veo",
+    model: "veo-3.1-generate-preview",
+    welcomeMessage:
+      "Google Veo на DeltaplanAI. Опишите сцену — AI сгенерирует короткое видео.",
+    placeholder: "Например: дрон летит над горами на рассвете, кинематографичный кадр...",
+    duration: 8,
     ratio: "16:9",
   },
 };

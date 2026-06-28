@@ -27,8 +27,15 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
     }
   }
 
-  if (config.type === "video" && config.provider === "runway") {
-    return Boolean(process.env.RUNWAY_API_KEY?.trim());
+  if (config.type === "video") {
+    if (config.provider === "runway") {
+      return Boolean(process.env.RUNWAY_API_KEY?.trim());
+    }
+    if (config.provider === "google-veo") {
+      return Boolean(
+        process.env.GOOGLE_API_KEY?.trim() || process.env.GEMINI_API_KEY?.trim(),
+      );
+    }
   }
 
   return false;
@@ -40,6 +47,9 @@ export function getProviderEnvVar(config: EmbedConfig): string | null {
     if (config.provider === "anthropic") return "ANTHROPIC_API_KEY";
   }
   if (config.type === "video" && config.provider === "runway") return "RUNWAY_API_KEY";
+  if (config.type === "video" && config.provider === "google-veo") {
+    return "GOOGLE_API_KEY";
+  }
   return null;
 }
 
