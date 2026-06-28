@@ -1,6 +1,6 @@
-import type { FluxGenerationRequest } from "@/data/image-options";
+import type { FluxGenerationRequest, ImageAspectRatio } from "@/data/image-options";
 
-const BFL_BASE = "https://api.bfl.ai/v1";
+const BFL_BASE = process.env.BFL_API_BASE?.trim() || "https://api.bfl.ai/v1";
 
 type BflCreateResponse = {
   id?: string;
@@ -26,10 +26,42 @@ export function isFluxConfigured(): boolean {
   return Boolean(process.env.BFL_API_KEY?.trim());
 }
 
-function qualityToDimensions(quality: "1k" | "2k" | "4k"): { width: number; height: number } {
-  if (quality === "4k") return { width: 2048, height: 2048 };
-  if (quality === "2k") return { width: 1536, height: 1536 };
-  return { width: 1024, height: 1024 };
+function formatBflError(status: number, message: string): string {
+  const lower = message.toLowerCase();
+
+  if (status === 401 || (lower.includes("invalid") && lower.includes("key"))) {
+    return "Неверный BFL_API_KEY. Проверьте ключ на https://api.bfl.ai и переменную на Vercel.";
+  }
+
+  if (status === 402 || lower.includes("credit") || lower.includes("payment")) {
+    return (
+      "На счёте BFL закончились кредиты. Пополните баланс на https://api.bfl.ai (Credits → Add)."
+    );
+  }
+
+  if (status === 429 || lower.includes("rate limit") || lower.includes("active tasks")) {
+    return "Слишком много одновременных запросов к FLUX. Подождите минуту и попробуйте снова.";
+  }
+
+  return message;
+}
+
+function dimensionsFromQualityAndRatio(
+  quality: "1k" | "2k" | "4k",
+  aspectRatio: ImageAspectRatio,
+): { width: number; height: number } {
+  const base = quality === "4k" ? 2048 : quality === "2k" ? 1536 : 1024;
+  const [ratioW, ratioH] = aspectRatio.split(":").map(Number);
+
+  if (!ratioW || !ratioH) {
+    return { width: base, height: base };
+  }
+
+  if (ratioW >= ratioH) {
+    return { width: base, height: Math.round((base * ratioH) / ratioW) };
+  }
+
+  return { width: Math.round((base * ratioW) / ratioH), height: base };
 }
 
 export async function startFluxImage(
@@ -37,7 +69,7 @@ export async function startFluxImage(
   options: FluxGenerationRequest,
 ): Promise<string> {
   const apiKey = getBflApiKey();
-  const { width, height } = qualityToDimensions(options.quality);
+  const { width, height } = dimensionsFromQualityAndRatio(options.quality, options.aspectRatio);
 
   const response = await fetch(`${BFL_BASE}/${options.model}`, {
     method: "POST",
@@ -56,7 +88,8 @@ export async function startFluxImage(
   const data = (await response.json()) as BflCreateResponse;
 
   if (!response.ok || !data.id) {
-    throw new Error(data.detail ?? data.error ?? "Не удалось запустить FLUX");
+    const message = data.detail ?? data.error ?? "Не удалось запустить FLUX";
+    throw new Error(formatBflError(response.status, message));
   }
 
   return JSON.stringify({ id: data.id, pollingUrl: data.polling_url });
@@ -83,7 +116,8 @@ export async function pollFluxTask(taskPayload: string): Promise<{
   const data = (await response.json()) as BflPollResponse;
 
   if (!response.ok) {
-    throw new Error(data.detail ?? data.error ?? "Ошибка опроса FLUX");
+    const message = data.detail ?? data.error ?? "Ошибка опроса FLUX";
+    throw new Error(formatBflError(response.status, message));
   }
 
   if (data.status === "Ready") {

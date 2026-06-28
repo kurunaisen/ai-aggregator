@@ -116,6 +116,7 @@ export default async function ToolPage({ params }: PageProps) {
 
             <div className="flex items-start gap-4 sm:gap-5">
               <ToolLogo
+                slug={tool.slug}
                 name={tool.name}
                 website={tool.website}
                 logoUrl={tool.logoUrl}

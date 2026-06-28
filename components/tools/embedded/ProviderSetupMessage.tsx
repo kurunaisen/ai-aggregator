@@ -30,6 +30,20 @@ export function ProviderSetupMessage({ config }: ProviderSetupProps) {
                 <code className="text-gold-light">KLING_ACCESS_KEY</code> и{" "}
                 <code className="text-gold-light">KLING_SECRET_KEY</code> не заданы на сервере.
               </>
+            ) : envVar === "BFL_API_KEY" ? (
+              <>
+                Переменная <code className="text-gold-light">BFL_API_KEY</code> не задана на сервере.
+                Ключ берётся на{" "}
+                <a
+                  href="https://api.bfl.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gold-light underline"
+                >
+                  api.bfl.ai
+                </a>
+                .
+              </>
             ) : (
               <>
                 Переменная <code className="text-gold-light">{envVar}</code> не задана на сервере.

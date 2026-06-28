@@ -4,6 +4,7 @@ import { useState } from "react";
 import { resolveToolLogoUrl } from "@/lib/tools/logo";
 
 type ToolLogoProps = {
+  slug?: string;
   name: string;
   website: string;
   logoUrl?: string | null;
@@ -19,6 +20,7 @@ const sizeClasses = {
 };
 
 export function ToolLogo({
+  slug,
   name,
   website,
   logoUrl,
@@ -27,7 +29,7 @@ export function ToolLogo({
   className = "",
 }: ToolLogoProps) {
   const [failed, setFailed] = useState(false);
-  const src = resolveToolLogoUrl({ logoUrl, website });
+  const src = resolveToolLogoUrl({ slug, logoUrl, website });
   const initial = name.charAt(0).toUpperCase();
   const boxClass = `${sizeClasses[size]} ${className}`;
 

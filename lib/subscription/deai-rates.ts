@@ -109,8 +109,11 @@ export function getImageBaseUsd(model: string, quality: "1k" | "2k" | "4k"): num
   if (id.includes("gemini-3-pro-image")) return 0.134;
   if (id.includes("gemini-3.1-flash-image")) return 0.045;
   if (id.includes("gemini-2.5-flash-image") || id.includes("nanobanana")) return 0.039;
-  if (id.includes("flux-2-pro") || id.includes("flux-pro")) return 0.07;
-  if (id.includes("klein")) return 0.02;
+  if (id.includes("flux-2-pro-preview")) return 0.07;
+  if (id.includes("flux-2-pro")) return 0.03;
+  if (id.includes("klein-4b")) return 0.014;
+  if (id.includes("klein")) return 0.015;
+  if (id.includes("pro-1.1")) return 0.04;
 
   let usd = 0.04;
 

@@ -11,6 +11,24 @@ type GeminiResponse = {
   candidates?: { content?: { parts?: GeminiPart[] } }[];
 };
 
+function formatGeminiImageError(message: string): string {
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("quota exceeded") ||
+    lower.includes("free_tier") ||
+    lower.includes("limit: 0")
+  ) {
+    return (
+      "Gemini Image API недоступен на бесплатном тарифе Google (лимит 0 для image-моделей). " +
+      "Подключите биллинг в Google AI Studio и используйте платный API-ключ, " +
+      "или переключитесь на FLUX (/tool/flux) с ключом BFL_API_KEY."
+    );
+  }
+
+  return message;
+}
+
 function qualityToImageSize(quality: "1k" | "2k" | "4k"): string | undefined {
   if (quality === "4k") return "4K";
   if (quality === "2k") return "2K";
@@ -53,7 +71,7 @@ export async function generateNanobananaImage(
   const data = (await response.json()) as GeminiResponse;
 
   if (!response.ok) {
-    throw new Error(data.error?.message ?? "Ошибка Gemini Image API");
+    throw new Error(formatGeminiImageError(data.error?.message ?? "Ошибка Gemini Image API"));
   }
 
   const parts = data.candidates?.[0]?.content?.parts ?? [];

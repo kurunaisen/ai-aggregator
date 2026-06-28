@@ -29,6 +29,7 @@ export function ToolCard({ tool }: ToolCardProps) {
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <ToolLogo
+            slug={tool.slug}
             name={tool.name}
             website={tool.website}
             logoUrl={tool.logoUrl}

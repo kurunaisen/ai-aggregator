@@ -46,6 +46,7 @@ export function EmbeddedImage({
   const [flux, setFlux] = useState<FluxGenerationRequest>({
     model: config.model as FluxGenerationRequest["model"],
     quality: "1k",
+    aspectRatio: "1:1",
   });
   const [loading, setLoading] = useState(false);
   const [polling, setPolling] = useState(false);
@@ -257,28 +258,32 @@ export function EmbeddedImage({
                 </select>
               </label>
 
-              {config.provider === "google-imagen" && (
-                <label className="block space-y-1.5 sm:col-span-2">
-                  <span className="text-xs text-silver-dim">Формат кадра</span>
-                  <select
-                    value={nanobanana.aspectRatio}
-                    onChange={(event) =>
-                      setNanobanana((prev) => ({
-                        ...prev,
-                        aspectRatio: event.target.value as NanobananaGenerationRequest["aspectRatio"],
-                      }))
+              <label className="block space-y-1.5 sm:col-span-2">
+                <span className="text-xs text-silver-dim">Формат кадра</span>
+                <select
+                  value={
+                    config.provider === "google-imagen"
+                      ? nanobanana.aspectRatio
+                      : flux.aspectRatio
+                  }
+                  onChange={(event) => {
+                    const aspectRatio = event.target.value as NanobananaGenerationRequest["aspectRatio"];
+                    if (config.provider === "google-imagen") {
+                      setNanobanana((prev) => ({ ...prev, aspectRatio }));
+                    } else {
+                      setFlux((prev) => ({ ...prev, aspectRatio }));
                     }
-                    disabled={loading || polling}
-                    className={selectClassName}
-                  >
-                    {IMAGE_ASPECT_RATIO_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
+                  }}
+                  disabled={loading || polling}
+                  className={selectClassName}
+                >
+                  {IMAGE_ASPECT_RATIO_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
 
             <EmbeddedSubmitBar

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="FLUX">
+  <defs>
+    <linearGradient id="fx-bg" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2a2418"/>
+      <stop offset="55%" stop-color="#151515"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="fx-flow" x1="12" y1="20" x2="52" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e2d4a8"/>
+      <stop offset="45%" stop-color="#c9a962"/>
+      <stop offset="100%" stop-color="#9a7b3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#fx-bg)"/>
+  <path
+    d="M12 38C18 30 24 34 30 28C36 22 42 26 52 18"
+    stroke="url(#fx-flow)"
+    stroke-width="3.5"
+    stroke-linecap="round"
+  />
+  <path
+    d="M12 46C20 38 28 42 36 34C44 26 48 30 52 26"
+    stroke="url(#fx-flow)"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    opacity="0.75"
+  />
+  <path
+    d="M18 22H46"
+    stroke="#e2d4a8"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+  <path
+    d="M34 22L46 22L40 14"
+    stroke="#c9a962"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

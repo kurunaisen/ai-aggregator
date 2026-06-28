@@ -5,7 +5,12 @@ export type NanobananaModelId =
   | "gemini-3.1-flash-image-preview"
   | "gemini-3-pro-image-preview";
 
-export type FluxModelId = "flux-2-pro-preview" | "flux-2-klein-9b-preview";
+export type FluxModelId =
+  | "flux-2-klein-4b"
+  | "flux-2-klein-9b-preview"
+  | "flux-2-pro"
+  | "flux-pro-1.1"
+  | "flux-2-pro-preview";
 
 export type ImageAspectRatio = "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
 
@@ -18,6 +23,7 @@ export type NanobananaGenerationRequest = {
 export type FluxGenerationRequest = {
   model: FluxModelId;
   quality: MediaQuality;
+  aspectRatio: ImageAspectRatio;
 };
 
 export const NANOBANANA_MODEL_OPTIONS: {
@@ -30,8 +36,11 @@ export const NANOBANANA_MODEL_OPTIONS: {
 ];
 
 export const FLUX_MODEL_OPTIONS: { value: FluxModelId; label: string }[] = [
-  { value: "flux-2-pro-preview", label: "FLUX.2 Pro" },
-  { value: "flux-2-klein-9b-preview", label: "FLUX.2 Klein 9B" },
+  { value: "flux-2-klein-4b", label: "FLUX.2 Klein 4B · самая дешёвая" },
+  { value: "flux-2-klein-9b-preview", label: "FLUX.2 Klein 9B · быстрая" },
+  { value: "flux-pro-1.1", label: "FLUX 1.1 Pro · бюджет" },
+  { value: "flux-2-pro", label: "FLUX.2 Pro · stable" },
+  { value: "flux-2-pro-preview", label: "FLUX.2 Pro Preview · макс. качество" },
 ];
 
 export const IMAGE_ASPECT_RATIO_OPTIONS: { value: ImageAspectRatio; label: string }[] = [
@@ -52,8 +61,9 @@ export function createDefaultNanobananaRequest(): NanobananaGenerationRequest {
 
 export function createDefaultFluxRequest(): FluxGenerationRequest {
   return {
-    model: "flux-2-pro-preview",
+    model: "flux-2-klein-4b",
     quality: "1k",
+    aspectRatio: "1:1",
   };
 }
 

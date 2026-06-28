@@ -89,15 +89,15 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
     provider: "google-imagen",
     model: "gemini-2.5-flash-image",
     welcomeMessage:
-      "Nano Banana на DeltaplanAI — генерация изображений через Gemini API. Выберите модель и формат кадра.",
+      "Nano Banana на DeltaplanAI — генерация изображений через Gemini API. Требуется платный API-ключ Google (image-модели не входят в free tier). Альтернатива: FLUX.",
     placeholder: "Например: минималистичный постер с космонавтом на фоне заката...",
   },
   flux: {
     type: "image",
     provider: "bfl-flux",
-    model: "flux-2-pro-preview",
+    model: "flux-2-klein-4b",
     welcomeMessage:
-      "FLUX на DeltaplanAI — фотореалистичные изображения через Black Forest Labs API.",
+      "FLUX на DeltaplanAI — фотореалистичные изображения через Black Forest Labs. Нужен API-ключ BFL (пополнение кредитов на api.bfl.ai).",
     placeholder: "Например: студийный портрет, мягкий свет, 85mm, ultra detailed...",
   },
   runway: {

@@ -350,6 +350,7 @@ export async function POST(request: Request) {
         generationOptions = {
           model: image?.flux?.model ?? (imageConfig.model as FluxGenerationRequest["model"]),
           quality,
+          aspectRatio: image?.flux?.aspectRatio ?? "1:1",
         };
         imageModel = generationOptions.model;
       }

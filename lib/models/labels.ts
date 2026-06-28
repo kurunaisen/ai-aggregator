@@ -18,7 +18,14 @@ export function formatModelLabel(model: string | null, toolSlug: string): string
 
   if (model.includes("grok")) return model.replace(/^grok-/i, "Grok ").replace(/-/g, " ");
   if (model.includes("kling")) return model.replace(/^kling-/i, "Kling ").replace(/-/g, " ");
-  if (model.includes("flux")) return model.includes("klein") ? "FLUX.2 Klein" : "FLUX.2 Pro";
+  if (model.includes("flux")) {
+    if (model.includes("klein-4b")) return "FLUX.2 Klein 4B";
+    if (model.includes("klein")) return "FLUX.2 Klein 9B";
+    if (model.includes("pro-1.1")) return "FLUX 1.1 Pro";
+    if (model.includes("pro-preview")) return "FLUX.2 Pro Preview";
+    if (model.includes("pro")) return "FLUX.2 Pro";
+    return "FLUX";
+  }
   if (model.includes("gemini") && model.includes("image")) {
     if (model.includes("3-pro")) return "Nano Banana Pro";
     if (model.includes("3.1-flash")) return "Nano Banana 2";
