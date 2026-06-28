@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { Provider } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 
@@ -10,12 +11,33 @@ type AuthFormProps = {
   mode: "login" | "signup";
 };
 
+const OAUTH_REDIRECT = "/auth/callback?next=/profile";
+const YANDEX_PROVIDER = "custom:yandex" as Provider;
+
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  async function signInWithOAuthProvider(provider: Provider) {
+    setLoading(true);
+    setMessage(null);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}${OAUTH_REDIRECT}`,
+      },
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -30,7 +52,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+            emailRedirectTo: `${window.location.origin}${OAUTH_REDIRECT}`,
           },
         });
         if (error) throw error;
@@ -44,36 +66,6 @@ export function AuthForm({ mode }: AuthFormProps) {
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Ошибка авторизации");
     } finally {
-      setLoading(false);
-    }
-  }
-
-  async function signInWithGoogle() {
-    setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
-      },
-    });
-    if (error) {
-      setMessage(error.message);
-      setLoading(false);
-    }
-  }
-
-  async function signInWithGitHub() {
-    setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
-      },
-    });
-    if (error) {
-      setMessage(error.message);
       setLoading(false);
     }
   }
@@ -130,9 +122,20 @@ export function AuthForm({ mode }: AuthFormProps) {
       <Button
         type="button"
         variant="outline"
-        className="w-full"
+        className="w-full gap-2"
         disabled={loading}
-        onClick={() => void signInWithGoogle()}
+        onClick={() => void signInWithOAuthProvider(YANDEX_PROVIDER)}
+      >
+        <YandexIcon className="h-4 w-4 shrink-0" />
+        Войти через Яндекс
+      </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-3 w-full"
+        disabled={loading}
+        onClick={() => void signInWithOAuthProvider("google")}
       >
         Войти через Google
       </Button>
@@ -142,7 +145,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         variant="outline"
         className="mt-3 w-full"
         disabled={loading}
-        onClick={() => void signInWithGitHub()}
+        onClick={() => void signInWithOAuthProvider("github")}
       >
         Войти через GitHub
       </Button>
@@ -165,5 +168,17 @@ export function AuthForm({ mode }: AuthFormProps) {
         )}
       </p>
     </div>
+  );
+}
+
+function YandexIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <rect width="24" height="24" rx="6" fill="#FC3F1D" />
+      <path
+        fill="#fff"
+        d="M13.32 17h-2.05V7.27h-3.1V5.4h8.25V17h-2.05v-4.62h-1.05V17z"
+      />
+    </svg>
   );
 }
