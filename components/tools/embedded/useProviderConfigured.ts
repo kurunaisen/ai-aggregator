@@ -30,6 +30,7 @@ function isConfigured(config: EmbedConfig, status: ProviderStatus): boolean {
     if (config.provider === "runway") return status.runway;
     if (config.provider === "google-veo") return status.google;
     if (config.provider === "kling") return status.kling;
+    if (config.provider === "xai-video") return status.xai;
   }
 
   return false;
