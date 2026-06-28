@@ -14,14 +14,14 @@ insert into public.tools (
   is_published
 ) values
   (
-    'cursor',
-    'Cursor',
-    'AI-редактор кода на базе VS Code',
-    'Cursor — IDE с встроенным AI-агентом: автодополнение, рефакторинг, объяснение кода и правки по описанию на естественном языке. Подходит для веб-разработки, скриптов и быстрого прототипирования.',
+    'monaco',
+    'Monaco Editor',
+    'Редактор кода в браузере с AI-помощником',
+    'Monaco Editor на DeltaplanAI — движок VS Code в браузере. Пишите код, выбирайте язык и спрашивайте AI об объяснении, отладке и рефакторинге. Оплата токенами Deai.',
     'Код',
     'code',
     'freemium',
-    'https://cursor.com',
+    'https://microsoft.github.io/monaco-editor/',
     true,
     true
   ),

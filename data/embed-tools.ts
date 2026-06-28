@@ -7,6 +7,16 @@ export type ChatEmbedConfig = {
   placeholder?: string;
 };
 
+export type CodeEmbedConfig = {
+  type: "code";
+  provider: "openai";
+  model: string;
+  defaultLanguage: string;
+  systemPrompt: string;
+  welcomeMessage: string;
+  placeholder?: string;
+};
+
 export type VideoEmbedConfig = {
   type: "video";
   provider: "runway";
@@ -17,7 +27,7 @@ export type VideoEmbedConfig = {
   ratio?: string;
 };
 
-export type EmbedConfig = ChatEmbedConfig | VideoEmbedConfig;
+export type EmbedConfig = ChatEmbedConfig | CodeEmbedConfig | VideoEmbedConfig;
 
 /** Встроенные инструменты агрегатора DeltaplanAI */
 export const EMBED_TOOLS: Record<string, EmbedConfig> = {
@@ -40,6 +50,17 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
     welcomeMessage:
       "Claude на DeltaplanAI. Анализ, тексты, код и рассуждения — прямо здесь.",
     placeholder: "Сообщение для Claude...",
+  },
+  monaco: {
+    type: "code",
+    provider: "openai",
+    model: "gpt-4o-mini",
+    defaultLanguage: "typescript",
+    systemPrompt:
+      "Ты опытный инженер-программист на DeltaplanAI. Помогай писать, объяснять, отлаживать и рефакторить код. Отвечай на русском, если пользователь пишет по-русски. Когда даёшь код — используй markdown-блоки с языком. Учитывай текущий код редактора из контекста.",
+    welcomeMessage:
+      "Monaco Editor — пишите код и спрашивайте AI: объяснение, исправление, рефакторинг, тесты.",
+    placeholder: "Например: объясни этот код / найди ошибку / добавь типизацию...",
   },
   runway: {
     type: "video",

@@ -10,7 +10,7 @@ type ProviderStatus = {
 };
 
 function isConfigured(config: EmbedConfig, status: ProviderStatus): boolean {
-  if (config.type === "chat") return status[config.provider];
+  if (config.type === "chat" || config.type === "code") return status[config.provider];
   if (config.type === "video") return status.runway;
   return false;
 }

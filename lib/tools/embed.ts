@@ -1,15 +1,24 @@
 import { EMBED_TOOLS, type EmbedConfig } from "@/data/embed-tools";
 
 export function getEmbedConfig(slug: string): EmbedConfig | null {
-  return EMBED_TOOLS[slug] ?? null;
+  if (slug in EMBED_TOOLS) {
+    return EMBED_TOOLS[slug];
+  }
+
+  // Старые ссылки /tool/cursor → Monaco
+  if (slug === "cursor") {
+    return EMBED_TOOLS.monaco;
+  }
+
+  return null;
 }
 
 export function isEmbedEnabled(slug: string): boolean {
-  return slug in EMBED_TOOLS;
+  return slug in EMBED_TOOLS || slug === "cursor";
 }
 
 export function isProviderConfigured(config: EmbedConfig): boolean {
-  if (config.type === "chat") {
+  if (config.type === "chat" || config.type === "code") {
     if (config.provider === "openai") {
       return Boolean(process.env.OPENAI_API_KEY?.trim());
     }
@@ -26,7 +35,7 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
 }
 
 export function getProviderEnvVar(config: EmbedConfig): string | null {
-  if (config.type === "chat") {
+  if (config.type === "chat" || config.type === "code") {
     if (config.provider === "openai") return "OPENAI_API_KEY";
     if (config.provider === "anthropic") return "ANTHROPIC_API_KEY";
   }

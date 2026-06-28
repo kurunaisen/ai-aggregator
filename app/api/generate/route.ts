@@ -23,7 +23,7 @@ import {
 } from "@/lib/subscription/deai";
 import { getEmbedConfig } from "@/lib/tools/embed";
 import { getToolBySlug } from "@/lib/tools/queries";
-import type { ChatEmbedConfig, VideoEmbedConfig } from "@/data/embed-tools";
+import type { ChatEmbedConfig, CodeEmbedConfig, VideoEmbedConfig } from "@/data/embed-tools";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type ChatMessage = {
@@ -35,9 +35,13 @@ const MAX_MESSAGES = 20;
 const MAX_CONTENT_LENGTH = 4000;
 const MAX_PROMPT_LENGTH = 1000;
 
+const MAX_EDITOR_CODE = 30000;
+
 const EMBED_TOOL_TYPES: Record<string, string> = {
   chatgpt: "text",
   claude: "text",
+  monaco: "text",
+  cursor: "text",
   runway: "video",
 };
 
@@ -106,12 +110,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Некорректный запрос." }, { status: 400 });
   }
 
-  const { slug, messages, prompt, action, taskId, openai, video } = body as {
+  const { slug, messages, prompt, action, taskId, openai, video, editorCode, language } =
+    body as {
     slug?: string;
     messages?: ChatMessage[];
     prompt?: string;
     action?: string;
     taskId?: string;
+    editorCode?: string;
+    language?: string;
     openai?: {
       model?: string;
       responseFormat?: "text" | "json_object" | "json_schema";
@@ -123,6 +130,8 @@ export async function POST(request: Request) {
       quality?: "1k" | "2k" | "4k";
     };
   };
+
+  const usageSlug = slug === "cursor" ? "monaco" : slug!;
 
   if (!slug) {
     return NextResponse.json({ error: "Не указан инструмент." }, { status: 400 });
@@ -155,7 +164,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    if (embed.type === "chat") {
+    if (embed.type === "chat" || embed.type === "code") {
       if (!Array.isArray(messages) || messages.length === 0) {
         return NextResponse.json({ error: "Сообщения не переданы." }, { status: 400 });
       }
@@ -176,8 +185,37 @@ export async function POST(request: Request) {
         }
       }
 
-      const chatConfig = embed as ChatEmbedConfig;
-      const chars = totalMessageChars(messages);
+      const chatConfig = embed as ChatEmbedConfig | CodeEmbedConfig;
+      const codeSnapshot =
+        embed.type === "code" && typeof editorCode === "string" ? editorCode : "";
+      const codeLanguage =
+        embed.type === "code"
+          ? language ?? (embed as CodeEmbedConfig).defaultLanguage
+          : undefined;
+
+      if (codeSnapshot.length > MAX_EDITOR_CODE) {
+        return NextResponse.json(
+          { error: `Код в редакторе: макс. ${MAX_EDITOR_CODE} символов.` },
+          { status: 400 },
+        );
+      }
+
+      let apiMessages = messages;
+      if (embed.type === "code" && codeSnapshot.trim()) {
+        const lastIndex = messages.length - 1;
+        const last = messages[lastIndex];
+        if (last?.role === "user") {
+          apiMessages = [
+            ...messages.slice(0, lastIndex),
+            {
+              role: "user",
+              content: `${last.content}\n\nТекущий код редактора (${codeLanguage}):\n\`\`\`${codeLanguage}\n${codeSnapshot}\n\`\`\``,
+            },
+          ];
+        }
+      }
+
+      const chars = totalMessageChars(messages) + codeSnapshot.length;
 
       let model = chatConfig.model;
       let reasoningEffort: "low" | "medium" | "high" | undefined;
@@ -205,14 +243,19 @@ export async function POST(request: Request) {
       let reply: string;
 
       if (chatConfig.provider === "anthropic") {
-        reply = await callAnthropic(chatConfig, messages);
+        reply = await callAnthropic(chatConfig as ChatEmbedConfig, apiMessages);
       } else {
         const validated = validateOpenAIOptions(openai);
         if (typeof validated === "string") {
           return NextResponse.json({ error: validated }, { status: 400 });
         }
         const { parsedSchema, ...openaiOptions } = validated;
-        reply = await callOpenAI(chatConfig, messages, openaiOptions, parsedSchema);
+        reply = await callOpenAI(
+          chatConfig as ChatEmbedConfig,
+          apiMessages,
+          openaiOptions,
+          parsedSchema,
+        );
       }
 
       const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
@@ -223,7 +266,7 @@ export async function POST(request: Request) {
         );
       }
 
-      await recordDeaiUsage(supabase, user.id, slug, "chat", deaiCost, model);
+      await recordDeaiUsage(supabase, user.id, usageSlug, "chat", deaiCost, model);
       const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 
       return NextResponse.json({ reply, deai, deaiCost });

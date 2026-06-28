@@ -101,7 +101,7 @@ function videoModelMultiplier(model: string): number {
 
 /**
  * Текст и код — режим «токены».
- * Код на платформе тарифицируется как текст (Cursor — отдельный продукт по подписке).
+ * Код на платформе тарифицируется как текст (Monaco Editor + AI).
  * 0.5–2 Deai за запрос.
  */
 export function calculateTextDeaiCost(params: {
