@@ -379,7 +379,7 @@ export async function POST(request: Request) {
         );
       }
 
-      const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
+      const deducted = await deductDeai(supabase, user.id, deaiCost);
       if (!deducted.success) {
         return NextResponse.json(
           { error: getInsufficientDeaiMessage(deaiCost), code: "INSUFFICIENT_DEAI" },
@@ -446,7 +446,7 @@ export async function POST(request: Request) {
 
       const result = await startImageGeneration(imageConfig, prompt!, generationOptions);
 
-      const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
+      const deducted = await deductDeai(supabase, user.id, deaiCost);
       if (!deducted.success) {
         return NextResponse.json(
           { error: getInsufficientDeaiMessage(deaiCost), code: "INSUFFICIENT_DEAI" },
@@ -556,12 +556,19 @@ export async function POST(request: Request) {
 
       const { supabase, user, profile } = auth;
 
-      const toolAccess = await getToolAccessStatus(supabase, user.id, profile.plan, slug);
+      const toolAccess = await getToolAccessStatus(
+        supabase,
+        user.id,
+        profile.plan,
+        slug,
+        auth.deai.balance,
+        deaiCost,
+      );
       if (!toolAccess.allowed) {
         return NextResponse.json(
           {
             error: toolAccess.reason,
-            code: "PLAN_TOOL_BLOCKED",
+            code: toolAccess.code ?? "PLAN_TOOL_BLOCKED",
             deai: auth.deai,
           },
           { status: 403 },
@@ -578,7 +585,7 @@ export async function POST(request: Request) {
         runwayOptions,
       );
 
-      const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
+      const deducted = await deductDeai(supabase, user.id, deaiCost);
       if (!deducted.success) {
         return NextResponse.json(
           { error: getInsufficientDeaiMessage(deaiCost), code: "INSUFFICIENT_DEAI" },

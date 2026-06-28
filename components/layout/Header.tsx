@@ -53,7 +53,6 @@ export async function Header() {
               displayName={displayName}
               avatarId={profile?.avatarId}
               deaiBalance={profile?.deaiBalance ?? 0}
-              plan={profile?.plan ?? "free"}
             />
           </div>
         </div>

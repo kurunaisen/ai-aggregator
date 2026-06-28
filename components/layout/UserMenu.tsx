@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
-import type { Plan } from "@/lib/subscription/constants";
 import { DeaiBadge } from "@/components/layout/DeaiBadge";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 
@@ -11,7 +10,6 @@ type UserMenuProps = {
   displayName?: string;
   avatarId?: string | null;
   deaiBalance?: number;
-  plan?: Plan;
 };
 
 export function UserMenu({
@@ -19,7 +17,6 @@ export function UserMenu({
   displayName = "Профиль",
   avatarId,
   deaiBalance = 0,
-  plan = "free",
 }: UserMenuProps) {
   if (!user) {
     return (

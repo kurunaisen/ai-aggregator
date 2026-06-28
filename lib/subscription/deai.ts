@@ -56,7 +56,6 @@ export async function deductDeai(
   supabase: SupabaseClient<Database>,
   userId: string,
   cost: number,
-  _plan: Plan,
 ): Promise<{ success: boolean; balance: number }> {
   const { data, error } = await supabase.rpc("deduct_deai", { p_amount: cost });
 
