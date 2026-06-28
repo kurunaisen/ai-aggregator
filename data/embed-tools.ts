@@ -221,6 +221,7 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
       "Режимы Std и Pro; опциональный звук в Kling 2.6",
       "Списание Deai зависит от модели и длительности",
     ],
+    previewVideoUrl: "/videos/kling-preview.mp4",
     welcomeMessage:
       "Опишите сцену — Kling сгенерирует короткое видео.",
     placeholder: "Например: кинематографичный кадр: город в дождливую ночь, неоновые отражения...",
