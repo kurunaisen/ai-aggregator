@@ -5,9 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChatEmbedConfig } from "@/data/embed-tools";
 import { calculateTextDeaiCost } from "@/lib/subscription/deai-cost";
 import type { DeaiSummary } from "@/lib/subscription/deai";
-import { Button } from "@/components/ui/Button";
-import { DeaiCostHint } from "@/components/tools/embedded/DeaiCostHint";
-import { UsageBar } from "@/components/tools/embedded/UsageBar";
+import { EmbeddedSubmitBar } from "@/components/tools/embedded/EmbeddedSubmitBar";
+import { EmbeddedToolHeader } from "@/components/tools/embedded/EmbeddedToolHeader";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
 import { useProviderConfigured } from "@/components/tools/embedded/useProviderConfigured";
 
@@ -104,23 +103,11 @@ export function EmbeddedChat({
     }
   }
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      void sendMessage();
-    }
-  }
-
   const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
 
   return (
     <div className="carbon-panel flex min-h-[520px] flex-col overflow-hidden rounded-2xl">
-      <div className="border-b divider-metallic px-5 py-4 sm:px-6">
-        <h2 className="text-lg font-semibold text-silver">{toolName}</h2>
-        <div className="mt-1">
-          <UsageBar deai={deai} billingMode="token" />
-        </div>
-      </div>
+      <EmbeddedToolHeader toolName={toolName} deai={deai} />
 
       {!providerConfigured ? (
         providerConfigured === false ? (
@@ -176,33 +163,17 @@ export function EmbeddedChat({
           )}
 
           <form onSubmit={sendMessage} className="border-t divider-metallic p-4 sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={config.placeholder ?? "Напишите сообщение..."}
-                rows={2}
-                disabled={loading || insufficientDeai}
-                className="input-theme min-h-[52px] flex-1 resize-none rounded-xl px-4 py-3 text-sm"
-              />
-              <div className="flex shrink-0 flex-col items-stretch gap-2 sm:min-w-[140px] sm:items-end">
-                <DeaiCostHint
-                  cost={estimatedCost}
-                  balance={deai.balance}
-                  unlimited={deai.unlimited}
-                  mode="token"
-                />
-                <Button
-                  type="submit"
-                  disabled={loading || insufficientDeai || !input.trim()}
-                  className="w-full sm:min-w-[120px]"
-                >
-                  {loading ? "..." : "Отправить"}
-                </Button>
-              </div>
-            </div>
+            <EmbeddedSubmitBar
+              value={input}
+              onChange={setInput}
+              onSubmit={sendMessage}
+              placeholder={config.placeholder ?? "Напишите сообщение..."}
+              disabled={insufficientDeai}
+              loading={loading}
+              cost={estimatedCost}
+              deai={deai}
+              inputRef={inputRef}
+            />
           </form>
         </>
       )}

@@ -11,9 +11,8 @@ import {
   type VideoDuration,
 } from "@/lib/subscription/deai-cost";
 import type { DeaiSummary } from "@/lib/subscription/deai";
-import { Button } from "@/components/ui/Button";
-import { DeaiCostHint } from "@/components/tools/embedded/DeaiCostHint";
-import { UsageBar } from "@/components/tools/embedded/UsageBar";
+import { EmbeddedSubmitBar } from "@/components/tools/embedded/EmbeddedSubmitBar";
+import { EmbeddedToolHeader } from "@/components/tools/embedded/EmbeddedToolHeader";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
 import { useProviderConfigured } from "@/components/tools/embedded/useProviderConfigured";
 
@@ -146,15 +145,7 @@ export function EmbeddedVideo({
 
   return (
     <div className="carbon-panel flex min-h-[520px] flex-col overflow-hidden rounded-2xl">
-      <div className="border-b divider-metallic px-5 py-4 sm:px-6">
-        <h2 className="text-lg font-semibold text-silver">{toolName}</h2>
-        <div className="mt-1">
-          <UsageBar deai={deai} billingMode="credit" />
-        </div>
-        <p className="mt-2 text-xs text-silver-dim/80">
-          Единый баланс Deai · этот инструмент списывает кредиты
-        </p>
-      </div>
+      <EmbeddedToolHeader toolName={toolName} deai={deai} />
 
       {!providerConfigured ? (
         providerConfigured === false ? (
@@ -230,29 +221,19 @@ export function EmbeddedVideo({
               </label>
             </div>
 
-            <textarea
+            <EmbeddedSubmitBar
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={setPrompt}
+              onSubmit={handleSubmit}
               placeholder={config.placeholder}
               rows={3}
-              disabled={loading || polling || insufficientDeai}
-              className="input-theme mb-3 w-full resize-none rounded-xl px-4 py-3 text-sm"
+              disabled={insufficientDeai || polling}
+              loading={loading || polling}
+              submitLabel="Сгенерировать"
+              cost={estimatedCost}
+              deai={deai}
+              enterToSubmit={false}
             />
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <DeaiCostHint
-                cost={estimatedCost}
-                balance={deai.balance}
-                unlimited={deai.unlimited}
-                mode="credit"
-              />
-              <Button
-                type="submit"
-                disabled={loading || polling || insufficientDeai || !prompt.trim()}
-                className="w-full sm:w-auto"
-              >
-                {loading || polling ? "Генерация..." : "Сгенерировать видео"}
-              </Button>
-            </div>
             <p className="mt-2 text-xs text-silver-dim/70">
               Генерация может занять 1–2 минуты
             </p>

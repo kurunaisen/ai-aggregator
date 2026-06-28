@@ -12,6 +12,7 @@ import { buildToolApplicationSchema } from "@/lib/seo/schema";
 import { absoluteUrl } from "@/lib/seo/site";
 import { pricingLabels } from "@/types/tool";
 import { Container } from "@/components/layout/Container";
+import { DeaiModeTag } from "@/components/deai/DeaiModeTag";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -21,6 +22,7 @@ import { LoginPrompt } from "@/components/tools/embedded/LoginPrompt";
 import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import { getDeaiSummary } from "@/lib/subscription/deai";
+import { billingModeFromToolType } from "@/lib/subscription/deai-cost";
 import { getEmbedConfig } from "@/lib/tools/embed";
 
 type PageProps = {
@@ -109,6 +111,7 @@ export default async function ToolPage({ params }: PageProps) {
             <div className="mb-5 flex flex-wrap items-center gap-2">
               {category && <Badge variant="accent">{category.name}</Badge>}
               <Badge>{pricingLabels[tool.pricing]}</Badge>
+              <DeaiModeTag mode={billingModeFromToolType(tool.toolType)} />
             </div>
 
             <div className="flex items-start gap-4 sm:gap-5">
@@ -127,7 +130,7 @@ export default async function ToolPage({ params }: PageProps) {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              {embedConfig && (
+              {embedConfig && !user && (
                 <a
                   href="#use-tool"
                   className="inline-flex items-center justify-center rounded-xl border border-gold/30 bg-gradient-to-r from-gold to-gold-light px-5 py-2.5 text-sm font-medium text-black transition-all hover:from-gold-light hover:to-gold shadow-gold"
@@ -140,7 +143,7 @@ export default async function ToolPage({ params }: PageProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-medium transition-all ${
-                  embedConfig
+                  embedConfig && !user
                     ? "border divider-metallic text-silver hover:border-gold/40 hover:text-gold-light"
                     : "border border-gold/30 bg-gradient-to-r from-gold to-gold-light text-black hover:from-gold-light hover:to-gold shadow-gold"
                 }`}

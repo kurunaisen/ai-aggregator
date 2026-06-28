@@ -63,6 +63,21 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
+  async function signInWithGitHub() {
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+      },
+    });
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="carbon-panel rounded-2xl p-6 sm:p-8">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -120,6 +135,16 @@ export function AuthForm({ mode }: AuthFormProps) {
         onClick={() => void signInWithGoogle()}
       >
         Войти через Google
+      </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-3 w-full"
+        disabled={loading}
+        onClick={() => void signInWithGitHub()}
+      >
+        Войти через GitHub
       </Button>
 
       <p className="mt-6 text-center text-sm text-silver-dim">

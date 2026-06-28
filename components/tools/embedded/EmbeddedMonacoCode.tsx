@@ -12,9 +12,9 @@ import type { OpenAIChatRequestOptions } from "@/data/openai-models";
 import { calculateTextDeaiCost } from "@/lib/subscription/deai-cost";
 import type { DeaiSummary } from "@/lib/subscription/deai";
 import { Button } from "@/components/ui/Button";
-import { DeaiCostHint } from "@/components/tools/embedded/DeaiCostHint";
+import { EmbeddedSubmitBar } from "@/components/tools/embedded/EmbeddedSubmitBar";
+import { EmbeddedToolHeader } from "@/components/tools/embedded/EmbeddedToolHeader";
 import { MonacoEditorPanel } from "@/components/tools/embedded/MonacoEditorPanel";
-import { UsageBar } from "@/components/tools/embedded/UsageBar";
 import { ProviderSetupMessage } from "@/components/tools/embedded/ProviderSetupMessage";
 import {
   createInitialOpenAIOptions,
@@ -158,15 +158,7 @@ export function EmbeddedMonacoCode({
 
   return (
     <div className="carbon-panel flex min-h-[640px] flex-col overflow-hidden rounded-2xl">
-      <div className="border-b divider-metallic px-5 py-4 sm:px-6">
-        <h2 className="text-lg font-semibold text-silver">{toolName}</h2>
-        <div className="mt-1">
-          <UsageBar deai={deai} billingMode="token" />
-        </div>
-        <p className="mt-2 text-xs text-silver-dim/80">
-          Monaco Editor + AI · списание токенами Deai
-        </p>
-      </div>
+      <EmbeddedToolHeader toolName={toolName} deai={deai} />
 
       {!providerConfigured ? (
         providerConfigured === false ? (
@@ -268,29 +260,16 @@ export function EmbeddedMonacoCode({
                 onSubmit={sendMessage}
                 className="border-t divider-metallic p-4 sm:p-5"
               >
-                <textarea
+                <EmbeddedSubmitBar
                   value={input}
-                  onChange={(event) => setInput(event.target.value)}
+                  onChange={setInput}
+                  onSubmit={sendMessage}
                   placeholder={config.placeholder}
-                  rows={2}
-                  disabled={loading || insufficientDeai}
-                  className="input-theme mb-3 min-h-[52px] w-full resize-none rounded-xl px-4 py-3 text-sm"
+                  disabled={insufficientDeai}
+                  loading={loading}
+                  cost={estimatedCost}
+                  deai={deai}
                 />
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <DeaiCostHint
-                    cost={estimatedCost}
-                    balance={deai.balance}
-                    unlimited={deai.unlimited}
-                    mode="token"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={loading || insufficientDeai || !input.trim()}
-                    className="w-full sm:w-auto sm:min-w-[140px]"
-                  >
-                    {loading ? "..." : "Спросить AI"}
-                  </Button>
-                </div>
               </form>
             </div>
           </div>

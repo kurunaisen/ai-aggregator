@@ -176,6 +176,10 @@ export function billingModeFromRequestType(requestType: string): DeaiBillingMode
   return requestType === "chat" ? "token" : "credit";
 }
 
+export function billingModeFromToolType(toolType: string): DeaiBillingMode {
+  return resolveDeaiCategory(toolType) === "text" ? "token" : "credit";
+}
+
 /** Подпись для UI: что именно списывается */
 export function formatDeaiBillingHint(category: DeaiCategory): string {
   if (category === "text") {

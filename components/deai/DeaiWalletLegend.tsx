@@ -24,19 +24,19 @@ export function DeaiWalletLegend({ compact = false }: DeaiWalletLegendProps) {
       </p>
       <ul className="mt-3 space-y-2 text-xs text-silver-dim">
         <li className="flex flex-wrap items-center gap-2">
-          <DeaiModeTag mode="token" size="sm" />
+          <DeaiModeTag mode="token" />
           <span>
             текст и код — {DEAI_PRICING_HINT.text}
           </span>
         </li>
         <li className="flex flex-wrap items-center gap-2">
-          <DeaiModeTag mode="credit" size="sm" />
+          <DeaiModeTag mode="credit" />
           <span>
             изображения — {DEAI_PRICING_HINT.image}
           </span>
         </li>
         <li className="flex flex-wrap items-center gap-2">
-          <DeaiModeTag mode="credit" size="sm" />
+          <DeaiModeTag mode="credit" />
           <span>
             видео — {DEAI_PRICING_HINT.video}
           </span>
