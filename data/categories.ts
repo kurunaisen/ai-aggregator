@@ -57,14 +57,3 @@ export function getToolCountByCategory(
 ): number {
   return tools.filter((t) => toolMatchesCategory(t, category)).length;
 }
-
-export function getToolCountByToolType(
-  tools: { toolType: string }[],
-  toolType: string,
-): number {
-  return tools.filter((t) => t.toolType === toolType).length;
-}
-
-export function getUniqueToolTypes(tools: { toolType: string }[]): string[] {
-  return [...new Set(tools.map((t) => t.toolType))].sort();
-}

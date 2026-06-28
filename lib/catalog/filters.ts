@@ -4,7 +4,6 @@ import type { PricingModel, Tool } from "@/types/tool";
 export type CatalogFilters = {
   q: string;
   category: string | null;
-  toolType: string | null;
   pricing: PricingModel | null;
 };
 
@@ -23,16 +22,13 @@ export function parseCatalogFilters(
     ? (pricing as PricingModel)
     : null;
 
-  const category = get("category");
+  const categoryParam = get("category") ?? get("tool_type");
   const validCategory =
-    category && getCategoryBySlug(category) ? category : null;
-
-  const toolType = get("tool_type");
+    categoryParam && getCategoryBySlug(categoryParam) ? categoryParam : null;
 
   return {
     q: get("q") ?? "",
     category: validCategory,
-    toolType: toolType || null,
     pricing: validPricing,
   };
 }
@@ -42,7 +38,6 @@ export function buildCatalogUrl(filters: CatalogFilters): string {
 
   if (filters.q.trim()) params.set("q", filters.q.trim());
   if (filters.category) params.set("category", filters.category);
-  if (filters.toolType) params.set("tool_type", filters.toolType);
   if (filters.pricing) params.set("pricing", filters.pricing);
 
   const qs = params.toString();
@@ -61,7 +56,6 @@ export function filterAndSortTools(
       if (cat && !toolMatchesCategory(tool, cat)) return false;
     }
 
-    if (filters.toolType && tool.toolType !== filters.toolType) return false;
     if (filters.pricing && tool.pricing !== filters.pricing) return false;
 
     if (q) {
@@ -84,7 +78,6 @@ export function hasActiveFilters(filters: CatalogFilters): boolean {
   return (
     filters.q.trim() !== "" ||
     filters.category !== null ||
-    filters.toolType !== null ||
     filters.pricing !== null
   );
 }
@@ -93,11 +86,10 @@ export function countActiveFilters(filters: CatalogFilters): number {
   let count = 0;
   if (filters.q.trim()) count++;
   if (filters.category) count++;
-  if (filters.toolType) count++;
   if (filters.pricing) count++;
   return count;
 }
 
 export function emptyFilters(): CatalogFilters {
-  return { q: "", category: null, toolType: null, pricing: null };
+  return { q: "", category: null, pricing: null };
 }

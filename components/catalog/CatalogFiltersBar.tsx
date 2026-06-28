@@ -2,12 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import {
-  categories,
-  getToolCountByCategory,
-  getToolCountByToolType,
-  getUniqueToolTypes,
-} from "@/data/categories";
+import { categories, getToolCountByCategory } from "@/data/categories";
 import {
   buildCatalogUrl,
   countActiveFilters,
@@ -49,12 +44,8 @@ export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
     return () => clearTimeout(timer);
   }, [searchInput, filters, pushFilters]);
 
-  const toolTypes = getUniqueToolTypes(tools);
   const categoryCounts = Object.fromEntries(
     categories.map((c) => [c.slug, getToolCountByCategory(tools, c)]),
-  );
-  const toolTypeCounts = Object.fromEntries(
-    toolTypes.map((type) => [type, getToolCountByToolType(tools, type)]),
   );
 
   const activeFilterCount = countActiveFilters(filters);
@@ -87,15 +78,11 @@ export function CatalogFiltersBar({ tools, filters }: CatalogFiltersBarProps) {
 
       <FilterPanel
         categories={categories}
-        toolTypes={toolTypes}
         selectedCategory={filters.category}
         onCategoryChange={(category) => updateFilter({ category })}
-        selectedToolType={filters.toolType}
-        onToolTypeChange={(toolType) => updateFilter({ toolType })}
         selectedPricing={filters.pricing}
         onPricingChange={(pricing) => updateFilter({ pricing })}
         categoryCounts={categoryCounts}
-        toolTypeCounts={toolTypeCounts}
         mobileOpen={mobileFiltersOpen}
         onMobileToggle={() => setMobileFiltersOpen((v) => !v)}
         activeFilterCount={activeFilterCount}

@@ -1,19 +1,15 @@
 "use client";
 
 import type { Category, PricingModel } from "@/types/tool";
-import { pricingLabels, toolTypeLabels } from "@/types/tool";
+import { pricingLabels } from "@/types/tool";
 
 type FilterPanelProps = {
   categories: Category[];
-  toolTypes: string[];
   selectedCategory: string | null;
   onCategoryChange: (slug: string | null) => void;
-  selectedToolType: string | null;
-  onToolTypeChange: (toolType: string | null) => void;
   selectedPricing: PricingModel | null;
   onPricingChange: (pricing: PricingModel | null) => void;
   categoryCounts: Record<string, number>;
-  toolTypeCounts: Record<string, number>;
   mobileOpen?: boolean;
   onMobileToggle?: () => void;
   activeFilterCount?: number;
@@ -23,21 +19,17 @@ const pricingOptions: PricingModel[] = ["free", "freemium", "paid"];
 
 export function FilterPanel({
   categories,
-  toolTypes,
   selectedCategory,
   onCategoryChange,
-  selectedToolType,
-  onToolTypeChange,
   selectedPricing,
   onPricingChange,
   categoryCounts,
-  toolTypeCounts,
   mobileOpen = true,
   onMobileToggle,
   activeFilterCount = 0,
 }: FilterPanelProps) {
   const filterBody = (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2">
       <FilterGroup label="Категория">
         <FilterChip active={selectedCategory === null} onClick={() => onCategoryChange(null)}>
           Все
@@ -52,22 +44,6 @@ export function FilterPanel({
           >
             {category.name}
             <span className="ml-1 opacity-60">{categoryCounts[category.slug] ?? 0}</span>
-          </FilterChip>
-        ))}
-      </FilterGroup>
-
-      <FilterGroup label="Тип инструмента">
-        <FilterChip active={selectedToolType === null} onClick={() => onToolTypeChange(null)}>
-          Все
-        </FilterChip>
-        {toolTypes.map((type) => (
-          <FilterChip
-            key={type}
-            active={selectedToolType === type}
-            onClick={() => onToolTypeChange(selectedToolType === type ? null : type)}
-          >
-            {toolTypeLabels[type] ?? type}
-            <span className="ml-1 opacity-60">{toolTypeCounts[type] ?? 0}</span>
           </FilterChip>
         ))}
       </FilterGroup>
