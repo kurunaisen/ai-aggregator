@@ -13,7 +13,7 @@ export const embeddedSubmitButtonClassName = "shrink-0 gap-1.5 px-3 py-2 text-xs
 type EmbeddedSubmitBarProps = {
   value: string;
   onChange: (value: string) => void;
-  onSubmit: (event?: React.FormEvent) => void;
+  onSubmit: (event?: React.FormEvent) => void | Promise<void>;
   placeholder?: string;
   rows?: number;
   disabled?: boolean;

@@ -97,8 +97,8 @@ export function EmbeddedVideo({
     throw new Error("Превышено время ожидания. Попробуйте короче промпт.");
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleSubmit(event?: React.FormEvent) {
+    event?.preventDefault();
     const text = prompt.trim();
     if (!text || loading || polling || insufficientDeai || providerConfigured !== true) return;
 
