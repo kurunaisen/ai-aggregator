@@ -46,6 +46,9 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
     if (config.provider === "bfl-flux") {
       return isFluxConfigured();
     }
+    if (config.provider === "xai-imagine") {
+      return isXaiConfigured();
+    }
   }
 
   if (config.type === "video") {
@@ -73,6 +76,7 @@ export function getProviderEnvVar(config: EmbedConfig): string | null {
   if (config.type === "image") {
     if (config.provider === "google-imagen") return "GOOGLE_API_KEY";
     if (config.provider === "bfl-flux") return "BFL_API_KEY";
+    if (config.provider === "xai-imagine") return "XAI_API_KEY";
   }
 
   if (config.type === "video") {

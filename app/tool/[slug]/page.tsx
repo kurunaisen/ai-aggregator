@@ -23,7 +23,9 @@ import { ensureProfile, getSessionUser } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import { getDeaiSummary } from "@/lib/subscription/deai";
 import { billingModeFromToolType } from "@/lib/subscription/deai-cost";
+import { ToolPageEmbedHero } from "@/components/tools/ToolPageEmbedHero";
 import { getEmbedConfig } from "@/lib/tools/embed";
+import { getEmbedHeaderContent } from "@/data/embed-tools";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -74,6 +76,7 @@ export default async function ToolPage({ params }: PageProps) {
   const category = getCategoryBySlug(tool.toolType);
   const related = await getRelatedTools(tool.toolType, tool.slug);
   const embedConfig = getEmbedConfig(tool.slug);
+  const embedHeader = embedConfig ? getEmbedHeaderContent(embedConfig) : undefined;
 
   const supabase = await createClient();
   const user = supabase ? await getSessionUser(supabase) : null;
@@ -114,21 +117,31 @@ export default async function ToolPage({ params }: PageProps) {
               <DeaiModeTag mode={billingModeFromToolType(tool.toolType)} />
             </div>
 
-            <div className="flex items-start gap-4 sm:gap-5">
-              <ToolLogo
+            {embedHeader ? (
+              <ToolPageEmbedHero
                 slug={tool.slug}
                 name={tool.name}
                 website={tool.website}
                 logoUrl={tool.logoUrl}
-                size="lg"
+                header={embedHeader}
               />
-              <div className="min-w-0">
-                <h1 className="text-3xl font-bold tracking-tight text-silver sm:text-5xl">
-                  {tool.name}
-                </h1>
-                <p className="mt-4 text-lg text-silver-dim sm:text-xl">{tool.tagline}</p>
+            ) : (
+              <div className="flex items-start gap-4 sm:gap-5">
+                <ToolLogo
+                  slug={tool.slug}
+                  name={tool.name}
+                  website={tool.website}
+                  logoUrl={tool.logoUrl}
+                  size="lg"
+                />
+                <div className="min-w-0">
+                  <h1 className="text-3xl font-bold tracking-tight text-silver sm:text-5xl">
+                    {tool.name}
+                  </h1>
+                  <p className="mt-4 text-lg text-silver-dim sm:text-xl">{tool.tagline}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-8 flex flex-wrap gap-3">
               {embedConfig && !user && (
@@ -172,72 +185,94 @@ export default async function ToolPage({ params }: PageProps) {
             </section>
           )}
 
-          <div className="grid gap-12 lg:grid-cols-3">
-            <div className="space-y-10 lg:col-span-2">
-              <section>
-                <h2 className="mb-4 text-xl font-semibold text-silver">
-                  Описание
-                </h2>
-                <p className="leading-relaxed text-silver-dim" itemProp="description">
-                  {tool.longDescription}
-                </p>
-              </section>
+          {(embedHeader || tool.features.length > 0 || tool.tags.length > 0 || related.length > 0) && (
+            <div
+              className={
+                embedHeader
+                  ? "flex flex-col gap-8 sm:flex-row sm:flex-wrap"
+                  : "grid gap-12 lg:grid-cols-3"
+              }
+            >
+              {!embedHeader && (
+                <div className="space-y-10 lg:col-span-2">
+                  <section>
+                    <h2 className="mb-4 text-xl font-semibold text-silver">
+                      Описание
+                    </h2>
+                    <p className="leading-relaxed text-silver-dim" itemProp="description">
+                      {tool.longDescription}
+                    </p>
+                  </section>
 
-              {tool.features.length > 0 && (
-                <section>
-                  <h2 className="mb-4 text-xl font-semibold text-silver">
-                    Возможности
-                  </h2>
-                  <ul className="space-y-3">
-                    {tool.features.map((feature) => (
-                      <li
-                        key={feature}
-                        className="flex items-start gap-3 text-silver-dim"
-                      >
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+                  {tool.features.length > 0 && (
+                    <section>
+                      <h2 className="mb-4 text-xl font-semibold text-silver">
+                        Возможности
+                      </h2>
+                      <ul className="space-y-3">
+                        {tool.features.map((feature) => (
+                          <li
+                            key={feature}
+                            className="flex items-start gap-3 text-silver-dim"
+                          >
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+                </div>
+              )}
+
+              {embedHeader && (
+                <meta itemProp="description" content={tool.longDescription} />
+              )}
+
+              {(tool.tags.length > 0 || related.length > 0) && (
+                <aside
+                  className={
+                    embedHeader
+                      ? "flex flex-1 flex-wrap gap-8"
+                      : "space-y-8"
+                  }
+                >
+                  {tool.tags.length > 0 && (
+                    <section className="carbon-panel min-w-[min(100%,18rem)] flex-1 rounded-2xl p-6">
+                      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold/70">
+                        Теги
+                      </h2>
+                      <div className="flex flex-wrap gap-2">
+                        {tool.tags.map((tag) => (
+                          <Badge key={tag}>{tag}</Badge>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {related.length > 0 && (
+                    <section className="carbon-panel min-w-[min(100%,18rem)] flex-1 rounded-2xl p-6">
+                      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold/70">
+                        Похожие
+                      </h2>
+                      <ul className="space-y-3">
+                        {related.map((item) => (
+                          <li key={item.slug}>
+                            <Link
+                              href={`/tool/${item.slug}`}
+                              className="text-sm text-silver transition-colors hover:text-gold-light"
+                            >
+                              {item.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+                </aside>
               )}
             </div>
-
-            <aside className="space-y-8">
-              {tool.tags.length > 0 && (
-                <section className="carbon-panel rounded-2xl p-6">
-                  <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold/70">
-                    Теги
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {tool.tags.map((tag) => (
-                      <Badge key={tag}>{tag}</Badge>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {related.length > 0 && (
-                <section className="carbon-panel rounded-2xl p-6">
-                  <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gold/70">
-                    Похожие
-                  </h2>
-                  <ul className="space-y-3">
-                    {related.map((item) => (
-                      <li key={item.slug}>
-                        <Link
-                          href={`/tool/${item.slug}`}
-                          className="text-sm text-silver transition-colors hover:text-gold-light"
-                        >
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-            </aside>
-          </div>
+          )}
         </article>
       </Container>
     </>

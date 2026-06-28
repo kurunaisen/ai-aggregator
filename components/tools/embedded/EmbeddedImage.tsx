@@ -5,9 +5,13 @@ import { useMemo, useState } from "react";
 import type { ImageEmbedConfig } from "@/data/embed-tools";
 import {
   FLUX_MODEL_OPTIONS,
+  GROK_IMAGINE_ASPECT_RATIO_OPTIONS,
+  GROK_IMAGINE_MODEL_OPTIONS,
+  GROK_IMAGINE_RESOLUTION_OPTIONS,
   IMAGE_ASPECT_RATIO_OPTIONS,
   NANOBANANA_MODEL_OPTIONS,
   type FluxGenerationRequest,
+  type GrokImagineGenerationRequest,
   type NanobananaGenerationRequest,
 } from "@/data/image-options";
 import {
@@ -48,6 +52,11 @@ export function EmbeddedImage({
     quality: "1k",
     aspectRatio: "1:1",
   });
+  const [grokImagine, setGrokImagine] = useState<GrokImagineGenerationRequest>({
+    model: config.model as GrokImagineGenerationRequest["model"],
+    resolution: "1k",
+    aspectRatio: "auto",
+  });
   const [loading, setLoading] = useState(false);
   const [polling, setPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,11 +66,18 @@ export function EmbeddedImage({
   const providerConfigured = useProviderConfigured(config);
 
   const activeModel =
-    config.provider === "google-imagen" ? nanobanana.model : flux.model;
+    config.provider === "google-imagen"
+      ? nanobanana.model
+      : config.provider === "xai-imagine"
+        ? grokImagine.model
+        : flux.model;
+
+  const billingQuality =
+    config.provider === "xai-imagine" ? grokImagine.resolution : quality;
 
   const estimatedCost = useMemo(
-    () => calculateImageDeaiCost({ model: activeModel, quality, outputCount: 1 }),
-    [activeModel, quality],
+    () => calculateImageDeaiCost({ model: activeModel, quality: billingQuality, outputCount: 1 }),
+    [activeModel, billingQuality],
   );
 
   const insufficientDeai = !deai.unlimited && deai.balance < estimatedCost;
@@ -124,9 +140,10 @@ export function EmbeddedImage({
           slug,
           prompt: text,
           image: {
-            quality,
+            quality: billingQuality,
             nanobanana: config.provider === "google-imagen" ? { ...nanobanana, quality } : undefined,
             flux: config.provider === "bfl-flux" ? { ...flux, quality } : undefined,
+            grokImagine: config.provider === "xai-imagine" ? grokImagine : undefined,
           },
         }),
       });
@@ -221,6 +238,11 @@ export function EmbeddedImage({
                         ...prev,
                         model: model as NanobananaGenerationRequest["model"],
                       }));
+                    } else if (config.provider === "xai-imagine") {
+                      setGrokImagine((prev) => ({
+                        ...prev,
+                        model: model as GrokImagineGenerationRequest["model"],
+                      }));
                     } else {
                       setFlux((prev) => ({
                         ...prev,
@@ -233,7 +255,9 @@ export function EmbeddedImage({
                 >
                   {(config.provider === "google-imagen"
                     ? NANOBANANA_MODEL_OPTIONS
-                    : FLUX_MODEL_OPTIONS
+                    : config.provider === "xai-imagine"
+                      ? GROK_IMAGINE_MODEL_OPTIONS
+                      : FLUX_MODEL_OPTIONS
                   ).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -243,14 +267,28 @@ export function EmbeddedImage({
               </label>
 
               <label className="block space-y-1.5">
-                <span className="text-xs text-silver-dim">Качество</span>
+                <span className="text-xs text-silver-dim">
+                  {config.provider === "xai-imagine" ? "Разрешение" : "Качество"}
+                </span>
                 <select
-                  value={quality}
-                  onChange={(event) => setQuality(event.target.value as MediaQuality)}
+                  value={config.provider === "xai-imagine" ? grokImagine.resolution : quality}
+                  onChange={(event) => {
+                    if (config.provider === "xai-imagine") {
+                      setGrokImagine((prev) => ({
+                        ...prev,
+                        resolution: event.target.value as GrokImagineGenerationRequest["resolution"],
+                      }));
+                    } else {
+                      setQuality(event.target.value as MediaQuality);
+                    }
+                  }}
                   disabled={loading || polling}
                   className={selectClassName}
                 >
-                  {MEDIA_QUALITY_OPTIONS.map((option) => (
+                  {(config.provider === "xai-imagine"
+                    ? GROK_IMAGINE_RESOLUTION_OPTIONS
+                    : MEDIA_QUALITY_OPTIONS
+                  ).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -264,20 +302,35 @@ export function EmbeddedImage({
                   value={
                     config.provider === "google-imagen"
                       ? nanobanana.aspectRatio
-                      : flux.aspectRatio
+                      : config.provider === "xai-imagine"
+                        ? grokImagine.aspectRatio
+                        : flux.aspectRatio
                   }
                   onChange={(event) => {
-                    const aspectRatio = event.target.value as NanobananaGenerationRequest["aspectRatio"];
                     if (config.provider === "google-imagen") {
-                      setNanobanana((prev) => ({ ...prev, aspectRatio }));
+                      setNanobanana((prev) => ({
+                        ...prev,
+                        aspectRatio: event.target.value as NanobananaGenerationRequest["aspectRatio"],
+                      }));
+                    } else if (config.provider === "xai-imagine") {
+                      setGrokImagine((prev) => ({
+                        ...prev,
+                        aspectRatio: event.target.value as GrokImagineGenerationRequest["aspectRatio"],
+                      }));
                     } else {
-                      setFlux((prev) => ({ ...prev, aspectRatio }));
+                      setFlux((prev) => ({
+                        ...prev,
+                        aspectRatio: event.target.value as FluxGenerationRequest["aspectRatio"],
+                      }));
                     }
                   }}
                   disabled={loading || polling}
                   className={selectClassName}
                 >
-                  {IMAGE_ASPECT_RATIO_OPTIONS.map((option) => (
+                  {(config.provider === "xai-imagine"
+                    ? GROK_IMAGINE_ASPECT_RATIO_OPTIONS
+                    : IMAGE_ASPECT_RATIO_OPTIONS
+                  ).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>

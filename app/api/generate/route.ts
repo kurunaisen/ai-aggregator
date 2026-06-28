@@ -10,8 +10,10 @@ import {
 import type { VeoGenerationRequest } from "@/data/veo-options";
 import type {
   FluxGenerationRequest,
+  GrokImagineGenerationRequest,
   NanobananaGenerationRequest,
 } from "@/data/image-options";
+import { validateGrokImagineOptions } from "@/lib/providers/validate-grok-imagine-options";
 import { validateImagePrompt } from "@/data/image-options";
 import {
   validateKlingGenerationRequest,
@@ -68,6 +70,7 @@ const EMBED_TOOL_TYPES: Record<string, string> = {
   chatgpt: "text",
   claude: "text",
   grok: "text",
+  "grok-imagine": "image",
   monaco: "text",
   cursor: "text",
   nanobanana: "image",
@@ -218,6 +221,7 @@ export async function POST(request: Request) {
       quality?: "1k" | "2k" | "4k";
       nanobanana?: NanobananaGenerationRequest;
       flux?: FluxGenerationRequest;
+      grokImagine?: GrokImagineGenerationRequest;
     };
   };
 
@@ -395,7 +399,11 @@ export async function POST(request: Request) {
       const quality = image?.quality ?? "1k";
 
       let imageModel = imageConfig.model;
-      let generationOptions: NanobananaGenerationRequest | FluxGenerationRequest;
+      let generationOptions:
+        | NanobananaGenerationRequest
+        | FluxGenerationRequest
+        | GrokImagineGenerationRequest;
+      let billingQuality: "1k" | "2k" | "4k" = quality;
 
       if (imageConfig.provider === "google-imagen") {
         generationOptions = {
@@ -404,6 +412,14 @@ export async function POST(request: Request) {
           aspectRatio: image?.nanobanana?.aspectRatio ?? "1:1",
         };
         imageModel = generationOptions.model;
+      } else if (imageConfig.provider === "xai-imagine") {
+        const validatedGrokImagine = validateGrokImagineOptions(image?.grokImagine);
+        if (typeof validatedGrokImagine === "string") {
+          return NextResponse.json({ error: validatedGrokImagine }, { status: 400 });
+        }
+        generationOptions = validatedGrokImagine;
+        imageModel = generationOptions.model;
+        billingQuality = generationOptions.resolution;
       } else {
         generationOptions = {
           model: image?.flux?.model ?? (imageConfig.model as FluxGenerationRequest["model"]),
@@ -415,7 +431,7 @@ export async function POST(request: Request) {
 
       const deaiCost = calculateImageDeaiCost({
         model: imageModel,
-        quality,
+        quality: billingQuality,
         outputCount: 1,
       });
 

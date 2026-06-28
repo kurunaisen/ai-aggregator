@@ -114,6 +114,9 @@ export function getVideoUsdPerSecond(model: string, quality: "1k" | "2k" | "4k")
 export function getImageBaseUsd(model: string, quality: "1k" | "2k" | "4k"): number {
   const id = model.toLowerCase();
 
+  if (id.includes("grok-imagine-image-quality")) return 0.05;
+  if (id.includes("grok-imagine-image")) return 0.02;
+
   if (id.includes("gemini-3-pro-image")) return 0.134;
   if (id.includes("gemini-3.1-flash-image")) return 0.045;
   if (id.includes("gemini-2.5-flash-image") || id.includes("nanobanana")) return 0.039;

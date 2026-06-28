@@ -1,15 +1,25 @@
 import type { ImageEmbedConfig } from "@/data/embed-tools";
-import type { FluxGenerationRequest, NanobananaGenerationRequest } from "@/data/image-options";
+import type {
+  FluxGenerationRequest,
+  GrokImagineGenerationRequest,
+  NanobananaGenerationRequest,
+} from "@/data/image-options";
 import { generateNanobananaImage } from "@/lib/providers/google-imagen";
 import { pollFluxTask, startFluxImage } from "@/lib/providers/flux";
+import { generateGrokImagineImage } from "@/lib/providers/xai-imagine";
 
 export async function generateImage(
   config: ImageEmbedConfig,
   prompt: string,
-  options: NanobananaGenerationRequest | FluxGenerationRequest,
+  options: NanobananaGenerationRequest | FluxGenerationRequest | GrokImagineGenerationRequest,
 ): Promise<{ imageUrl: string; taskId?: string }> {
   if (config.provider === "google-imagen") {
     const result = await generateNanobananaImage(prompt, options as NanobananaGenerationRequest);
+    return { imageUrl: result.dataUrl };
+  }
+
+  if (config.provider === "xai-imagine") {
+    const result = await generateGrokImagineImage(prompt, options as GrokImagineGenerationRequest);
     return { imageUrl: result.dataUrl };
   }
 
@@ -35,7 +45,7 @@ export async function pollImageGeneration(
 export async function startImageGeneration(
   config: ImageEmbedConfig,
   prompt: string,
-  options: NanobananaGenerationRequest | FluxGenerationRequest,
+  options: NanobananaGenerationRequest | FluxGenerationRequest | GrokImagineGenerationRequest,
 ): Promise<{ imageUrl?: string; taskId?: string }> {
   const result = await generateImage(config, prompt, options);
   return result;

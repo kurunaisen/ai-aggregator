@@ -49,6 +49,18 @@ insert into public.tools (
     true
   ),
   (
+    'grok-imagine',
+    'Grok Imagine',
+    'Генерация изображений xAI',
+    'Grok Imagine на DeltaplanAI — text-to-image через официальный API xAI. Модели Imagine и Imagine Quality, разрешение 1K/2K.',
+    'Изображения',
+    'image',
+    'freemium',
+    'https://x.ai/api/imagine',
+    true,
+    true
+  ),
+  (
     'monaco',
     'Monaco Editor',
     'Редактор кода в браузере с AI-помощником',
@@ -135,5 +147,5 @@ on conflict (slug) do update set
 update public.tools
 set is_published = false
 where slug not in (
-  'chatgpt', 'claude', 'grok', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling'
+  'chatgpt', 'claude', 'grok', 'grok-imagine', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling'
 );

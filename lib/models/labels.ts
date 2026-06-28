@@ -19,6 +19,8 @@ export function formatModelLabel(model: string | null, toolSlug: string): string
       .trim();
   }
 
+  if (model.includes("grok-imagine-image-quality")) return "Grok Imagine Quality";
+  if (model.includes("grok-imagine-image")) return "Grok Imagine";
   if (model.includes("grok")) return model.replace(/^grok-/i, "Grok ").replace(/-/g, " ");
   if (model.includes("kling")) return model.replace(/^kling-/i, "Kling ").replace(/-/g, " ");
   if (model.includes("flux")) {
@@ -50,6 +52,7 @@ export function toolSlugLabel(slug: string): string {
     chatgpt: "ChatGPT",
     claude: "Claude",
     grok: "Grok",
+    "grok-imagine": "Grok Imagine",
     nanobanana: "Nano Banana",
     flux: "FLUX",
     runway: "Runway",

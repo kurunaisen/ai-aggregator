@@ -12,6 +12,20 @@ export type FluxModelId =
   | "flux-pro-1.1"
   | "flux-2-pro-preview";
 
+export type GrokImagineModelId = "grok-imagine-image" | "grok-imagine-image-quality";
+
+export type GrokImagineAspectRatio =
+  | "auto"
+  | "1:1"
+  | "16:9"
+  | "9:16"
+  | "4:3"
+  | "3:4"
+  | "3:2"
+  | "2:3";
+
+export type GrokImagineResolution = "1k" | "2k";
+
 export type ImageAspectRatio = "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
 
 export type NanobananaGenerationRequest = {
@@ -25,6 +39,42 @@ export type FluxGenerationRequest = {
   quality: MediaQuality;
   aspectRatio: ImageAspectRatio;
 };
+
+export type GrokImagineGenerationRequest = {
+  model: GrokImagineModelId;
+  resolution: GrokImagineResolution;
+  aspectRatio: GrokImagineAspectRatio;
+};
+
+export const GROK_IMAGINE_MODEL_OPTIONS: {
+  value: GrokImagineModelId;
+  label: string;
+}[] = [
+  { value: "grok-imagine-image", label: "Grok Imagine · быстрая ($0.02)" },
+  { value: "grok-imagine-image-quality", label: "Grok Imagine Quality · макс. ($0.05)" },
+];
+
+export const GROK_IMAGINE_RESOLUTION_OPTIONS: {
+  value: GrokImagineResolution;
+  label: string;
+}[] = [
+  { value: "1k", label: "1K" },
+  { value: "2k", label: "2K" },
+];
+
+export const GROK_IMAGINE_ASPECT_RATIO_OPTIONS: {
+  value: GrokImagineAspectRatio;
+  label: string;
+}[] = [
+  { value: "auto", label: "Auto" },
+  { value: "1:1", label: "1:1" },
+  { value: "16:9", label: "16:9" },
+  { value: "9:16", label: "9:16" },
+  { value: "4:3", label: "4:3" },
+  { value: "3:4", label: "3:4" },
+  { value: "3:2", label: "3:2" },
+  { value: "2:3", label: "2:3" },
+];
 
 export const NANOBANANA_MODEL_OPTIONS: {
   value: NanobananaModelId;
@@ -65,6 +115,30 @@ export function createDefaultFluxRequest(): FluxGenerationRequest {
     quality: "1k",
     aspectRatio: "1:1",
   };
+}
+
+export function createDefaultGrokImagineRequest(): GrokImagineGenerationRequest {
+  return {
+    model: "grok-imagine-image",
+    resolution: "1k",
+    aspectRatio: "auto",
+  };
+}
+
+export function isAllowedGrokImagineModel(modelId: string): modelId is GrokImagineModelId {
+  return GROK_IMAGINE_MODEL_OPTIONS.some((option) => option.value === modelId);
+}
+
+export function isAllowedGrokImagineAspectRatio(
+  value: string,
+): value is GrokImagineAspectRatio {
+  return GROK_IMAGINE_ASPECT_RATIO_OPTIONS.some((option) => option.value === value);
+}
+
+export function isAllowedGrokImagineResolution(
+  value: string,
+): value is GrokImagineResolution {
+  return value === "1k" || value === "2k";
 }
 
 export function validateImagePrompt(prompt: string): string | null {
