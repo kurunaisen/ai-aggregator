@@ -16,6 +16,7 @@ import {
 } from "@/data/image-options";
 import {
   calculateImageDeaiCost,
+  formatDeai,
   MEDIA_QUALITY_OPTIONS,
   type MediaQuality,
 } from "@/lib/subscription/deai-cost";
@@ -33,6 +34,11 @@ type EmbeddedImageProps = {
 };
 
 const selectClassName = "input-theme w-full rounded-xl px-3 py-2.5 text-sm";
+
+function imageModelOptionLabel(modelId: string, label: string, quality: MediaQuality): string {
+  const cost = formatDeai(calculateImageDeaiCost({ model: modelId, quality, outputCount: 1 }));
+  return `${label} · ${cost} Deai`;
+}
 
 export function EmbeddedImage({
   slug,
@@ -260,7 +266,13 @@ export function EmbeddedImage({
                       : FLUX_MODEL_OPTIONS
                   ).map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {imageModelOptionLabel(
+                        option.value,
+                        option.label,
+                        config.provider === "xai-imagine"
+                          ? grokImagine.resolution
+                          : quality,
+                      )}
                     </option>
                   ))}
                 </select>

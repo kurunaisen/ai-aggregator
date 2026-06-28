@@ -50,8 +50,8 @@ export const GROK_IMAGINE_MODEL_OPTIONS: {
   value: GrokImagineModelId;
   label: string;
 }[] = [
-  { value: "grok-imagine-image", label: "Grok Imagine · быстрая ($0.02)" },
-  { value: "grok-imagine-image-quality", label: "Grok Imagine Quality · макс. ($0.05)" },
+  { value: "grok-imagine-image", label: "Grok Imagine · быстрая" },
+  { value: "grok-imagine-image-quality", label: "Grok Imagine Quality · макс. качество" },
 ];
 
 export const GROK_IMAGINE_RESOLUTION_OPTIONS: {

@@ -112,7 +112,7 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
     headerDescription:
       "Grok Imagine на DeltaplanAI — генерация изображений через официальный API xAI: иллюстрации, постеры, продуктовые кадры и концепт-арт по текстовому описанию, с выбором модели и формата кадра.",
     headerHighlights: [
-      "Две модели: Grok Imagine ($0.02) и Imagine Quality ($0.05) за картинку",
+      "Две модели: Grok Imagine (2 Deai) и Imagine Quality (4.5 Deai) за картинку",
       "Разрешение 1K или 2K; соотношение сторон auto, 1:1, 16:9, 9:16 и другие",
       "Тот же XAI_API_KEY, что и для чата Grok",
       "FLAT-цена за изображение; списание Deai с наценкой платформы",
