@@ -94,9 +94,9 @@ export function getVideoUsdPerSecond(model: string, quality: "1k" | "2k" | "4k")
     return 0.4;
   }
 
-  if (id.includes("gen4") || id.includes("gen-4")) {
-    return 0.08;
-  }
+  if (id.includes("gen4.5")) return 0.12;
+  if (id.includes("gen4_turbo") || id.includes("gen4-turbo")) return 0.05;
+  if (id.includes("gen4") || id.includes("gen-4")) return 0.08;
 
   if (id.includes("gen3") || id.includes("turbo")) {
     return 0.05;

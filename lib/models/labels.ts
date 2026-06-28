@@ -37,6 +37,8 @@ export function formatModelLabel(model: string | null, toolSlug: string): string
     return "Nano Banana";
   }
 
+  if (model.includes("gen4.5")) return "Runway Gen-4.5";
+  if (model.includes("gen4_turbo")) return "Runway Gen-4 Turbo";
   if (model.includes("gen3")) return "Runway Gen-3 Turbo";
   if (model.includes("gen4")) return "Runway Gen-4";
   if (model.includes("veo-3.1-fast")) return "Veo 3.1 Fast";

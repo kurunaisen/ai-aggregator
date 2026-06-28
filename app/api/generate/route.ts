@@ -20,6 +20,8 @@ import {
   validateKlingPrompt,
 } from "@/data/kling-options";
 import type { KlingGenerationRequest } from "@/data/kling-options";
+import type { RunwayGenerationRequest } from "@/data/runway-options";
+import { validateRunwayGenerationRequest } from "@/lib/providers/validate-runway-options";
 import { callOpenAI } from "@/lib/providers/openai-chat";
 import { callXai } from "@/lib/providers/xai-chat";
 import { validateClaudeOptions } from "@/lib/providers/validate-claude-options";
@@ -216,6 +218,7 @@ export async function POST(request: Request) {
       quality?: "1k" | "2k" | "4k";
       veo?: VeoGenerationRequest;
       kling?: KlingGenerationRequest;
+      runway?: RunwayGenerationRequest;
     };
     image?: {
       quality?: "1k" | "2k" | "4k";
@@ -466,28 +469,36 @@ export async function POST(request: Request) {
     }
 
     if (embed.type === "video") {
-      const promptError = validateVeoPrompt(prompt ?? "");
-      if (promptError && (embed as VideoEmbedConfig).provider === "google-veo") {
-        return NextResponse.json({ error: promptError }, { status: 400 });
+      const videoConfig = embed as VideoEmbedConfig;
+
+      if (videoConfig.provider === "google-veo") {
+        const promptError = validateVeoPrompt(prompt ?? "");
+        if (promptError) {
+          return NextResponse.json({ error: promptError }, { status: 400 });
+        }
       }
 
-      if (!prompt?.trim()) {
+      if (
+        videoConfig.provider !== "google-veo" &&
+        videoConfig.provider !== "runway" &&
+        !prompt?.trim()
+      ) {
         return NextResponse.json({ error: "Опишите сцену для видео." }, { status: 400 });
       }
 
-      if (prompt.length > MAX_PROMPT_LENGTH) {
+      if (prompt && prompt.length > MAX_PROMPT_LENGTH) {
         return NextResponse.json({ error: `Макс. ${MAX_PROMPT_LENGTH} символов.` }, { status: 400 });
       }
 
-      const videoConfig = embed as VideoEmbedConfig;
       const duration = video?.duration ?? videoConfig.duration ?? 5;
       const quality = video?.quality ?? "1k";
 
       let veoOptions: VeoGenerationRequest | undefined;
       let klingOptions: KlingGenerationRequest | undefined;
+      let runwayOptions: RunwayGenerationRequest | undefined;
 
       if (videoConfig.provider === "google-veo") {
-        const validated = validateVeoGenerationRequest(prompt, video?.veo);
+        const validated = validateVeoGenerationRequest(prompt ?? "", video?.veo);
         if (typeof validated === "string") {
           return NextResponse.json({ error: validated }, { status: 400 });
         }
@@ -495,21 +506,37 @@ export async function POST(request: Request) {
       }
 
       if (videoConfig.provider === "kling") {
-        const promptError = validateKlingPrompt(prompt);
+        const promptError = validateKlingPrompt(prompt ?? "");
         if (promptError) {
           return NextResponse.json({ error: promptError }, { status: 400 });
         }
 
-        const validated = validateKlingGenerationRequest(prompt, video?.kling);
+        const validated = validateKlingGenerationRequest(prompt ?? "", video?.kling);
         if (typeof validated === "string") {
           return NextResponse.json({ error: validated }, { status: 400 });
         }
         klingOptions = validated;
       }
 
+      if (videoConfig.provider === "runway") {
+        const validated = validateRunwayGenerationRequest(prompt ?? "", video?.runway);
+        if (typeof validated === "string") {
+          return NextResponse.json({ error: validated }, { status: 400 });
+        }
+        runwayOptions = validated;
+      }
+
       const deaiCost = calculateVideoDeaiCost({
-        model: klingOptions?.model ?? veoOptions?.model ?? videoConfig.model,
-        duration: klingOptions?.durationSeconds ?? veoOptions?.durationSeconds ?? duration,
+        model:
+          runwayOptions?.model ??
+          klingOptions?.model ??
+          veoOptions?.model ??
+          videoConfig.model,
+        duration:
+          runwayOptions?.durationSeconds ??
+          klingOptions?.durationSeconds ??
+          veoOptions?.durationSeconds ??
+          duration,
         quality: klingOptions
           ? klingOptions.mode === "pro"
             ? "2k"
@@ -530,11 +557,12 @@ export async function POST(request: Request) {
 
       const generationTaskId = await startVideoGeneration(
         videoConfig,
-        prompt,
+        prompt ?? "",
         duration,
-        videoConfig.ratio ?? "16:9",
+        runwayOptions?.ratio ?? videoConfig.ratio ?? "16:9",
         veoOptions,
         klingOptions,
+        runwayOptions,
       );
 
       const deducted = await deductDeai(supabase, user.id, deaiCost, profile.plan);
@@ -551,7 +579,7 @@ export async function POST(request: Request) {
         slug,
         "video",
         deaiCost,
-        klingOptions?.model ?? veoOptions?.model ?? videoConfig.model,
+        runwayOptions?.model ?? klingOptions?.model ?? veoOptions?.model ?? videoConfig.model,
       );
       const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 

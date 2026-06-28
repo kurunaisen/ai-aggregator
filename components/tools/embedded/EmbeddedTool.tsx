@@ -7,8 +7,8 @@ import { EmbeddedImage } from "@/components/tools/embedded/EmbeddedImage";
 import { EmbeddedKlingVideo } from "@/components/tools/embedded/EmbeddedKlingVideo";
 import { EmbeddedMonacoCode } from "@/components/tools/embedded/EmbeddedMonacoCode";
 import { EmbeddedOpenAIChat } from "@/components/tools/embedded/EmbeddedOpenAIChat";
+import { EmbeddedRunwayVideo } from "@/components/tools/embedded/EmbeddedRunwayVideo";
 import { EmbeddedVeoVideo } from "@/components/tools/embedded/EmbeddedVeoVideo";
-import { EmbeddedVideo } from "@/components/tools/embedded/EmbeddedVideo";
 import type { DeaiSummary } from "@/lib/subscription/deai";
 
 type EmbeddedToolProps = {
@@ -54,7 +54,7 @@ export function EmbeddedTool({ slug, toolName, config, deai }: EmbeddedToolProps
     }
 
     return (
-      <EmbeddedVideo
+      <EmbeddedRunwayVideo
         slug={slug}
         toolName={toolName}
         config={config}
