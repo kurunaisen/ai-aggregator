@@ -14,6 +14,7 @@ import type { Tool } from "@/types/tool";
 import { FilterPanel } from "@/components/tools/FilterPanel";
 import { SearchBar } from "@/components/tools/SearchBar";
 import { Button } from "@/components/ui/Button";
+import { CatalogHintsMenu } from "@/components/catalog/CatalogHintsMenu";
 
 type CatalogFiltersBarProps = {
   tools: Tool[];
@@ -90,6 +91,8 @@ export function CatalogFiltersBar({ tools, filters, children }: CatalogFiltersBa
             </Button>
           )}
         </div>
+
+        <CatalogHintsMenu />
 
         {children}
       </div>

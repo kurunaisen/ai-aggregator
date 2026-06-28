@@ -72,7 +72,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
                 {filtered.length !== tools.length && (
                   <span className="text-silver-dim/60"> из {tools.length}</span>
                 )}
-                . Выберите категорию или найдите нужный сервис через поиск.
+                . Выберите задачу ниже, категорию в фильтрах или найдите сервис через поиск.
               </>
             )}
           </p>

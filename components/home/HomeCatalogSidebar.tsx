@@ -2,6 +2,7 @@ import Link from "next/link";
 import { categories } from "@/data/categories";
 import { Button } from "@/components/ui/Button";
 import { HomeCatalogSearch } from "@/components/home/HomeCatalogSearch";
+import { CatalogHintsMenu } from "@/components/catalog/CatalogHintsMenu";
 
 type HomeCatalogSidebarProps = {
   toolCount: number;
@@ -20,7 +21,9 @@ export function HomeCatalogSidebar({ toolCount }: HomeCatalogSidebarProps) {
 
         <HomeCatalogSearch />
 
-        <nav className="space-y-1">
+        <CatalogHintsMenu variant="sidebar" className="mt-5 border-t divider-metallic pt-5" />
+
+        <nav className="mt-5 space-y-1 border-t divider-metallic pt-5">
           <SidebarLink href="/catalog" active>
             Все инструменты
           </SidebarLink>
