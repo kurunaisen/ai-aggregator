@@ -12,7 +12,8 @@ const PROVIDER_LINKS: Partial<Record<string, string>> = {
   RUNWAY_API_KEY: "https://dev.runwayml.com/",
   GOOGLE_API_KEY: "https://aistudio.google.com/apikey",
   BFL_API_KEY: "https://api.bfl.ai/",
-  KLING_ACCESS_KEY: "https://app.klingai.com/global/dev/",
+  KLING_API_KEY: "https://app.klingai.com/global/dev/api-key",
+  KLING_ACCESS_KEY: "https://app.klingai.com/global/dev/api-key",
 };
 
 export function ProviderSetupMessage({ config }: ProviderSetupProps) {
@@ -24,11 +25,21 @@ export function ProviderSetupMessage({ config }: ProviderSetupProps) {
       <p>
         {envVar ? (
           <>
-            {envVar === "KLING_ACCESS_KEY" ? (
+            {envVar === "KLING_API_KEY" ? (
               <>
-                Переменные{" "}
-                <code className="text-gold-light">KLING_ACCESS_KEY</code> и{" "}
-                <code className="text-gold-light">KLING_SECRET_KEY</code> не заданы на сервере.
+                Kling не настроен: задайте{" "}
+                <code className="text-gold-light">KLING_API_KEY</code> — ключ из окна после
+                Create. Если API отклонит авторизацию, добавьте{" "}
+                <code className="text-gold-light">KLING_ACCESS_KEY</code> (колонка «API Key» в
+                таблице) и тот же ключ из окна как{" "}
+                <code className="text-gold-light">KLING_API_KEY</code> или{" "}
+                <code className="text-gold-light">KLING_SECRET_KEY</code>.
+              </>
+            ) : envVar === "RUNWAY_API_KEY" ? (
+              <>
+                Runway не настроен: задайте <code className="text-gold-light">RUNWAY_API_KEY</code>.
+                Ключ создаётся на dev.runwayml.com → Manage → New API key (показывается один раз).
+                Credits на dev.runwayml.com отдельно от app.runwayml.com.
               </>
             ) : envVar === "BFL_API_KEY" ? (
               <>

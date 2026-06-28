@@ -1,6 +1,7 @@
 import { EMBED_TOOLS, type EmbedConfig } from "@/data/embed-tools";
 import { isFluxConfigured } from "@/lib/providers/flux";
 import { isKlingConfigured } from "@/lib/providers/kling-jwt";
+import { isRunwayConfigured } from "@/lib/providers/ai";
 import { isGoogleApiConfigured } from "@/lib/providers/veo";
 import { isXaiConfigured } from "@/lib/providers/xai-chat";
 
@@ -53,7 +54,7 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
 
   if (config.type === "video") {
     if (config.provider === "runway") {
-      return Boolean(process.env.RUNWAY_API_KEY?.trim());
+      return isRunwayConfigured();
     }
     if (config.provider === "google-veo") {
       return isGoogleApiConfigured();
@@ -82,7 +83,7 @@ export function getProviderEnvVar(config: EmbedConfig): string | null {
   if (config.type === "video") {
     if (config.provider === "runway") return "RUNWAY_API_KEY";
     if (config.provider === "google-veo") return "GOOGLE_API_KEY";
-    if (config.provider === "kling") return "KLING_ACCESS_KEY";
+    if (config.provider === "kling") return "KLING_API_KEY";
   }
 
   return null;

@@ -1,8 +1,8 @@
 import type { KlingGenerationRequest } from "@/data/kling-options";
 import {
-  createKlingJwt,
+  getKlingAuthAttempts,
   getKlingBaseUrl,
-  getKlingCredentials,
+  resolveKlingAuth,
 } from "@/lib/providers/kling-jwt";
 
 type KlingApiResponse<T> = {
@@ -20,26 +20,68 @@ type KlingTaskData = {
   };
 };
 
-function klingHeaders(accessKey: string, secretKey: string): HeadersInit {
-  const token = createKlingJwt(accessKey, secretKey);
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-}
+const KLING_AUTH_ERROR_CODES = new Set([1000, 1001, 1002, 1003, 1004]);
 
 function parseKlingError(message?: string): string {
   return message?.trim() || "Ошибка Kling API";
+}
+
+function isKlingAuthFailure(response: Response, data: KlingApiResponse<unknown>): boolean {
+  if (response.status === 401 || response.status === 403) return true;
+  return typeof data.code === "number" && KLING_AUTH_ERROR_CODES.has(data.code);
+}
+
+function klingAuthSetupHint(): string {
+  return (
+    "Проверьте KLING_API_KEY на Vercel. Если один ключ не подходит — добавьте KLING_ACCESS_KEY " +
+    "(из таблицы Kling) и ключ из окна Create как KLING_API_KEY или KLING_SECRET_KEY."
+  );
+}
+
+async function klingFetch(
+  path: string,
+  init: RequestInit = {},
+): Promise<{ response: Response; data: KlingApiResponse<KlingTaskData> }> {
+  const tokens = getKlingAuthAttempts();
+  if (tokens.length === 0) {
+    throw new Error("Kling API не настроен");
+  }
+
+  const url = `${getKlingBaseUrl()}${path}`;
+  let lastAuthError: string | null = null;
+
+  for (const token of tokens) {
+    const response = await fetch(url, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init.headers ?? {}),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = (await response.json()) as KlingApiResponse<KlingTaskData>;
+
+    if (!isKlingAuthFailure(response, data)) {
+      return { response, data };
+    }
+
+    lastAuthError = parseKlingError(data.message) || `HTTP ${response.status}`;
+  }
+
+  if (resolveKlingAuth()?.mode === "bearer") {
+    throw new Error(`${lastAuthError ?? "Ошибка авторизации Kling"}. ${klingAuthSetupHint()}`);
+  }
+
+  throw new Error(lastAuthError ?? "Ошибка авторизации Kling");
 }
 
 export async function startKlingVideo(
   prompt: string,
   options: KlingGenerationRequest,
 ): Promise<string> {
-  const { accessKey, secretKey } = getKlingCredentials();
-  const response = await fetch(`${getKlingBaseUrl()}/v1/videos/text2video`, {
+  const { response, data } = await klingFetch("/v1/videos/text2video", {
     method: "POST",
-    headers: klingHeaders(accessKey, secretKey),
     body: JSON.stringify({
       model_name: options.model,
       prompt: prompt.trim(),
@@ -50,8 +92,6 @@ export async function startKlingVideo(
       sound: options.sound ? "on" : "off",
     }),
   });
-
-  const data = (await response.json()) as KlingApiResponse<KlingTaskData>;
 
   if (!response.ok || data.code !== 0 || !data.data?.task_id) {
     throw new Error(parseKlingError(data.message));
@@ -65,15 +105,9 @@ export async function pollKlingTask(taskId: string): Promise<{
   videoUrl?: string;
   error?: string;
 }> {
-  const { accessKey, secretKey } = getKlingCredentials();
-  const response = await fetch(
-    `${getKlingBaseUrl()}/v1/videos/text2video/${encodeURIComponent(taskId)}`,
-    {
-      headers: klingHeaders(accessKey, secretKey),
-    },
+  const { response, data } = await klingFetch(
+    `/v1/videos/text2video/${encodeURIComponent(taskId)}`,
   );
-
-  const data = (await response.json()) as KlingApiResponse<KlingTaskData>;
 
   if (!response.ok || data.code !== 0) {
     throw new Error(parseKlingError(data.message));
