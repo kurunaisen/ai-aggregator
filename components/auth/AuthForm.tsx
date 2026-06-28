@@ -9,19 +9,21 @@ import { Button } from "@/components/ui/Button";
 
 type AuthFormProps = {
   mode: "login" | "signup";
+  initialMessage?: string | null;
 };
 
 const OAUTH_REDIRECT = "/auth/callback?next=/profile";
 const YANDEX_PROVIDER = "custom:yandex" as Provider;
+const YANDEX_SCOPES = "login:email login:info";
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, initialMessage = null }: AuthFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(initialMessage);
 
-  async function signInWithOAuthProvider(provider: Provider) {
+  async function signInWithOAuthProvider(provider: Provider, scopes?: string) {
     setLoading(true);
     setMessage(null);
 
@@ -30,6 +32,10 @@ export function AuthForm({ mode }: AuthFormProps) {
       provider,
       options: {
         redirectTo: `${window.location.origin}${OAUTH_REDIRECT}`,
+        ...(scopes ? { scopes } : {}),
+        ...(provider === YANDEX_PROVIDER
+          ? { queryParams: { force_confirm: "yes" } }
+          : {}),
       },
     });
 
@@ -124,7 +130,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         variant="outline"
         className="w-full gap-2"
         disabled={loading}
-        onClick={() => void signInWithOAuthProvider(YANDEX_PROVIDER)}
+        onClick={() => void signInWithOAuthProvider(YANDEX_PROVIDER, YANDEX_SCOPES)}
       >
         <YandexIcon className="h-4 w-4 shrink-0" />
         Войти через Яндекс

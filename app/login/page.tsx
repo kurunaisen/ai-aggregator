@@ -8,7 +8,25 @@ export const metadata: Metadata = {
   description: "Войдите в DeltaplanAI для доступа к встроенным нейросетям.",
 };
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<{ error?: string; reason?: string }>;
+};
+
+function buildAuthErrorMessage(error?: string, reason?: string): string | null {
+  if (error !== "auth") return null;
+  if (reason?.includes("email from external provider")) {
+    return "Яндекс не передал email в формате Supabase. В Supabase для custom:yandex включите email_optional и custom_claims_allowlist (scripts/update-yandex-oauth.ps1), затем войдите снова.";
+  }
+  if (reason) {
+    return `Не удалось войти: ${reason}`;
+  }
+  return "Не удалось войти. Попробуйте снова или выберите другой способ.";
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const initialMessage = buildAuthErrorMessage(params.error, params.reason);
+
   return (
     <Container className="py-16">
       <div className="mx-auto max-w-md">
@@ -16,7 +34,7 @@ export default function LoginPage() {
         <p className="mb-8 text-center text-silver-dim">
           Используйте ChatGPT, Claude и Runway на DeltaplanAI
         </p>
-        <AuthForm mode="login" />
+        <AuthForm mode="login" initialMessage={initialMessage} />
         <p className="mt-6 text-center text-sm text-silver-dim">
           <Link href="/pricing" className="text-gold-light hover:underline">
             Тарифы и лимиты

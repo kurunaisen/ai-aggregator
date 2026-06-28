@@ -15,6 +15,7 @@ import {
   getProfileDisplayName,
   getSessionUser,
 } from "@/lib/auth/profile";
+import { getOAuthEmail } from "@/lib/auth/oauth-metadata";
 import { createClient } from "@/lib/supabase/server";
 import {
   DEAI_PRICING_HINT,
@@ -43,6 +44,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const profile = await ensureProfile(supabase, user);
   const deai = await getDeaiSummary(supabase, user.id, profile.plan);
   const displayName = getProfileDisplayName(profile, user);
+  const accountEmail = getOAuthEmail(user);
 
   const params = await searchParams;
   const daysParam = Number(params.days);
@@ -56,8 +58,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <ProfileAvatar avatarId={profile.avatarId} name={displayName} size="lg" />
           <div>
             <h1 className="text-3xl font-bold text-silver">{displayName}</h1>
-            {user.email && (
-              <p className="mt-1 text-sm text-silver-dim">{user.email}</p>
+            {accountEmail && (
+              <p className="mt-1 text-sm text-silver-dim">{accountEmail}</p>
             )}
           </div>
         </div>

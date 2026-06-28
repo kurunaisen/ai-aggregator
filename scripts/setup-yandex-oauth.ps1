@@ -1,4 +1,4 @@
-# Creates Yandex as OAuth2 custom provider in Supabase (NOT OIDC).
+# Creates or updates Yandex as OAuth2 custom provider in Supabase (NOT OIDC).
 # Usage:
 #   $env:SUPABASE_URL="https://xxxx.supabase.co"
 #   $env:SUPABASE_SERVICE_ROLE_KEY="eyJ..."
@@ -18,35 +18,29 @@ if (-not $SupabaseUrl -or -not $ServiceRoleKey -or -not $ClientId -or -not $Clie
   exit 1
 }
 
-$authUrl = "$SupabaseUrl/auth/v1/admin/custom-providers"
-$body = @{
-  provider_type = "oauth2"
-  identifier = "yandex"
-  name = "Yandex ID"
-  client_id = $ClientId
-  client_secret = $ClientSecret
-  authorization_url = "https://oauth.yandex.ru/authorize"
-  token_url = "https://oauth.yandex.ru/token"
-  userinfo_url = "https://login.yandex.ru/info?format=json"
-  scopes = @("login:email", "login:info")
-  pkce_enabled = $false
-  attribute_mapping = @{
-    sub = "id"
-    email = "default_email"
-    name = "display_name"
-    given_name = "first_name"
-    family_name = "last_name"
-    preferred_username = "login"
-  }
-} | ConvertTo-Json -Depth 5
+$bodyCreate = & "$PSScriptRoot/yandex-oauth-provider-body.ps1" -ClientId $ClientId -ClientSecret $ClientSecret |
+  ConvertTo-Json -Depth 6
+$bodyUpdate = & "$PSScriptRoot/yandex-oauth-provider-body.ps1" -ClientId $ClientId -ClientSecret $ClientSecret -ForUpdate |
+  ConvertTo-Json -Depth 6
 
-Write-Host "Creating custom OAuth2 provider custom:yandex ..."
-$response = Invoke-RestMethod -Method Post -Uri $authUrl -Headers @{
-  Authorization = "Bearer $ServiceRoleKey"
-  "Content-Type" = "application/json"
-} -Body $body
+. "$PSScriptRoot/supabase-admin-headers.ps1"
+. "$PSScriptRoot/yandex-oauth-constants.ps1"
+$headers = New-SupabaseAdminHeaders -ServiceRoleKey $ServiceRoleKey
 
-$response | ConvertTo-Json -Depth 5
+Write-Host "Upserting custom OAuth2 provider custom:yandex ..."
+try {
+  $response = Invoke-RestMethod -Method Post -Uri "$SupabaseUrl/auth/v1/admin/custom-providers" -Headers $headers -Body $bodyCreate
+} catch {
+  Write-Host "Provider may already exist, trying update..."
+  $response = Invoke-RestMethod -Method Put -Uri "$SupabaseUrl/auth/v1/admin/custom-providers/$YandexProviderPathSegment" -Headers $headers -Body $bodyUpdate
+}
+
+$response | ConvertTo-Json -Depth 6
 Write-Host ""
-Write-Host "Done. In Yandex OAuth app set redirect URI to:"
-Write-Host "$SupabaseUrl/auth/v1/callback"
+Write-Host "=== Yandex OAuth (oauth.yandex.ru) ==="
+Write-Host "Callback URL: $SupabaseUrl/auth/v1/callback"
+Write-Host "Permissions: login:email, login:info"
+Write-Host "Verify scopes: https://oauth.yandex.ru/client/$ClientId/info"
+Write-Host ""
+Write-Host "email_optional=true — required because Yandex returns default_email, not email."
+Write-Host "App reads default_email from user_metadata after sign-in."

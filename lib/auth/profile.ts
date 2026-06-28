@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import { getOAuthDisplayName, getOAuthEmail } from "@/lib/auth/oauth-metadata";
 import {
   DEFAULT_PROFILE_AVATAR_ID,
   isProfileAvatarId,
@@ -40,6 +41,10 @@ function mapProfileRow(data: {
 
 export function getProfileDisplayName(profile: Profile, user: User): string {
   if (profile.displayName?.trim()) return profile.displayName.trim();
+  const oauthName = getOAuthDisplayName(user);
+  if (oauthName) return oauthName;
+  const oauthEmail = getOAuthEmail(user);
+  if (oauthEmail) return oauthEmail.split("@")[0] ?? "Профиль";
   if (user.email) return user.email.split("@")[0] ?? "Профиль";
   return "Профиль";
 }
@@ -69,13 +74,28 @@ export async function ensureProfile(
   user: User,
 ): Promise<Profile> {
   const existing = await getProfile(supabase, user.id);
-  if (existing) return existing;
+  const oauthEmail = getOAuthEmail(user);
+
+  if (existing) {
+    if (oauthEmail && !existing.email) {
+      const { data } = await supabase
+        .from("profiles")
+        .update({ email: oauthEmail, updated_at: new Date().toISOString() })
+        .eq("id", user.id)
+        .select(PROFILE_FIELDS)
+        .maybeSingle();
+
+      if (data) return mapProfileRow(data);
+    }
+
+    return existing;
+  }
 
   const { data, error } = await supabase
     .from("profiles")
     .insert({
       id: user.id,
-      email: user.email ?? null,
+      email: oauthEmail ?? user.email ?? null,
       plan: "free",
       deai_balance: FREE_STARTING_DEAI,
       avatar_id: DEFAULT_PROFILE_AVATAR_ID,
@@ -86,7 +106,7 @@ export async function ensureProfile(
   if (error || !data) {
     return {
       id: user.id,
-      email: user.email ?? null,
+      email: oauthEmail ?? user.email ?? null,
       displayName: null,
       avatarId: DEFAULT_PROFILE_AVATAR_ID,
       plan: "free",
