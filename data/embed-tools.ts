@@ -185,6 +185,7 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
       "Форматы 16:9, 9:16, 1:1 и другие; длительность 5 или 10 секунд",
       "Списание Deai зависит от модели и длительности",
     ],
+    previewVideoUrl: "/videos/runway-preview.mp4",
     welcomeMessage:
       "Выберите режим: видео по тексту или анимация загруженного кадра.",
     placeholder: "Например: закат над океаном, камера медленно приближается...",
