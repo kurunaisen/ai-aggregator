@@ -44,7 +44,7 @@ export const DEAI_PRICING_HINT = {
   code: "как текст · по модели и объёму",
   image: "от 3.5 Deai за 1K-кадр",
   video:
-    "Runway 5с ~23 · Kling 5с ~28 · Veo Lite 8с ~37 · Veo Fast 8с ~74 · Veo 3.1 8с ~296 Deai",
+    "Runway 5с ~23 · Kling 5с ~28 · Grok Video 8с ~56 · Veo Lite 8с ~37 · Veo 3.1 8с ~296 Deai",
 } as const;
 
 export const DEAI_STARTER_BUDGET_HINT = `${STARTING_DEAI} Deai ≈ ${STARTING_DEAI} ₽: ~80–100 коротких текстовых запросов (GPT-4o Mini) или 2 видео Runway 5 с`;

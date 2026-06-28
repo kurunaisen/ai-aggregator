@@ -131,6 +131,18 @@ insert into public.tools (
     'https://klingai.com',
     true,
     true
+  ),
+  (
+    'grok-video',
+    'Grok Video',
+    'Генерация видео от xAI',
+    'Grok Video на DeltaplanAI — text-to-video от xAI: модели grok-imagine-video и 1.5, 5–15 сек, 480p–1080p.',
+    'Видео',
+    'video',
+    'freemium',
+    'https://x.ai/api',
+    true,
+    true
   )
 on conflict (slug) do update set
   name = excluded.name,
@@ -147,5 +159,5 @@ on conflict (slug) do update set
 update public.tools
 set is_published = false
 where slug not in (
-  'chatgpt', 'claude', 'grok', 'grok-imagine', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling'
+  'chatgpt', 'claude', 'grok', 'grok-imagine', 'grok-video', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling'
 );

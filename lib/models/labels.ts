@@ -19,6 +19,8 @@ export function formatModelLabel(model: string | null, toolSlug: string): string
       .trim();
   }
 
+  if (model.includes("grok-imagine-video-1.5")) return "Grok Video 1.5";
+  if (model.includes("grok-imagine-video")) return "Grok Video";
   if (model.includes("grok-imagine-image-quality")) return "Grok Imagine Quality";
   if (model.includes("grok-imagine-image")) return "Grok Imagine";
   if (model.includes("grok")) return model.replace(/^grok-/i, "Grok ").replace(/-/g, " ");
@@ -55,6 +57,7 @@ export function toolSlugLabel(slug: string): string {
     claude: "Claude",
     grok: "Grok",
     "grok-imagine": "Grok Imagine",
+    "grok-video": "Grok Video",
     nanobanana: "Nano Banana",
     flux: "FLUX",
     runway: "Runway",

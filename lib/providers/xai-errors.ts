@@ -45,12 +45,18 @@ export function extractXaiErrorBody(data: unknown, status: number, statusText: s
   return `HTTP ${status}${suffix}`;
 }
 
+const PRODUCT_PREFIX: Record<"chat" | "imagine" | "video", string> = {
+  chat: "xAI",
+  imagine: "Grok Imagine",
+  video: "Grok Video",
+};
+
 export function formatXaiApiError(
   message: string,
-  product: "chat" | "imagine" = "chat",
+  product: "chat" | "imagine" | "video" = "chat",
 ): string {
   const lower = message.toLowerCase();
-  const prefix = product === "imagine" ? "Grok Imagine" : "xAI";
+  const prefix = PRODUCT_PREFIX[product];
 
   if (lower.includes("invalid api key") || lower.includes("incorrect api key")) {
     return "xAI: неверный API-ключ. Создайте ключ на console.x.ai и добавьте XAI_API_KEY на Vercel.";
@@ -83,6 +89,13 @@ export function formatXaiApiError(
       );
     }
 
+    if (product === "video") {
+      return (
+        "xAI: Grok Video недоступен для вашего API-ключа. " +
+        "Проверьте доступ к grok-imagine-video в console.x.ai и биллинг."
+      );
+    }
+
     return (
       "xAI: модель Grok недоступна для вашего API-ключа. " +
       "Проверьте доступ к grok-4.3 в console.x.ai и биллинг."
@@ -98,7 +111,7 @@ export function formatXaiApiError(
 
 export async function parseXaiJsonResponse<T extends Record<string, unknown>>(
   response: Response,
-  product: "chat" | "imagine" = "chat",
+  product: "chat" | "imagine" | "video" = "chat",
 ): Promise<T> {
   const raw = await response.text();
 

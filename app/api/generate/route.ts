@@ -20,6 +20,11 @@ import {
   validateKlingPrompt,
 } from "@/data/kling-options";
 import type { KlingGenerationRequest } from "@/data/kling-options";
+import {
+  validateGrokVideoGenerationRequest,
+  validateGrokVideoPrompt,
+} from "@/data/grok-video-options";
+import type { GrokVideoGenerationRequest } from "@/data/grok-video-options";
 import type { RunwayGenerationRequest } from "@/data/runway-options";
 import { validateRunwayGenerationRequest } from "@/lib/providers/validate-runway-options";
 import { callOpenAI } from "@/lib/providers/openai-chat";
@@ -81,6 +86,7 @@ const EMBED_TOOL_TYPES: Record<string, string> = {
   runway: "video",
   veo: "video",
   kling: "video",
+  "grok-video": "video",
 };
 
 type AuthContext = {
@@ -220,6 +226,7 @@ export async function POST(request: Request) {
       veo?: VeoGenerationRequest;
       kling?: KlingGenerationRequest;
       runway?: RunwayGenerationRequest;
+      grok?: GrokVideoGenerationRequest;
     };
     image?: {
       quality?: "1k" | "2k" | "4k";
@@ -497,6 +504,7 @@ export async function POST(request: Request) {
       let veoOptions: VeoGenerationRequest | undefined;
       let klingOptions: KlingGenerationRequest | undefined;
       let runwayOptions: RunwayGenerationRequest | undefined;
+      let grokOptions: GrokVideoGenerationRequest | undefined;
 
       if (videoConfig.provider === "google-veo") {
         const validated = validateVeoGenerationRequest(prompt ?? "", video?.veo);
@@ -527,18 +535,39 @@ export async function POST(request: Request) {
         runwayOptions = validated;
       }
 
+      if (videoConfig.provider === "xai-video") {
+        const promptError = validateGrokVideoPrompt(prompt ?? "");
+        if (promptError) {
+          return NextResponse.json({ error: promptError }, { status: 400 });
+        }
+
+        const validated = validateGrokVideoGenerationRequest(prompt ?? "", video?.grok);
+        if (typeof validated === "string") {
+          return NextResponse.json({ error: validated }, { status: 400 });
+        }
+        grokOptions = validated;
+      }
+
       const deaiCost = calculateVideoDeaiCost({
         model:
           runwayOptions?.model ??
           klingOptions?.model ??
+          grokOptions?.model ??
           veoOptions?.model ??
           videoConfig.model,
         duration:
           runwayOptions?.durationSeconds ??
           klingOptions?.durationSeconds ??
+          grokOptions?.durationSeconds ??
           veoOptions?.durationSeconds ??
           duration,
-        quality: klingOptions
+        quality: grokOptions
+          ? grokOptions.resolution === "1080p"
+            ? "4k"
+            : grokOptions.resolution === "720p"
+              ? "2k"
+              : "1k"
+          : klingOptions
           ? klingOptions.mode === "pro"
             ? "2k"
             : "1k"
@@ -583,6 +612,7 @@ export async function POST(request: Request) {
         veoOptions,
         klingOptions,
         runwayOptions,
+        grokOptions,
       );
 
       const deducted = await deductDeai(supabase, user.id, deaiCost);
@@ -599,7 +629,11 @@ export async function POST(request: Request) {
         slug,
         "video",
         deaiCost,
-        runwayOptions?.model ?? klingOptions?.model ?? veoOptions?.model ?? videoConfig.model,
+        runwayOptions?.model ??
+          klingOptions?.model ??
+          grokOptions?.model ??
+          veoOptions?.model ??
+          videoConfig.model,
       );
       const deai = await getDeaiSummary(supabase, user.id, profile.plan);
 

@@ -15,8 +15,9 @@ update public.usage_logs ul
 set model = case ul.tool_slug
   when 'chatgpt' then 'gpt-4o-mini'
   when 'claude' then 'claude-haiku-4-5-20251001'
-  when 'grok' then 'grok-3'
+  when 'grok' then 'grok-4.3'
   when 'grok-imagine' then 'grok-imagine-image'
+  when 'grok-video' then 'grok-imagine-video'
   when 'nanobanana' then 'gemini-2.5-flash-image'
   when 'flux' then 'flux-2-klein-4b'
   when 'kling' then 'kling-v2-6'

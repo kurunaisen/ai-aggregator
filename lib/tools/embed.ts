@@ -62,6 +62,9 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
     if (config.provider === "kling") {
       return isKlingConfigured();
     }
+    if (config.provider === "xai-video") {
+      return isXaiConfigured();
+    }
   }
 
   return false;
@@ -84,6 +87,7 @@ export function getProviderEnvVar(config: EmbedConfig): string | null {
     if (config.provider === "runway") return "RUNWAY_API_KEY";
     if (config.provider === "google-veo") return "GOOGLE_API_KEY";
     if (config.provider === "kling") return "KLING_API_KEY";
+    if (config.provider === "xai-video") return "XAI_API_KEY";
   }
 
   return null;

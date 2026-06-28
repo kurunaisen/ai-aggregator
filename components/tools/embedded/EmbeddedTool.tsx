@@ -4,6 +4,7 @@ import type { EmbedConfig } from "@/data/embed-tools";
 import { EmbeddedClaudeChat } from "@/components/tools/embedded/EmbeddedClaudeChat";
 import { EmbeddedChat } from "@/components/tools/embedded/EmbeddedChat";
 import { EmbeddedImage } from "@/components/tools/embedded/EmbeddedImage";
+import { EmbeddedGrokVideo } from "@/components/tools/embedded/EmbeddedGrokVideo";
 import { EmbeddedKlingVideo } from "@/components/tools/embedded/EmbeddedKlingVideo";
 import { EmbeddedMonacoCode } from "@/components/tools/embedded/EmbeddedMonacoCode";
 import { EmbeddedOpenAIChat } from "@/components/tools/embedded/EmbeddedOpenAIChat";
@@ -59,6 +60,17 @@ export function EmbeddedTool({ slug, toolName, config, deai, toolAccess }: Embed
     if (config.provider === "kling") {
       return (
         <EmbeddedKlingVideo
+          slug={slug}
+          toolName={toolName}
+          config={config}
+          initialDeai={deai}
+        />
+      );
+    }
+
+    if (config.provider === "xai-video") {
+      return (
+        <EmbeddedGrokVideo
           slug={slug}
           toolName={toolName}
           config={config}

@@ -107,6 +107,12 @@ export function getVideoUsdPerSecond(model: string, quality: "1k" | "2k" | "4k")
     return 0.06;
   }
 
+  if (id.includes("grok-imagine-video")) {
+    if (quality === "4k") return 0.07;
+    if (quality === "2k") return 0.07;
+    return 0.05;
+  }
+
   return 0.05;
 }
 

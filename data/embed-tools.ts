@@ -35,7 +35,7 @@ export type ImageEmbedConfig = EmbedPageHeader & {
 
 export type VideoEmbedConfig = EmbedPageHeader & {
   type: "video";
-  provider: "runway" | "google-veo" | "kling";
+  provider: "runway" | "google-veo" | "kling" | "xai-video";
   model: string;
   welcomeMessage: string;
   placeholder?: string;
@@ -225,6 +225,24 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
       "Опишите сцену — Kling сгенерирует короткое видео.",
     placeholder: "Например: кинематографичный кадр: город в дождливую ночь, неоновые отражения...",
     duration: 5,
+    ratio: "16:9",
+  },
+  "grok-video": {
+    type: "video",
+    provider: "xai-video",
+    model: "grok-imagine-video",
+    headerDescription:
+      "Grok Video на DeltaplanAI — генерация коротких роликов от xAI по текстовому описанию: настройка длительности, формата кадра и разрешения 480p–1080p.",
+    headerHighlights: [
+      "Модели Grok Video и Grok Video 1.5",
+      "Длительность 5–15 сек; форматы 16:9, 9:16, 1:1 и другие",
+      "Разрешение 480p, 720p или 1080p (на 1.5)",
+      "Списание Deai зависит от длительности и разрешения",
+    ],
+    welcomeMessage:
+      "Опишите сцену — Grok сгенерирует короткое видео.",
+    placeholder: "Например: камера медленно пролетает над ночным городом, неон и дождь...",
+    duration: 8,
     ratio: "16:9",
   },
 };

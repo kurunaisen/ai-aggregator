@@ -4,5 +4,5 @@
 update public.tools
 set is_published = false
 where slug not in (
-  'chatgpt', 'claude', 'grok', 'grok-imagine', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling'
+  'chatgpt', 'claude', 'grok', 'grok-imagine', 'grok-video', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling'
 );
