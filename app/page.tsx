@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getFeaturedTools, getPublishedTools } from "@/lib/tools/queries";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { buildWebSiteSchema } from "@/lib/seo/schema";
@@ -29,7 +30,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const revalidate = 60;
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; error_description?: string }>;
+}) {
+  const params = await searchParams;
+  if (params.error) {
+    const reason = params.error_description ?? params.error;
+    redirect(`/login?error=auth&reason=${encodeURIComponent(reason)}`);
+  }
+
   const [featuredTools, allTools] = await Promise.all([
     getFeaturedTools(),
     getPublishedTools(),

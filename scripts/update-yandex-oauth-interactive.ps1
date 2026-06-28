@@ -83,9 +83,14 @@ $yandexSecretPlain = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
   [Runtime.InteropServices.Marshal]::SecureStringToBSTR($yandexSecret)
 )
 
-$bodyCreate = & "$PSScriptRoot/yandex-oauth-provider-body.ps1" -ClientId $yandexClientId.Trim() -ClientSecret $yandexSecretPlain |
+$defaultSiteUrl = "https://ai-aggregator-eosin.vercel.app"
+$siteUrlInput = Read-Host "Site URL for userinfo proxy [$defaultSiteUrl]"
+$siteUrl = if ($siteUrlInput.Trim()) { $siteUrlInput.Trim() } else { $defaultSiteUrl }
+Write-Host "Userinfo proxy: $siteUrl/api/auth/yandex/userinfo" -ForegroundColor DarkGray
+
+$bodyCreate = & "$PSScriptRoot/yandex-oauth-provider-body.ps1" -ClientId $yandexClientId.Trim() -ClientSecret $yandexSecretPlain -SiteUrl $siteUrl |
   ConvertTo-Json -Depth 6
-$bodyUpdate = & "$PSScriptRoot/yandex-oauth-provider-body.ps1" -ClientId $yandexClientId.Trim() -ClientSecret $yandexSecretPlain -ForUpdate |
+$bodyUpdate = & "$PSScriptRoot/yandex-oauth-provider-body.ps1" -ClientId $yandexClientId.Trim() -ClientSecret $yandexSecretPlain -SiteUrl $siteUrl -ForUpdate |
   ConvertTo-Json -Depth 6
 
 . "$PSScriptRoot/supabase-admin-headers.ps1"
