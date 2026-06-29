@@ -159,6 +159,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_orders: {
+        Row: {
+          id: string;
+          user_id: string;
+          provider: string;
+          external_id: string;
+          plan: string;
+          amount_rub: number;
+          deai_grant: number;
+          status: string;
+          created_at: string;
+          paid_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          provider?: string;
+          external_id: string;
+          plan: string;
+          amount_rub: number;
+          deai_grant: number;
+          status?: string;
+          created_at?: string;
+          paid_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          provider?: string;
+          external_id?: string;
+          plan?: string;
+          amount_rub?: number;
+          deai_grant?: number;
+          status?: string;
+          created_at?: string;
+          paid_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

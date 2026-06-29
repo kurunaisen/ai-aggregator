@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Provider } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { AUTH_CLOSED_MESSAGE, isAuthEmailAllowed } from "@/lib/auth/allowlist";
 import { Button } from "@/components/ui/Button";
 
 type AuthFormProps = {
@@ -49,6 +50,12 @@ export function AuthForm({ mode, initialMessage = null }: AuthFormProps) {
     event.preventDefault();
     setLoading(true);
     setMessage(null);
+
+    if (!isAuthEmailAllowed(email)) {
+      setMessage(AUTH_CLOSED_MESSAGE);
+      setLoading(false);
+      return;
+    }
 
     const supabase = createClient();
 

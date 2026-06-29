@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Container } from "@/components/layout/Container";
 import { DeaiWalletLegend } from "@/components/deai/DeaiWalletLegend";
 import { Button } from "@/components/ui/Button";
+import { PlanCheckoutButton } from "@/components/pricing/PlanCheckoutButton";
+import { PricingPaymentNotice } from "@/components/pricing/PricingPaymentNotice";
+import { getSessionUser } from "@/lib/auth/profile";
+import { createClient } from "@/lib/supabase/server";
 import {
   BASE_DEAI_GRANT_LABEL,
   BASE_PLAN_DESCRIPTION,
@@ -17,18 +22,25 @@ import {
 
 export const metadata: Metadata = {
   title: "Тарифы",
-  description: "Free, Base и Pro — тарифы DeltaplanAI с пакетами Deai.",
+  description: "Free, Base и Pro — тарифы DeltaplanAI с оплатой картой и СБП через ЮKassa.",
 };
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const supabase = await createClient();
+  const loggedIn = Boolean(supabase && (await getSessionUser(supabase)));
+
   return (
     <Container className="py-16">
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-3xl font-bold text-silver sm:text-4xl">Тарифы</h1>
         <p className="mt-4 text-silver-dim">
-          Единая валюта Deai ({DEAI_EXCHANGE_HINT}). Пакет начисляется на баланс при оплате тарифа.
+          Единая валюта Deai ({DEAI_EXCHANGE_HINT}). Оплата картой, СБП и SberPay через ЮKassa.
         </p>
       </div>
+
+      <Suspense fallback={null}>
+        <PricingPaymentNotice />
+      </Suspense>
 
       <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-3">
         <div className="carbon-panel rounded-2xl p-8">
@@ -53,9 +65,13 @@ export default function PricingPage() {
             <li>{BASE_DEAI_GRANT_LABEL} на баланс при оплате</li>
             <li>{BASE_PLAN_DESCRIPTION}</li>
           </ul>
-          <Button href="/profile" variant="outline" className="mt-8 w-full">
-            Оформить Base — скоро
-          </Button>
+          <PlanCheckoutButton
+            plan="base"
+            label={`Оплатить Base — ${BASE_PRICE_LABEL}`}
+            loggedIn={loggedIn}
+            variant="outline"
+            className="mt-8"
+          />
         </div>
 
         <div className="carbon-panel relative rounded-2xl border-gold/30 p-8 shadow-gold">
@@ -68,11 +84,14 @@ export default function PricingPage() {
             <li>{PRO_DEAI_GRANT_LABEL} на баланс при оплате</li>
             <li>{PRO_PLAN_DESCRIPTION}</li>
           </ul>
-          <Button href="/profile" variant="outline" className="mt-8 w-full">
-            Оформить Pro — скоро
-          </Button>
+          <PlanCheckoutButton
+            plan="pro"
+            label={`Оплатить Pro — ${PRO_PRICE_LABEL}`}
+            loggedIn={loggedIn}
+            className="mt-8"
+          />
           <p className="mt-3 text-center text-xs text-silver-dim">
-            Оплата через Stripe — этап 2
+            Карта · СБП · SberPay · ЮMoney
           </p>
         </div>
       </div>

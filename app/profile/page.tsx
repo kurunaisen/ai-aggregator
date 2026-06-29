@@ -83,7 +83,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </section>
 
           <section className="carbon-panel rounded-2xl p-6 sm:p-8">
-            <SubscriptionPanel plan={profile.plan} />
+            <SubscriptionPanel plan={profile.plan} loggedIn />
           </section>
 
           <section className="carbon-panel rounded-2xl p-6 sm:p-8">

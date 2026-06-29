@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { isAuthEmailAllowed } from "@/lib/auth/allowlist";
 import type { Database } from "@/lib/supabase/database.types";
 
 export async function middleware(request: NextRequest) {
@@ -29,7 +30,22 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user?.email && !isAuthEmailAllowed(user.email)) {
+    await supabase.auth.signOut();
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    loginUrl.searchParams.set("error", "closed");
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
+  }
 
   return response;
 }

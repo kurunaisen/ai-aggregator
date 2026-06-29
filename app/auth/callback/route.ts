@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAuthEmailAllowed } from "@/lib/auth/allowlist";
 import type { Database } from "@/lib/supabase/database.types";
 
 function safeNextPath(next: string | null): string {
@@ -20,13 +21,25 @@ function redirectOrigin(request: NextRequest, origin: string): string {
   return origin;
 }
 
-function authErrorRedirect(origin: string, reason?: string | null) {
+function authErrorRedirect(
+  origin: string,
+  reason?: string | null,
+  cookieSource?: NextResponse,
+) {
   const url = new URL("/login", origin);
-  url.searchParams.set("error", "auth");
-  if (reason) {
-    url.searchParams.set("reason", reason);
+  if (reason === "closed") {
+    url.searchParams.set("error", "closed");
+  } else {
+    url.searchParams.set("error", "auth");
+    if (reason) {
+      url.searchParams.set("reason", reason);
+    }
   }
-  return NextResponse.redirect(url);
+  const redirect = NextResponse.redirect(url);
+  cookieSource?.cookies.getAll().forEach((cookie) => {
+    redirect.cookies.set(cookie.name, cookie.value);
+  });
+  return redirect;
 }
 
 export async function GET(request: NextRequest) {
@@ -73,6 +86,15 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return authErrorRedirect(baseOrigin, error.message);
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!isAuthEmailAllowed(user?.email)) {
+    await supabase.auth.signOut();
+    return authErrorRedirect(baseOrigin, "closed", response);
   }
 
   return response;

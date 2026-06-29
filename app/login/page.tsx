@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { AUTH_CLOSED_MESSAGE } from "@/lib/auth/allowlist";
 import { Container } from "@/components/layout/Container";
 
 export const metadata: Metadata = {
@@ -13,7 +14,9 @@ type LoginPageProps = {
 };
 
 function buildAuthErrorMessage(error?: string, reason?: string): string | null {
+  if (error === "closed") return AUTH_CLOSED_MESSAGE;
   if (error !== "auth") return null;
+  if (reason === "closed") return AUTH_CLOSED_MESSAGE;
   if (reason?.includes("missing provider id")) {
     return "Supabase не видит sub от Яндекса. 1) Откройте /api/auth/yandex/userinfo — должен быть 401. 2) Запустите scripts\\run-yandex-oauth-fix.cmd. 3) Проверка: scripts\\check-yandex-oauth.cmd";
   }

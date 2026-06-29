@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { PlanCheckoutButton } from "@/components/pricing/PlanCheckoutButton";
 import type { Plan } from "@/lib/subscription/constants";
 import {
   BASE_DEAI_GRANT_LABEL,
@@ -13,9 +13,10 @@ import { getPlanLabel, hasProPlan, isPaidPlan } from "@/lib/subscription/plans";
 
 type SubscriptionPanelProps = {
   plan: Plan;
+  loggedIn?: boolean;
 };
 
-export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
+export function SubscriptionPanel({ plan, loggedIn = false }: SubscriptionPanelProps) {
   const label = getPlanLabel(plan);
   const paid = isPaidPlan(plan);
   const pro = hasProPlan(plan);
@@ -52,9 +53,12 @@ export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
             </Link>
             .
           </p>
-          <Button href="/pricing" variant="outline">
-            Управление подпиской — скоро
-          </Button>
+          <PlanCheckoutButton
+            plan="pro"
+            label={`Пополнить Pro — ${PRO_PRICE_LABEL}`}
+            loggedIn={loggedIn}
+            variant="outline"
+          />
         </div>
       ) : paid ? (
         <div className="space-y-3 text-sm text-silver-dim">
@@ -63,10 +67,17 @@ export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
             ). Полный доступ — в тарифе Pro.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button href="/pricing">Перейти на Pro</Button>
-            <Button href="/pricing" variant="outline">
-              Управление Base — скоро
-            </Button>
+            <PlanCheckoutButton
+              plan="pro"
+              label={`Перейти на Pro — ${PRO_PRICE_LABEL}`}
+              loggedIn={loggedIn}
+            />
+            <PlanCheckoutButton
+              plan="base"
+              label={`Пополнить Base — ${BASE_PRICE_LABEL}`}
+              loggedIn={loggedIn}
+              variant="outline"
+            />
           </div>
         </div>
       ) : (
@@ -76,12 +87,22 @@ export function SubscriptionPanel({ plan }: SubscriptionPanelProps) {
             {PRO_PRICE_LABEL} ({PRO_DEAI_GRANT_LABEL}): {PRO_PLAN_DESCRIPTION}
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button href="/pricing">Сравнить тарифы</Button>
+            <PlanCheckoutButton
+              plan="base"
+              label={`Оплатить Base — ${BASE_PRICE_LABEL}`}
+              loggedIn={loggedIn}
+              variant="outline"
+            />
+            <PlanCheckoutButton
+              plan="pro"
+              label={`Оплатить Pro — ${PRO_PRICE_LABEL}`}
+              loggedIn={loggedIn}
+            />
             <Link
               href="/pricing"
               className="inline-flex items-center text-gold-light hover:underline"
             >
-              Подробнее о Base и Pro
+              Подробнее о тарифах
             </Link>
           </div>
         </div>
