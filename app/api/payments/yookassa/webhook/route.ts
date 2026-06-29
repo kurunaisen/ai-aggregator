@@ -48,13 +48,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  let verifiedPayment = payment;
   const fetched = await fetchYookassaPayment(payment.id);
-  if (fetched?.status === "succeeded") {
-    verifiedPayment = fetched;
+  if (!fetched || fetched.status !== "succeeded") {
+    console.error("yookassa webhook: payment verification failed", payment.id);
+    return NextResponse.json({ error: "verification_failed" }, { status: 400 });
   }
 
-  const result = await fulfillYookassaPayment(admin, verifiedPayment);
+  const result = await fulfillYookassaPayment(admin, fetched);
 
   if (!result.ok) {
     console.error("fulfillYookassaPayment:", result.error);

@@ -1,23 +1,7 @@
--- Deai: токены вместо дневных лимитов
--- Выполните в Supabase SQL Editor после schema-aggregator.sql
+-- Безопасность: защита баланса/тарифа и валидация deduct_deai
+-- Выполните в Supabase SQL Editor
 
-alter table public.profiles
-  add column if not exists deai_balance numeric(6, 1) not null default 50;
-
-update public.profiles
-set deai_balance = 25
-where deai_balance is null;
-
-alter table public.usage_logs
-  add column if not exists deai_cost numeric(6, 1);
-
-alter table public.usage_logs
-  drop constraint if exists usage_logs_request_type_check;
-
-alter table public.usage_logs
-  add constraint usage_logs_request_type_check
-  check (request_type in ('chat', 'video', 'image'));
-
+-- 1) deduct_deai: запрет отрицательных сумм (иначе накрутка баланса)
 create or replace function public.deduct_deai(p_amount numeric)
 returns numeric
 language plpgsql
@@ -58,6 +42,7 @@ $$;
 revoke all on function public.deduct_deai(numeric) from public;
 grant execute on function public.deduct_deai(numeric) to authenticated;
 
+-- 2) add_deai: только положительные суммы (service_role)
 create or replace function public.add_deai(p_amount numeric, p_user_id uuid default auth.uid())
 returns numeric
 language plpgsql
@@ -93,16 +78,32 @@ $$;
 revoke all on function public.add_deai(numeric, uuid) from public;
 grant execute on function public.add_deai(numeric, uuid) to service_role;
 
-create or replace function public.handle_new_user()
+-- 3) profiles: пользователь не может менять plan, balance, billing
+create or replace function public.protect_profile_sensitive_columns()
 returns trigger
 language plpgsql
-security definer
-set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, plan, deai_balance)
-  values (new.id, new.email, 'free', 50)
-  on conflict (id) do nothing;
+  if current_user in ('service_role', 'postgres', 'supabase_admin') then
+    return new;
+  end if;
+
+  if new.id is distinct from old.id
+     or new.email is distinct from old.email
+     or new.plan is distinct from old.plan
+     or new.deai_balance is distinct from old.deai_balance
+     or new.stripe_customer_id is distinct from old.stripe_customer_id
+     or new.created_at is distinct from old.created_at then
+    raise exception 'forbidden_profile_update';
+  end if;
+
   return new;
 end;
 $$;
+
+drop trigger if exists protect_profile_sensitive_columns on public.profiles;
+
+create trigger protect_profile_sensitive_columns
+  before update on public.profiles
+  for each row
+  execute function public.protect_profile_sensitive_columns();
