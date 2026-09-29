@@ -43,6 +43,12 @@ export async function Header() {
             <Link href="/" className="hidden text-lg font-semibold tracking-tight text-silver sm:inline">
               Deltaplan<span className="text-gold">AI</span>
             </Link>
+            <Link
+              href="/assistant"
+              className="text-sm font-medium text-silver-dim transition-colors hover:text-gold-light"
+            >
+              Нормы
+            </Link>
           </div>
 
           <ToolUpdatesMarquee />
