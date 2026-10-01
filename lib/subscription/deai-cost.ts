@@ -188,8 +188,11 @@ export function billingModeFromToolType(toolType: string): DeaiBillingMode {
 
 /** Минимальная стоимость одного запуска для проверки доступа по балансу */
 export function getMinimumEmbedDeaiCost(config: EmbedConfig): number {
-  if (config.type === "chat" || config.type === "code") {
-    return calculateTextDeaiCost({ model: config.model, totalChars: 400 });
+  if (config.type === "chat" || config.type === "code" || config.type === "documents") {
+    return calculateTextDeaiCost({
+      model: config.model,
+      totalChars: config.type === "documents" ? 8000 : 400,
+    });
   }
 
   if (config.type === "image") {

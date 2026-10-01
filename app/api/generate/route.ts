@@ -248,6 +248,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Инструмент недоступен." }, { status: 403 });
   }
 
+  if (embed.type === "documents") {
+    return NextResponse.json(
+      { error: "Запросы к документам отправляются со страницы инструмента." },
+      { status: 400 },
+    );
+  }
+
   await resolveToolMeta(slug);
 
   if (action === "poll" && embed.type === "video") {

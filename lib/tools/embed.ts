@@ -28,6 +28,10 @@ export function isEmbedEnabled(slug: string): boolean {
 }
 
 export function isProviderConfigured(config: EmbedConfig): boolean {
+  if (config.type === "documents") {
+    return Boolean(process.env.OPENAI_API_KEY?.trim());
+  }
+
   if (config.type === "chat" || config.type === "code") {
     if (config.provider === "openai") {
       return Boolean(process.env.OPENAI_API_KEY?.trim());
@@ -71,6 +75,8 @@ export function isProviderConfigured(config: EmbedConfig): boolean {
 }
 
 export function getProviderEnvVar(config: EmbedConfig): string | null {
+  if (config.type === "documents") return "OPENAI_API_KEY";
+
   if (config.type === "chat" || config.type === "code") {
     if (config.provider === "openai") return "OPENAI_API_KEY";
     if (config.provider === "anthropic") return "ANTHROPIC_API_KEY";

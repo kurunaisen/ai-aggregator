@@ -2,6 +2,7 @@
 
 import type { EmbedConfig } from "@/data/embed-tools";
 import { EmbeddedClaudeChat } from "@/components/tools/embedded/EmbeddedClaudeChat";
+import { EmbeddedDocuments } from "@/components/tools/embedded/EmbeddedDocuments";
 import { EmbeddedChat } from "@/components/tools/embedded/EmbeddedChat";
 import { EmbeddedImage } from "@/components/tools/embedded/EmbeddedImage";
 import { EmbeddedGrokVideo } from "@/components/tools/embedded/EmbeddedGrokVideo";
@@ -30,6 +31,16 @@ export function EmbeddedTool({ slug, toolName, config, deai, toolAccess }: Embed
         <EmbeddedToolHeader toolName={toolName} deai={deai} />
         <ToolAccessGateMessage toolName={toolName} access={toolAccess} />
       </div>
+    );
+  }
+
+  if (config.type === "documents") {
+    return (
+      <EmbeddedDocuments
+        toolName={toolName}
+        config={config}
+        initialDeai={deai}
+      />
     );
   }
 

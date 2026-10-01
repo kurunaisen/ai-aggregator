@@ -155,9 +155,43 @@ on conflict (slug) do update set
   featured = excluded.featured,
   is_published = excluded.is_published;
 
+insert into public.tools (
+  slug,
+  name,
+  short_description,
+  description,
+  category,
+  tool_type,
+  pricing,
+  website_url,
+  featured,
+  is_published
+) values (
+  'documents',
+  'Документы',
+  'Ответы, акты, ППР и протоколы по вашим файлам',
+  'Документы на DeltaplanAI: загрузите PDF, DOCX и текстовые файлы. Система отвечает на вопросы и готовит черновики актов, ППР, протоколов и писем только по фактам из ваших документов.',
+  'Текст',
+  'text',
+  'freemium',
+  'https://platform.openai.com',
+  true,
+  true
+)
+on conflict (slug) do update set
+  name = excluded.name,
+  short_description = excluded.short_description,
+  description = excluded.description,
+  category = excluded.category,
+  tool_type = excluded.tool_type,
+  pricing = excluded.pricing,
+  website_url = excluded.website_url,
+  featured = excluded.featured,
+  is_published = excluded.is_published;
+
 -- Скрыть инструменты без встроенного виджета
 update public.tools
 set is_published = false
 where slug not in (
-  'chatgpt', 'claude', 'grok', 'grok-imagine', 'grok-video', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling'
+  'chatgpt', 'claude', 'grok', 'grok-imagine', 'grok-video', 'monaco', 'nanobanana', 'flux', 'runway', 'veo', 'kling', 'documents'
 );

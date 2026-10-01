@@ -198,6 +198,87 @@ export type Database = {
         };
         Relationships: [];
       };
+      document_bases: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      source_documents: {
+        Row: {
+          id: string;
+          base_id: string;
+          user_id: string;
+          filename: string;
+          char_count: number;
+          notice: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          base_id: string;
+          user_id: string;
+          filename: string;
+          char_count?: number;
+          notice?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          base_id?: string;
+          user_id?: string;
+          filename?: string;
+          char_count?: number;
+          notice?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      document_chunks: {
+        Row: {
+          id: string;
+          document_id: string;
+          base_id: string;
+          user_id: string;
+          chunk_index: number;
+          content: string;
+          embedding: string | null;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          base_id: string;
+          user_id: string;
+          chunk_index: number;
+          content: string;
+          embedding?: string | null;
+        };
+        Update: {
+          id?: string;
+          document_id?: string;
+          base_id?: string;
+          user_id?: string;
+          chunk_index?: number;
+          content?: string;
+          embedding?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -208,6 +289,39 @@ export type Database = {
       add_deai: {
         Args: { p_amount: number; p_user_id?: string };
         Returns: number;
+      };
+      match_document_chunks: {
+        Args: { p_base_id: string; p_query: string; p_limit?: number };
+        Returns: {
+          chunk_id: string;
+          document_id: string;
+          filename: string;
+          chunk_index: number;
+          content: string;
+          rank: number;
+        }[];
+      };
+      match_document_chunks_semantic: {
+        Args: { p_base_id: string; p_embedding: string; p_limit?: number };
+        Returns: {
+          chunk_id: string;
+          document_id: string;
+          filename: string;
+          chunk_index: number;
+          content: string;
+          rank: number;
+        }[];
+      };
+      expand_document_chunk_neighbors: {
+        Args: { p_base_id: string; p_chunk_ids: string[] };
+        Returns: {
+          chunk_id: string;
+          document_id: string;
+          filename: string;
+          chunk_index: number;
+          content: string;
+          rank: number;
+        }[];
       };
     };
     Enums: Record<string, never>;
