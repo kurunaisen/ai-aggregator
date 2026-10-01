@@ -23,6 +23,12 @@ export const catalogHints: CatalogHint[] = [
   { id: "reels-short", label: "Ролик для Reels", href: "/tool/kling" },
   { id: "cinematic-shot", label: "Кинематографичный кадр", href: "/tool/veo" },
 
+  // Документы по своим файлам
+  { id: "doc-answer", label: "Ответ по своим документам", href: "/tool/documents" },
+  { id: "write-act", label: "Составить акт", href: "/tool/documents" },
+  { id: "write-ppr", label: "Составить ППР", href: "/tool/documents" },
+  { id: "write-protocol", label: "Написать протокол", href: "/tool/documents" },
+
   // Текст и учёба
   { id: "write-essay", label: "Написать реферат", href: "/tool/claude" },
   { id: "check-homework", label: "Проверить домашнюю работу", href: "/tool/chatgpt" },

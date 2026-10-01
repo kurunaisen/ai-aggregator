@@ -1,5 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { createAnonClient } from "@/lib/supabase/anon";
+import { documentsCatalogTool, withDocumentsTool } from "@/lib/tools/documents-catalog";
 import { isEmbeddableCatalogSlug } from "@/lib/tools/embed";
 import type { ToolRow } from "@/lib/supabase/database.types";
 import type { PricingModel, Tool } from "@/types/tool";
@@ -29,7 +30,7 @@ function filterEmbeddableTools(rows: ToolRow[]): Tool[] {
 export async function getPublishedTools(): Promise<Tool[]> {
   noStore();
   const supabase = createAnonClient();
-  if (!supabase) return [];
+  if (!supabase) return withDocumentsTool([]);
 
   const { data, error } = await supabase
     .from("tools")
@@ -39,10 +40,10 @@ export async function getPublishedTools(): Promise<Tool[]> {
 
   if (error) {
     console.error("getPublishedTools:", error.message);
-    return [];
+    return withDocumentsTool([]);
   }
 
-  return filterEmbeddableTools(data ?? []);
+  return withDocumentsTool(filterEmbeddableTools(data ?? []));
 }
 
 export async function getFeaturedTools(): Promise<Tool[]> {
@@ -61,12 +62,24 @@ export async function getFeaturedTools(): Promise<Tool[]> {
     return [];
   }
 
-  return filterEmbeddableTools(data ?? []);
+  const featured = filterEmbeddableTools(data ?? []);
+  if (featured.some((tool) => tool.slug === "documents")) return featured;
+
+  const { data: documentsRow, error: documentsError } = await supabase
+    .from("tools")
+    .select("slug")
+    .eq("slug", "documents")
+    .maybeSingle();
+
+  if (documentsError || documentsRow) return featured;
+  return [documentsCatalogTool(), ...featured];
 }
 
 export async function getToolBySlug(slug: string): Promise<Tool | null> {
   const supabase = createAnonClient();
-  if (!supabase) return null;
+  if (!supabase) {
+    return slug === "documents" ? documentsCatalogTool() : null;
+  }
 
   const { data, error } = await supabase
     .from("tools")
@@ -77,11 +90,11 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
 
   if (error) {
     console.error("getToolBySlug:", error.message);
-    return null;
+    return slug === "documents" ? documentsCatalogTool() : null;
   }
 
   if (!data || !isEmbeddableCatalogSlug(data.slug)) {
-    return null;
+    return slug === "documents" ? documentsCatalogTool() : null;
   }
 
   return mapToolRow(data);
@@ -89,7 +102,7 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
 
 export async function getPublishedToolSlugs(): Promise<string[]> {
   const supabase = createAnonClient();
-  if (!supabase) return [];
+  if (!supabase) return ["documents"];
 
   const { data, error } = await supabase
     .from("tools")
@@ -98,12 +111,11 @@ export async function getPublishedToolSlugs(): Promise<string[]> {
 
   if (error) {
     console.error("getPublishedToolSlugs:", error.message);
-    return [];
+    return ["documents"];
   }
 
-  return (data ?? [])
-    .map((row) => row.slug)
-    .filter(isEmbeddableCatalogSlug);
+  const slugs = (data ?? []).map((row) => row.slug).filter(isEmbeddableCatalogSlug);
+  return slugs.includes("documents") ? slugs : ["documents", ...slugs];
 }
 
 export async function getRelatedTools(

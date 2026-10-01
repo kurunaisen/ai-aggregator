@@ -14,6 +14,8 @@ type ProviderStatus = {
 };
 
 function isConfigured(config: EmbedConfig, status: ProviderStatus): boolean {
+  if (config.type === "documents") return status.openai;
+
   if (config.type === "chat" || config.type === "code") {
     if (config.provider === "openai") return status.openai;
     if (config.provider === "anthropic") return status.anthropic;

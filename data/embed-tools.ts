@@ -43,11 +43,18 @@ export type VideoEmbedConfig = EmbedPageHeader & {
   ratio?: string;
 };
 
+export type DocumentsEmbedConfig = EmbedPageHeader & {
+  type: "documents";
+  provider: "openai";
+  model: string;
+};
+
 export type EmbedConfig =
   | ChatEmbedConfig
   | CodeEmbedConfig
   | ImageEmbedConfig
-  | VideoEmbedConfig;
+  | VideoEmbedConfig
+  | DocumentsEmbedConfig;
 
 /** Встроенные инструменты агрегатора DeltaplanAI */
 export const EMBED_TOOLS: Record<string, EmbedConfig> = {
@@ -228,6 +235,19 @@ export const EMBED_TOOLS: Record<string, EmbedConfig> = {
     placeholder: "Например: кинематографичный кадр: город в дождливую ночь, неоновые отражения...",
     duration: 5,
     ratio: "16:9",
+  },
+  documents: {
+    type: "documents",
+    provider: "openai",
+    model: "gpt-4.1",
+    headerDescription:
+      "Документы на DeltaplanAI: загрузите свои PDF, DOCX и текстовые файлы. Система отвечает на вопросы и готовит черновики актов, ППР, протоколов и писем по фактам из этих файлов. Если данных не хватает, в тексте остаётся пометка [уточнить], а не выдуманный реквизит.",
+    headerHighlights: [
+      "Свои комплекты: договор, проект, переписка, старые акты — в одном наборе",
+      "Режимы: вопрос, акт, ППР, протокол, письмо и любой другой документ",
+      "Факты только из загруженных файлов, с указанием источника",
+      "Скачивание готового черновика в DOCX или TXT",
+    ],
   },
   "grok-video": {
     type: "video",

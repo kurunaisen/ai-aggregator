@@ -64,6 +64,7 @@ export function toolSlugLabel(slug: string): string {
     veo: "Google Veo",
     kling: "Kling",
     monaco: "Monaco Editor",
+    documents: "Документы",
   };
 
   return labels[slug] ?? slug;
