@@ -24,6 +24,7 @@ type ChatMessage = {
   content: string;
   sources?: SourceRef[];
   coverage?: "full" | "retrieved";
+  warnings?: string[];
 };
 
 type StoredDocument = {
@@ -44,6 +45,15 @@ type EmbeddedDocumentsProps = {
   config: DocumentsEmbedConfig;
   initialDeai: DeaiSummary;
 };
+
+function exportText(message: ChatMessage): string {
+  if (!message.warnings?.length) return message.content;
+  const scope =
+    message.coverage === "retrieved"
+      ? "В использованных фрагментах не найдено"
+      : "В загруженных файлах не найдено";
+  return `${message.content}\n\n${scope}:\n${message.warnings.map((item) => `- ${item}`).join("\n")}`;
+}
 
 function formatChars(count: number): string {
   if (count < 1000) return `${count} зн.`;
@@ -211,6 +221,7 @@ export function EmbeddedDocuments({ toolName, config, initialDeai }: EmbeddedDoc
         deai?: DeaiSummary;
         sources?: SourceRef[];
         coverage?: "full" | "retrieved";
+        warnings?: string[];
       };
 
       if (!response.ok) {
@@ -228,6 +239,7 @@ export function EmbeddedDocuments({ toolName, config, initialDeai }: EmbeddedDoc
           content: data.reply ?? "",
           sources: data.sources,
           coverage: data.coverage,
+          warnings: data.warnings ?? [],
         },
       ]);
     } catch (err) {
@@ -244,7 +256,7 @@ export function EmbeddedDocuments({ toolName, config, initialDeai }: EmbeddedDoc
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: documentModeLabel(mode),
-        text: message.content,
+        text: exportText(message),
         format,
       }),
     });
@@ -420,6 +432,7 @@ export function EmbeddedDocuments({ toolName, config, initialDeai }: EmbeddedDoc
                   Напишите вопрос или опишите документ. Ответ строится по файлам выбранного
                   комплекта. Если суммы, даты или фамилии в файлах нет, в тексте будет пометка{" "}
                   <span className="text-gold-light">[уточнить]</span>, а не выдуманное значение.
+                  Под ответом будут числа, даты и шифры, которых нет в файлах: их видно сразу, без вычитки всего текста.
                   {selected ? ` Сейчас выбран комплект «${selected.title}».` : " Сначала создайте комплект слева."}
                 </div>
               )}
@@ -437,11 +450,29 @@ export function EmbeddedDocuments({ toolName, config, initialDeai }: EmbeddedDoc
                     {message.role === "user" ? "Вы" : "Черновик"}
                   </p>
                   <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                  {message.role === "assistant" && message.warnings && message.warnings.length > 0 && (
+                    <div className="mt-3 rounded-lg border border-gold/30 bg-gold/10 px-3 py-2 text-xs leading-relaxed text-gold-light">
+                      {message.coverage === "retrieved"
+                        ? "В использованных фрагментах нет этих данных. Проверьте их по файлам, прежде чем подписывать:"
+                        : "В загруженных файлах нет этих данных. Уберите их или замените на [уточнить]:"}
+                      <ul className="mt-1 list-disc pl-4">
+                        {message.warnings.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {message.role === "assistant" && message.warnings && message.warnings.length === 0 && (
+                    <p className="mt-3 text-xs text-silver-dim">
+                      Числа, даты и шифры из черновика найдены в файлах. Формулировки перед
+                      использованием всё равно стоит просмотреть.
+                    </p>
+                  )}
                   {message.role === "assistant" && (
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => void copyText(message.content)}
+                        onClick={() => void copyText(exportText(message))}
                         className="rounded-lg border border-white/10 px-2 py-1 text-xs text-silver-dim hover:text-silver"
                       >
                         Копировать

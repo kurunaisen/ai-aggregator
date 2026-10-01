@@ -12,6 +12,7 @@ import { completeDocuments } from "@/lib/documents/complete";
 import { loadDocumentContext } from "@/lib/documents/load-context";
 import { groundedUserMessage } from "@/lib/documents/prompt";
 import { isUuid } from "@/lib/documents/schema";
+import { findUnsupportedClaims } from "@/lib/documents/verify";
 import { requireDocumentSession, schemaErrorResponse } from "@/lib/documents/session";
 import { calculateTextDeaiCost } from "@/lib/subscription/deai-cost";
 import {
@@ -181,11 +182,17 @@ export async function POST(request: Request) {
   await recordDeaiUsage(supabase, userId, DOCUMENTS_TOOL_SLUG, "chat", deaiCost, DOCUMENTS_MODEL);
   const deai = await getDeaiSummary(supabase, userId, profile.plan);
 
+  const warnings = findUnsupportedClaims(
+    reply,
+    loaded.pieces.map((piece) => piece.content).join("\n"),
+  );
+
   return NextResponse.json({
     reply,
     deai,
     deaiCost,
     coverage: loaded.coverage,
+    warnings,
     sources: loaded.pieces.map((piece) => ({
       filename: piece.filename,
       chunkIndex: piece.chunkIndex + 1,
