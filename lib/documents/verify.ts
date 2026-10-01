@@ -80,15 +80,6 @@ export function findUnsupportedClaims(reply: string, sources: string): string[] 
     if (!appears(date, sourceCompact)) claims.push(date);
   }
 
-  const numbers = body.match(/\b\d{1,3}(?:\s\d{3})+(?:[.,]\d+)?\b|\b\d{5,}(?:[.,]\d+)?\b/g) ?? [];
-  for (const number of numbers) {
-    const digits = number.replace(/\D/g, "");
-    if (digits.length < 5) continue;
-    if (sourceCompact.includes(digits)) continue;
-    if (claims.some((claim) => claim.replace(/\D/g, "").includes(digits))) continue;
-    claims.push(number);
-  }
-
   const codes =
     body.match(/(?:ГОСТ|СП|СНиП|СанПиН)\s*\d+(?:\.\d+)*(?:-\d+)?/gi) ?? [];
   for (const code of codes) {
@@ -99,6 +90,15 @@ export function findUnsupportedClaims(reply: string, sources: string): string[] 
   for (const item of documentNumbers) {
     const token = item.replace(/^№\s*/, "");
     if (!sourceCompact.includes(compact(token))) claims.push(item.trim());
+  }
+
+  const numbers = body.match(/\b\d{1,3}(?:\s\d{3})+(?:[.,]\d+)?\b|\b\d{5,}(?:[.,]\d+)?\b/g) ?? [];
+  for (const number of numbers) {
+    const digits = number.replace(/\D/g, "");
+    if (digits.length < 5) continue;
+    if (sourceCompact.includes(digits)) continue;
+    if (claims.some((claim) => claim.replace(/\D/g, "").includes(digits))) continue;
+    claims.push(number);
   }
 
   return unique(claims);

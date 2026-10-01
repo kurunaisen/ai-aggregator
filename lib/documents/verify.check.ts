@@ -16,6 +16,7 @@ const dirty = findUnsupportedClaims(
 assert.ok(dirty.some((item) => item.includes("99-А") || item.includes("№ 99-А")));
 assert.ok(dirty.some((item) => item.includes("875")));
 assert.ok(dirty.some((item) => /гост/i.test(item)));
+assert.equal(dirty.includes("12345"), false);
 assert.ok(dirty.some((item) => item.includes("2024") || item.includes("января")));
 
 const marked = findUnsupportedClaims("Сумма [уточнить: 999999 рублей].", sources);
