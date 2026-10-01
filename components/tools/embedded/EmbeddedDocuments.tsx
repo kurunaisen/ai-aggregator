@@ -350,6 +350,7 @@ export function EmbeddedDocuments({ toolName, config, initialDeai }: EmbeddedDoc
               <p className="text-sm font-medium text-silver">2. Файлы</p>
               <p className="mt-1 text-xs leading-relaxed text-silver-dim">
                 PDF, DOCX, TXT, MD, CSV или JSON, до 8 МБ. Скан без текстового слоя не подойдёт.
+                Спрашивать можно своими словами: поиск идёт и по смыслу, и по совпадению слов.
               </p>
               <input
                 ref={fileRef}

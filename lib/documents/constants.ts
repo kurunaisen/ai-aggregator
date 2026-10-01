@@ -1,6 +1,7 @@
 export const DOCUMENTS_TOOL_SLUG = "documents";
 
 export const DOCUMENTS_MODEL = "gpt-4.1";
+export const EMBEDDING_MODEL = "text-embedding-3-small";
 
 export const MAX_BASES = 30;
 export const MAX_DOCUMENTS_PER_BASE = 40;
@@ -12,6 +13,9 @@ export const CHUNK_OVERLAP = 250;
 export const FULL_CONTEXT_CHARS = 52_000;
 export const MAX_CONTEXT_CHARS = 52_000;
 export const MAX_RETRIEVED_CHUNKS = 12;
+export const MAX_SEMANTIC_CHUNKS = 12;
+export const EMBED_BACKFILL_BATCH = 64;
+export const EMBED_BACKFILL_ROUNDS = 3;
 export const MAX_CHAT_MESSAGES = 12;
 export const MAX_USER_MESSAGE_CHARS = 6_000;
 export const MAX_EXPORT_CHARS = 100_000;

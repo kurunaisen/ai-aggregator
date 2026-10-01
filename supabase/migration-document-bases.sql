@@ -218,3 +218,5 @@ on conflict (slug) do update set
   website_url = excluded.website_url,
   featured = excluded.featured,
   is_published = excluded.is_published;
+
+-- Смысловой поиск: supabase/migration-document-embeddings.sql

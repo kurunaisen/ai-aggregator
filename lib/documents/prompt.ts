@@ -24,17 +24,25 @@ export function groundedUserMessage(params: {
   task: string;
   pieces: ContextPiece[];
   coverage: "full" | "retrieved";
+  files: { filename: string; charCount: number }[];
 }): string {
   const coverage =
     params.coverage === "full"
       ? "Ниже весь текст загруженных файлов этого комплекта."
-      : "Ниже ближайшие к задаче фрагменты. Если их мало для вывода, так и напиши.";
+      : "Ниже фрагменты, найденные по смыслу и по словам, вместе с соседними кусками тех же файлов. Если их мало для вывода, так и напиши.";
+
+  const fileList = params.files
+    .map((file) => `- ${file.filename} (${file.charCount} знаков)`)
+    .join("\n");
 
   return [
     `Тип документа: ${documentModeLabel(params.mode)}.`,
     "",
     "Задание:",
     params.task.trim(),
+    "",
+    "Файлы комплекта:",
+    fileList,
     "",
     coverage,
     "",

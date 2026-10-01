@@ -11,11 +11,11 @@ assert.ok(chunks.length > 2);
 assert.ok(chunks.every((part) => part.length <= 500));
 
 const primary: ContextPiece[] = [
-  { id: "a", filename: "Договор.pdf", chunkIndex: 2, content: "сумма 100" },
+  { id: "a", documentId: "d1", filename: "Договор.pdf", chunkIndex: 2, content: "сумма 100" },
 ];
 const extra: ContextPiece[] = [
-  { id: "a", filename: "Договор.pdf", chunkIndex: 2, content: "дубль" },
-  { id: "b", filename: "Проект.docx", chunkIndex: 0, content: "объект" },
+  { id: "a", documentId: "d1", filename: "Договор.pdf", chunkIndex: 2, content: "дубль" },
+  { id: "b", documentId: "d2", filename: "Проект.docx", chunkIndex: 0, content: "объект" },
 ];
 const merged = mergePieces(primary, extra);
 assert.equal(merged.length, 2);
@@ -23,11 +23,13 @@ assert.equal(merged[0].content, "сумма 100");
 
 const packed = packPieces(
   [
-    { id: "1", filename: "a.txt", chunkIndex: 0, content: "x".repeat(100) },
-    { id: "2", filename: "b.txt", chunkIndex: 0, content: "y".repeat(100) },
+    { id: "1", documentId: "d1", filename: "a.txt", chunkIndex: 0, content: "x".repeat(100) },
+    { id: "2", documentId: "d2", filename: "b.txt", chunkIndex: 0, content: "y".repeat(100) },
   ],
   160,
 );
+const headed = chunkText(`${"Введение договора. ".repeat(80)}\n1.2 Охрана труда\nКаски обязательны на площадке.`);
+assert.ok(headed.some((part) => part.includes("Охрана труда")));
 assert.equal(packed.length, 1);
 
 console.log("document chunk checks ok", { parts: parts.length, chunks: chunks.length });

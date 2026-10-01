@@ -2,6 +2,7 @@ import { CHUNK_OVERLAP, CHUNK_SIZE } from "@/lib/documents/constants";
 
 export type ContextPiece = {
   id: string;
+  documentId: string;
   filename: string;
   chunkIndex: number;
   content: string;
@@ -12,7 +13,15 @@ export function chunkText(
   size = CHUNK_SIZE,
   overlap = CHUNK_OVERLAP,
 ): string[] {
-  const normalized = text.replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  const normalized = text
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(
+      /(^|\n)(?=(?:#{1,4} |(?:\d+\.){1,4}\d* \S|Глава \d|Раздел \d|Статья \d))/gi,
+      "$1\n",
+    )
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   if (!normalized) return [];
   if (normalized.length <= size) return [normalized];
 

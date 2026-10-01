@@ -257,6 +257,7 @@ export type Database = {
           user_id: string;
           chunk_index: number;
           content: string;
+          embedding: string | null;
         };
         Insert: {
           id?: string;
@@ -265,6 +266,7 @@ export type Database = {
           user_id: string;
           chunk_index: number;
           content: string;
+          embedding?: string | null;
         };
         Update: {
           id?: string;
@@ -273,6 +275,7 @@ export type Database = {
           user_id?: string;
           chunk_index?: number;
           content?: string;
+          embedding?: string | null;
         };
         Relationships: [];
       };
@@ -289,6 +292,28 @@ export type Database = {
       };
       match_document_chunks: {
         Args: { p_base_id: string; p_query: string; p_limit?: number };
+        Returns: {
+          chunk_id: string;
+          document_id: string;
+          filename: string;
+          chunk_index: number;
+          content: string;
+          rank: number;
+        }[];
+      };
+      match_document_chunks_semantic: {
+        Args: { p_base_id: string; p_embedding: string; p_limit?: number };
+        Returns: {
+          chunk_id: string;
+          document_id: string;
+          filename: string;
+          chunk_index: number;
+          content: string;
+          rank: number;
+        }[];
+      };
+      expand_document_chunk_neighbors: {
+        Args: { p_base_id: string; p_chunk_ids: string[] };
         Returns: {
           chunk_id: string;
           document_id: string;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   DOCUMENTS_MODEL,
   DOCUMENTS_TOOL_SLUG,
+  documentModeLabel,
   isDocumentMode,
   MAX_CHAT_MESSAGES,
   MAX_USER_MESSAGE_CHARS,
@@ -120,7 +121,12 @@ export async function POST(request: Request) {
       .slice(-2)
       .map((message) => message.content)
       .join("\n");
-    loaded = await loadDocumentContext(supabase, userId, payload.baseId, priorUser);
+    loaded = await loadDocumentContext(
+      supabase,
+      userId,
+      payload.baseId,
+      `${documentModeLabel(mode)}\n${priorUser}`,
+    );
   } catch (error) {
     const schema = schemaErrorResponse(error);
     if (schema) return schema;
@@ -133,6 +139,7 @@ export async function POST(request: Request) {
     task: latest.content,
     pieces: loaded.pieces,
     coverage: loaded.coverage,
+    files: loaded.files,
   });
 
   const apiMessages = [...trimHistory(messages), { role: "user" as const, content: grounded }];

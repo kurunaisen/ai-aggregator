@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { chunkText } from "@/lib/documents/chunk";
+import { embedTexts, formatVector } from "@/lib/documents/embed";
+import { isOptionalSearchError } from "@/lib/documents/schema";
 import {
   MAX_CHUNKS_PER_DOCUMENT,
   MAX_DOCUMENTS_PER_BASE,
@@ -110,6 +112,13 @@ export async function POST(request: Request) {
     notice = notice ?? "Сохранены первые фрагменты файла: он слишком большой.";
   }
 
+  const vectors = await embedTexts(chunks);
+  if (!vectors) {
+    notice = [notice, "Смысловой поиск по этому файлу пока недоступен, остаётся поиск по словам."]
+      .filter(Boolean)
+      .join(" ");
+  }
+
   const storedText = chunks.join("\n\n");
   const { data: created, error: insertError } = await supabase
     .from("source_documents")
@@ -135,12 +144,24 @@ export async function POST(request: Request) {
     user_id: userId,
     chunk_index: chunkIndex,
     content,
+    ...(vectors ? { embedding: formatVector(vectors[chunkIndex]) } : {}),
   }));
 
-  for (let offset = 0; offset < rows.length; offset += 40) {
-    const { error: chunkError } = await supabase
-      .from("document_chunks")
-      .insert(rows.slice(offset, offset + 40));
+  for (let offset = 0; offset < rows.length; offset += 20) {
+    const batch = rows.slice(offset, offset + 20);
+    let { error: chunkError } = await supabase.from("document_chunks").insert(batch);
+
+    if (chunkError && vectors && isOptionalSearchError(chunkError.message)) {
+      const plain = batch.map((row) => ({
+        document_id: row.document_id,
+        base_id: row.base_id,
+        user_id: row.user_id,
+        chunk_index: row.chunk_index,
+        content: row.content,
+      }));
+      const retry = await supabase.from("document_chunks").insert(plain);
+      chunkError = retry.error;
+    }
 
     if (chunkError) {
       await supabase.from("source_documents").delete().eq("id", created.id).eq("user_id", userId);
