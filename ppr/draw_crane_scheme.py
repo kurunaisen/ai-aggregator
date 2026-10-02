@@ -224,12 +224,8 @@ def draw_crane_plan(ax, boom_to):
     label(ax, 2.85, 1.58, "стрела", size=7.5)
 
 
-def draw_block(ax, x0, y0=-4.5, length=3.0, width=9.0, caption=None, hook=None):
+def draw_block(ax, x0, y0=-4.5, length=3.0, width=9.0, caption=None, hook=None, caption_text="один блок 3 × 9 м", caption_ha="center"):
     rect(ax, x0, y0, length, width, fc=BLOCK, ec=INK, lw=1.25, zorder=4)
-    # Roof seam lines of the module, under the sling
-    ax.plot([x0, x0 + length], [y0 + width / 2, y0 + width / 2], color="#d2c8b6", lw=0.45, zorder=4)
-    for k in (1, 2):
-        ax.plot([x0, x0 + length], [y0 + k * width / 3, y0 + k * width / 3], color="#e4dccb", lw=0.35, zorder=4)
     if hook is not None:
         hx, hy = hook
         for cx, cy in ((x0, y0), (x0 + length, y0), (x0, y0 + width), (x0 + length, y0 + width)):
@@ -238,7 +234,7 @@ def draw_block(ax, x0, y0=-4.5, length=3.0, width=9.0, caption=None, hook=None):
         ax.add_patch(Circle((hx, hy), 0.13, fc=INK, zorder=7))
     if caption is None:
         caption = (x0 + length / 2, y0 + width + 0.48)
-    label(ax, caption[0], caption[1], "блок 3 × 9 м", size=8, bold=True, z=9)
+    label(ax, caption[0], caption[1], caption_text, size=8, bold=True, z=9, ha=caption_ha)
 
 
 def draw_flatbed_plan(ax):
@@ -309,7 +305,7 @@ def draw_plan_set(ax):
     ax.plot([-4.2, 11.2], [0, 0], color="#9aa0a6", lw=0.6, ls=(0, (7, 2, 1.4, 2)), zorder=1)
     draw_flatbed_plan(ax)
     draw_crane_plan(ax, 7.0)
-    draw_block(ax, 5.5, caption=(7.0, 2.6), hook=(7.0, 0.0))
+    draw_block(ax, 5.5, caption=(5.35, 3.75), hook=(7.0, 0.0), caption_text="один блок", caption_ha="right")
     # Entry arrow along the free side of the trailer
     ax.annotate(
         "", xy=(9.55, 2.6), xytext=(9.55, -1.6),
@@ -336,24 +332,25 @@ def _curve(ax, verts, fc, ec=INK, lw=0.9, z=4):
     ax.add_patch(PathPatch(Path(verts + [verts[0]], codes), fc=fc, ec=ec, lw=lw, zorder=z))
 
 
-def module_face(ax, x, y, w, h, bays, z=4, door=None):
+def block_wall(ax, x, y, w, h, z=4):
+    """Сплошная стена одного блока. Стойки только по углам."""
     rect(ax, x, y, w, h, fc=BLOCK, ec=INK, lw=1.05, zorder=z)
-    rect(ax, x - 0.04, y + h - 0.06, w + 0.08, 0.10, fc="#e7dfd0", ec=INK, lw=0.35, zorder=z + 1)
-    rect(ax, x, y, w, 0.14, fc="#d9d0be", ec=INK, lw=0.35, zorder=z + 1)
-    for i in range(bays + 1):
-        px = x + i * (w / bays)
-        rect(ax, px - 0.035, y, 0.07, h, fc="#cfc6b4", ec=INK, lw=0.25, zorder=z + 1)
-    bay = w / bays
-    for i in range(bays):
-        wx = x + i * bay
-        if i == door:
-            rect(ax, wx + bay * 0.22, y + 0.14, bay * 0.50, h * 0.62, fc="#efe8da", ec=INK, lw=0.45, zorder=z + 2)
-            ax.add_patch(Circle((wx + bay * 0.62, y + h * 0.38), 0.035, fc="#222", zorder=z + 3))
-        else:
-            gx = wx + bay * 0.16
-            rect(ax, gx, y + h * 0.40, bay * 0.64, h * 0.32, fc=GLASS, ec=INK, lw=0.4, zorder=z + 2)
-            ax.plot([gx, gx + bay * 0.64], [y + h * 0.56, y + h * 0.56], color="#9bb0c0", lw=0.35, zorder=z + 3)
-            ax.plot([gx + bay * 0.32, gx + bay * 0.32], [y + h * 0.40, y + h * 0.72], color="#9bb0c0", lw=0.35, zorder=z + 3)
+    rect(ax, x - 0.03, y + h - 0.06, w + 0.06, 0.08, fc="#e7dfd0", ec=INK, lw=0.3, zorder=z + 1)
+    rect(ax, x, y, w, 0.10, fc="#d9d0be", ec=INK, lw=0.3, zorder=z + 1)
+    rect(ax, x, y, 0.06, h, fc="#cfc6b4", ec=INK, lw=0.25, zorder=z + 1)
+    rect(ax, x + w - 0.06, y, 0.06, h, fc="#cfc6b4", ec=INK, lw=0.25, zorder=z + 1)
+    if w < 5:
+        ww, wh = min(1.15, w * 0.4), h * 0.26
+        gx, gy = x + (w - ww) / 2, y + h * 0.52
+        rect(ax, gx, gy, ww, wh, fc=GLASS, ec=INK, lw=0.4, zorder=z + 2)
+        return
+    rect(ax, x + 0.28, y + 0.10, 0.78, h * 0.58, fc="#efe8da", ec=INK, lw=0.4, zorder=z + 2)
+    left, right, gap, n = x + 1.5, x + w - 0.35, 0.28, 3
+    ww = (right - left - gap * (n - 1)) / n
+    gy, wh = y + h * 0.58, h * 0.20
+    for i in range(n):
+        gx = left + i * (ww + gap)
+        rect(ax, gx, gy, ww, wh, fc=GLASS, ec=INK, lw=0.4, zorder=z + 2)
 
 
 def telescopic_boom(ax, root, tip, w0, z=4):
@@ -534,7 +531,7 @@ def draw_crane_elevation(ax):
     fender(ax, 7.78, 0.42, 0.40, z=3)
     wheel_side(ax, 6.22, 0.42, 0.40, dual=True)
     wheel_side(ax, 7.78, 0.42, 0.40, dual=True)
-    module_face(ax, 5.5, 2.0, 3.0, 2.5, 2, door=0)
+    block_wall(ax, 5.5, 2.0, 3.0, 2.5)
     label(ax, 6.20, 4.05, "блок", size=8, bold=True)
     label(ax, 5.15, 1.05, "шаланда", size=7, ha="right")
 
@@ -612,8 +609,8 @@ def draw_trailer_long(ax):
     rect(ax, 15.85, 0.15, 0.08, 0.55, fc="#2a2a2a", ec=INK, lw=0.3, zorder=4)
 
     block_x = deck_x + (deck_l - 9.0) / 2
-    module_face(ax, block_x, 1.39, 9.0, 2.5, 4, door=1, z=4)
-    label(ax, block_x + 6.4, 1.88, "блок 3 × 9 × 2,5 м", size=7.5, bold=True)
+    block_wall(ax, block_x, 1.39, 9.0, 2.5)
+    label(ax, block_x + 5.2, 1.95, "один блок 3 × 9 × 2,5 м", size=7.5, bold=True)
 
     hdim(ax, deck_x, deck_x + deck_l, -1.15, "площадка 13,6", y_from=0)
     hdim(ax, block_x, block_x + 9.0, 4.55, "9,0", y_from=3.89)

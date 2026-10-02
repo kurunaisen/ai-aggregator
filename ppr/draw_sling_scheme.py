@@ -78,26 +78,28 @@ def vdim(ax, y1, y2, x, text, x_from, size=7.5):
     )
 
 
-def module_face(ax, x, y, w, h, bays, door=None, z=3):
+def block_wall(ax, x, y, w, h, z=3):
+    """Сплошная стена одного блока. Стойки только по углам, без членения на блоки."""
     rect(ax, x, y, w, h, fc=BLOCK, ec=INK, lw=1.05, zorder=z)
-    rect(ax, x - 0.04, y + h - 0.05, w + 0.08, 0.08, fc="#e7dfd0", ec=INK, lw=0.35, zorder=z + 1)
-    rect(ax, x, y, w, 0.12, fc="#d9d0be", ec=INK, lw=0.3, zorder=z + 1)
-    bay = w / bays
-    for i in range(bays + 1):
-        px = x + i * bay
-        rect(ax, px - 0.03, y, 0.06, h, fc="#cfc6b4", ec=INK, lw=0.25, zorder=z + 1)
-    for i in range(bays):
-        wx = x + i * bay
-        if i == door:
-            rect(ax, wx + bay * 0.22, y + 0.12, bay * 0.48, h * 0.58, fc="#efe8da", ec=INK, lw=0.4, zorder=z + 2)
-            ax.add_patch(Circle((wx + bay * 0.60, y + h * 0.36), 0.035, fc="#222", zorder=z + 3))
-        else:
-            gx = wx + bay * 0.16
-            rect(ax, gx, y + h * 0.42, bay * 0.62, h * 0.30, fc=GLASS, ec=INK, lw=0.4, zorder=z + 2)
-            ax.plot(
-                [gx, gx + bay * 0.62], [y + h * 0.57, y + h * 0.57],
-                color="#9bb0c0", lw=0.35, zorder=z + 3,
-            )
+    rect(ax, x - 0.03, y + h - 0.06, w + 0.06, 0.08, fc="#e7dfd0", ec=INK, lw=0.3, zorder=z + 1)
+    rect(ax, x, y, w, 0.10, fc="#d9d0be", ec=INK, lw=0.3, zorder=z + 1)
+    rect(ax, x, y, 0.07, h, fc="#cfc6b4", ec=INK, lw=0.3, zorder=z + 1)
+    rect(ax, x + w - 0.07, y, 0.07, h, fc="#cfc6b4", ec=INK, lw=0.3, zorder=z + 1)
+    if w < 5:
+        ww, wh = min(1.2, w * 0.4), h * 0.26
+        gx, gy = x + (w - ww) / 2, y + h * 0.52
+        rect(ax, gx, gy, ww, wh, fc=GLASS, ec=INK, lw=0.4, zorder=z + 2)
+        ax.plot([gx, gx + ww], [gy + wh / 2, gy + wh / 2], color="#9bb0c0", lw=0.35, zorder=z + 3)
+        return
+    rect(ax, x + 0.28, y + 0.10, 0.82, h * 0.58, fc="#efe8da", ec=INK, lw=0.4, zorder=z + 2)
+    ax.add_patch(Circle((x + 0.96, y + h * 0.34), 0.04, fc="#222", zorder=z + 3))
+    left, right, gap, n = x + 1.55, x + w - 0.4, 0.28, 3
+    ww = (right - left - gap * (n - 1)) / n
+    gy, wh = y + h * 0.58, h * 0.20
+    for i in range(n):
+        gx = left + i * (ww + gap)
+        rect(ax, gx, gy, ww, wh, fc=GLASS, ec=INK, lw=0.4, zorder=z + 2)
+        ax.plot([gx, gx + ww], [gy + wh / 2, gy + wh / 2], color="#9bb0c0", lw=0.35, zorder=z + 3)
 
 
 def cg_mark(ax, x, y, r=0.16):
@@ -137,7 +139,7 @@ def draw_chain(ax, p0, p1, step=0.38):
 def draw_side(ax):
     """Длинная грань 9 м. Передняя и задняя ветви в этом виде совпадают."""
     style_ax(ax, (-1.6, 12.4), (-1.7, 9.3))
-    module_face(ax, 0, 0, LENGTH, HEIGHT, 4, door=0)
+    block_wall(ax, 0, 0, LENGTH, HEIGHT)
     hook = (LENGTH / 2, HEIGHT + HOOK_H)
     ax.plot([hook[0], hook[0]], [HEIGHT, hook[1]], color="#8a8278", lw=0.6, ls=(0, (4, 2)), zorder=4)
     draw_chain(ax, (0, HEIGHT), hook)
@@ -146,8 +148,8 @@ def draw_side(ax):
     eye(ax, LENGTH, HEIGHT)
     master_and_hook(ax, *hook)
     cg_mark(ax, LENGTH / 2, HEIGHT / 2, r=0.12)
-    label(ax, 5.55, 0.48, "Ц.Т.", size=7)
-    label(ax, 3.30, 2.05, f"{comma(MASS, 1)} т", size=8, bold=True)
+    label(ax, 4.85, 0.62, "Ц.Т.", size=7, ha="left")
+    label(ax, 2.55, 0.62, f"{comma(MASS, 1)} т", size=8, bold=True)
 
     label(ax, 1.35, 5.35, comma(BRANCH, 1), size=8, rotation=49)
     label(ax, 0.55, 3.55, "две ветви", size=7, ha="right")
@@ -157,13 +159,13 @@ def draw_side(ax):
     hdim(ax, 0, LENGTH, -1.15, comma(LENGTH, 1), y_from=0)
     vdim(ax, 0, HEIGHT, 10.15, comma(HEIGHT, 1), x_from=LENGTH, size=7.5)
     vdim(ax, HEIGHT, hook[1], 11.35, comma(HOOK_H, 2), x_from=LENGTH, size=7.5)
-    label(ax, LENGTH / 2, 8.85, "Вид с длинной стороны", size=11, bold=True)
+    label(ax, LENGTH / 2, 8.85, "Один блок. Длинная сторона", size=11, bold=True)
 
 
 def draw_end(ax):
     """Торец 3 м. Ветви длинных граней в этом виде совпадают."""
     style_ax(ax, (-1.5, 6.4), (-1.7, 9.3))
-    module_face(ax, 0, 0, WIDTH, HEIGHT, 2, door=0)
+    block_wall(ax, 0, 0, WIDTH, HEIGHT)
     hook = (WIDTH / 2, HEIGHT + HOOK_H)
     ax.plot([hook[0], hook[0]], [HEIGHT, hook[1]], color="#8a8278", lw=0.6, ls=(0, (4, 2)), zorder=4)
     draw_chain(ax, (0, HEIGHT), hook)
@@ -173,15 +175,12 @@ def draw_end(ax):
     master_and_hook(ax, *hook)
     label(ax, hook[0] + 0.5, hook[1] + 0.55, "крюк", size=7.5, ha="left")
     hdim(ax, 0, WIDTH, -1.15, comma(WIDTH, 1), y_from=0)
-    label(ax, WIDTH / 2, 8.85, "Вид с торца", size=11, bold=True)
+    label(ax, WIDTH / 2, 8.85, "Торец этого блока", size=11, bold=True)
 
 
 def draw_plan(ax):
     style_ax(ax, (-1.3, 11.6), (-2.0, 5.3))
     rect(ax, 0, 0, LENGTH, WIDTH, fc=BLOCK, ec=INK, lw=1.15, zorder=3)
-    rect(ax, 0, WIDTH - 0.08, LENGTH, 0.08, fc="#e7dfd0", ec=INK, lw=0.3, zorder=4)
-    for k in (1, 2):
-        ax.plot([0, LENGTH], [k * WIDTH / 3, k * WIDTH / 3], color="#e0d6c4", lw=0.4, zorder=3)
     center = (LENGTH / 2, WIDTH / 2)
     corners = ((0, 0), (LENGTH, 0), (0, WIDTH), (LENGTH, WIDTH))
     for corner in corners:
