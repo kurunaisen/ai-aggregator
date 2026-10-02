@@ -5,6 +5,7 @@ import math
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Ellipse, FancyBboxPatch, Polygon, Rectangle, Wedge
+from matplotlib.transforms import Affine2D
 from matplotlib.font_manager import FontProperties
 
 SANS = FontProperties(fname="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
@@ -27,8 +28,10 @@ GAUGE = 1.52
 AXES_Y = (-3.0, 0.0, 3.0)
 STOP = 6.5
 CAB_FRONT = 5.0
-# Показан промежуточный ход: ближняя грань ещё не дошла до стопа.
+# Блок на стопе: ближняя грань 6,5 м. Кран на это время со створа убран.
+# Машины нарисованы в старых координатах и сдвинуты на SHIFT.
 NEAR = 15.0
+SHIFT = -8.5
 ALONG = 3.0
 ACROSS = 9.0
 HEIGHT = 2.5
@@ -176,6 +179,37 @@ def draw_chain(ax, p0, p1, step=0.28):
         ax.add_patch(Ellipse((cx, cy), w, h, angle=turn, fc="#f7f7f7", ec=INK, lw=0.45, zorder=7))
 
 
+class XShift:
+    """Сдвигает рисунок по X, не трогая подписи и размеры листа."""
+
+    def __init__(self, ax, dx):
+        self._ax = ax
+        self._dx = dx
+        self._transform = Affine2D().translate(dx, 0) + ax.transData
+
+    def add_patch(self, patch, **kwargs):
+        patch.set_transform(self._transform)
+        return self._ax.add_patch(patch, **kwargs)
+
+    def plot(self, *args, **kwargs):
+        if args and hasattr(args[0], "__iter__") and not isinstance(args[0], str):
+            xs = [x + self._dx for x in args[0]]
+            return self._ax.plot(xs, *args[1:], **kwargs)
+        return self._ax.plot(*args, **kwargs)
+
+    def text(self, x, y, s, **kwargs):
+        return self._ax.text(x + self._dx, y, s, **kwargs)
+
+    def annotate(self, text, xy, xytext=None, **kwargs):
+        xy = (xy[0] + self._dx, xy[1])
+        if xytext is not None:
+            xytext = (xytext[0] + self._dx, xytext[1])
+        return self._ax.annotate(text, xy=xy, xytext=xytext, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._ax, name)
+
+
 def eye_mark(ax, x, y, r=0.09, z=8):
     ax.add_patch(Circle((x, y), r, fc="white", ec=INK, lw=0.75, zorder=z))
     ax.add_patch(Circle((x, y), r * 0.38, fc=INK, zorder=z + 1))
@@ -221,7 +255,7 @@ def draw_tracks_side(ax, x0, x1):
     rect(ax, x0, RAIL_TOP - 0.06, x1 - x0, 0.06, fc=RAIL, ec=INK, lw=0.35, zorder=2)
 
 
-def draw_crane_plan(ax):
+def draw_crane_plan(ax, transport=False):
     ax.add_patch(FancyBboxPatch(
         (-3.55, -1.18), 8.55, 2.36,
         boxstyle="round,pad=0.02,rounding_size=0.14",
@@ -242,18 +276,20 @@ def draw_crane_plan(ax):
     rect(ax, 4.72, -0.82, 0.22, 1.64, fc=GLASS, ec=INK, lw=0.35, zorder=6)
     rect(ax, 2.78, 0.55, 1.5, 0.28, fc="#1c2a34", ec=GLASS, lw=0.3, zorder=6)
     rect(ax, 2.78, -0.83, 1.5, 0.28, fc="#1c2a34", ec=GLASS, lw=0.3, zorder=6)
-    label(ax, 3.7, 0.0, "кабина", size=7, color="white")
+    if not transport:
+        label(ax, 3.7, 0.0, "кабина", size=7, color="white")
 
-    pads = ((1.35, 2.15), (1.35, -2.85), (-2.15, 2.15), (-2.15, -2.85))
-    roots = ((1.35, 0.95), (1.35, -0.95), (-0.85, 0.95), (-0.85, -0.95))
-    for (px, py), (sx, sy) in zip(pads, roots):
-        ex, ey = px + 0.38, py + 0.28
-        ax.add_patch(Polygon(boom_polygon(sx, sy, ex, ey, 0.26, 0.2), closed=True, fc="#4c565e", ec=INK, lw=0.55, zorder=4))
-        ax.add_patch(FancyBboxPatch(
-            (px, py), 0.76, 0.56, boxstyle="round,pad=0.01,rounding_size=0.04",
-            fc=PAD, ec=INK, lw=0.65, zorder=5,
-        ))
-        rect(ax, px + 0.12, py + 0.1, 0.52, 0.36, fc="#3a4146", ec=INK, lw=0.3, zorder=6)
+    if not transport:
+        pads = ((1.35, 2.15), (1.35, -2.85), (-2.15, 2.15), (-2.15, -2.85))
+        roots = ((1.35, 0.95), (1.35, -0.95), (-0.85, 0.95), (-0.85, -0.95))
+        for (px, py), (sx, sy) in zip(pads, roots):
+            ex, ey = px + 0.38, py + 0.28
+            ax.add_patch(Polygon(boom_polygon(sx, sy, ex, ey, 0.26, 0.2), closed=True, fc="#4c565e", ec=INK, lw=0.55, zorder=4))
+            ax.add_patch(FancyBboxPatch(
+                (px, py), 0.76, 0.56, boxstyle="round,pad=0.01,rounding_size=0.04",
+                fc=PAD, ec=INK, lw=0.65, zorder=5,
+            ))
+            rect(ax, px + 0.12, py + 0.1, 0.52, 0.36, fc="#3a4146", ec=INK, lw=0.3, zorder=6)
 
     ax.add_patch(Circle((0, 0), 1.05, fc="#d5dbdf", ec=INK, lw=0.8, zorder=5))
     ax.add_patch(FancyBboxPatch(
@@ -271,7 +307,15 @@ def draw_crane_plan(ax):
     ax.add_patch(Circle((0, 0), 0.1, fc=INK, zorder=8))
     ax.plot([-0.28, 0.28], [0, 0], color="white", lw=0.7, zorder=9)
     ax.plot([0, 0], [-0.28, 0.28], color="white", lw=0.7, zorder=9)
-    # Поднятая стрела даёт короткую проекцию и не накрывает экскаватор.
+    if transport:
+        # Стрела уложена вдоль шасси, над кабиной, в транспортное положение.
+        ax.add_patch(Polygon(
+            boom_polygon(0.55, 0.0, 4.55, 0.0, 0.36, 0.22),
+            closed=True, fc="#e7e1d4", ec=BOOM_EDGE, lw=0.6, zorder=7,
+        ))
+        label(ax, 2.4, 1.85, "стрела собрана", size=7)
+        label(ax, 3.7, -1.7, "кабина", size=7)
+        return
     for a, b, w0, w1, color in (
         (0.05, 0.42, 0.42, 0.34, "#d9d3c4"),
         (0.38, 0.72, 0.32, 0.26, "#e7e1d4"),
@@ -456,9 +500,9 @@ def draw_excavator_side(ax):
     for tx in (11.98, 12.14, 12.30, 12.44):
         ax.plot([tx, tx + 0.03], [1.02, 0.74], color=INK, lw=0.85, zorder=7)
     eye_mark(ax, EYE_SIDE[0], EYE_SIDE[1], r=0.09)
-    label(ax, 13.05, 2.42, "рым", size=7)
-    ax.plot([12.82, EYE_SIDE[0] + 0.02], [2.28, EYE_SIDE[1] + 0.06], color=INK, lw=0.45, zorder=8)
-    label(ax, 13.15, 0.82, "зубья", size=6.5)
+    label(ax, 12.9, 2.15, "рым", size=7)
+    ax.plot([12.75, EYE_SIDE[0] + 0.04], [2.02, EYE_SIDE[1] + 0.06], color=INK, lw=0.45, zorder=8)
+    label(ax, 13.2, 0.7, "зубья", size=6.5)
 
 
 def draw_block_plan(ax):
@@ -486,48 +530,56 @@ def draw_block_side(ax):
 
 
 def draw_plan(ax):
-    style_ax(ax, (-4.6, 19.6), (-6.6, 6.9))
-    ax.add_patch(Rectangle((4.2, -5.2), 15.0, 10.4, fc=STONE, ec="#e4dfd4", lw=0.4, hatch="..", zorder=0))
-    draw_tracks_plan(ax, 6.0, 19.2)
-    draw_crane_plan(ax)
-    draw_excavator_plan(ax)
-    draw_block_plan(ax)
+    style_ax(ax, (-4.8, 20.8), (-6.6, 6.9))
+    face = NEAR + SHIFT
+    ax.add_patch(Rectangle((-2.4, -5.2), 12.7, 10.4, fc=STONE, ec="#e4dfd4", lw=0.4, hatch="..", zorder=0))
+    draw_tracks_plan(ax, -1.5, face + ALONG + 0.6)
+    ax.plot([0, 0], [-4.9, 5.3], color=INK, lw=0.7, ls=(0, (4, 2.2)), zorder=2)
+    work = XShift(ax, SHIFT)
+    draw_excavator_plan(work)
+    draw_block_plan(work)
     for y in (-HITCH, HITCH):
-        draw_chain(ax, (12.5, 0.0), (NEAR, y), step=0.32)
-    ax.plot([STOP, STOP], [-5.0, 4.85], color=INK, lw=0.9, ls=(0, (5, 2.5)), zorder=3)
-    label(ax, STOP + 0.15, 5.2, "стоп", size=8, bold=True, ha="left")
-    label(ax, 13.85, -1.5, "не стоять", size=7)
-    label(ax, 13.7, 1.15, "2СЦ", size=7.5)
-    label(ax, 10.2, -4.55, "щебень", size=7)
-    hdim(ax, 0, CAB_FRONT, -5.55, comma(CAB_FRONT, 1), y_from=-1.25, size=7)
-    hdim(ax, 0, STOP, -6.25, comma(STOP, 1), y_from=0, size=7.5)
-    vdim(ax, -ACROSS / 2, ACROSS / 2, 18.65, comma(ACROSS, 1), x_from=NEAR + ALONG, size=7)
-    label(ax, 7.6, 6.4, "План. Тяга к крану", size=11, bold=True)
+        draw_chain(work, (12.5, 0.0), (NEAR, y), step=0.32)
+    parked = XShift(ax, 14.7)
+    draw_crane_plan(parked, transport=True)
+    label(ax, 16.2, -2.35, "на время тяги кран здесь", size=7.5)
+    ax.plot([STOP, STOP], [-5.0, 5.15], color=INK, lw=0.9, ls=(0, (5, 2.5)), zorder=3)
+    label(ax, STOP + 0.18, 5.55, "стоп", size=8, bold=True, ha="left")
+    label(ax, -2.6, 5.85, "сюда кран встаёт после стопа", size=7, ha="left")
+    label(ax, 5.3, -1.55, "не стоять", size=7)
+    label(ax, 5.15, 1.25, "2СЦ", size=7.5)
+    label(ax, 1.4, -4.55, "щебень", size=7)
+    hdim(ax, 0, CAB_FRONT, -5.55, "5,0 кабина", y_from=-2.4, size=7)
+    hdim(ax, 0, STOP, -6.25, comma(STOP, 1), y_from=-2.4, size=7.5)
+    vdim(ax, -ACROSS / 2, ACROSS / 2, face + ALONG + 0.7, comma(ACROSS, 1), x_from=face + ALONG, size=7)
+    label(ax, 3.4, 6.45, "План. Блок доводят до вылета", size=11, bold=True)
 
 
 def draw_side(ax):
-    style_ax(ax, (-4.2, 19.4), (-2.15, 5.7))
-    ax.plot([-3.8, 19.2], [0, 0], color=INK, lw=1.0, zorder=2)
-    ax.add_patch(Rectangle((4.0, -0.42), 15.2, 0.42, fc=STONE, ec="none", hatch="..", zorder=0))
-    draw_tracks_side(ax, 6.0, 19.0)
-    draw_crane_side(ax)
-    draw_excavator_side(ax)
-    draw_block_side(ax)
-    draw_chain(ax, EYE_SIDE, HITCH_SIDE, step=0.26)
+    style_ax(ax, (-3.4, 11.6), (-2.15, 5.7))
+    ax.plot([-3.0, 11.2], [0, 0], color=INK, lw=1.0, zorder=2)
+    ax.add_patch(Rectangle((-2.2, -0.42), 12.6, 0.42, fc=STONE, ec="none", hatch="..", zorder=0))
+    draw_tracks_side(ax, -1.6, NEAR + SHIFT + ALONG + 0.5)
+    ax.plot([0, 0], [0, 4.5], color=INK, lw=0.7, ls=(0, (4, 2.2)), zorder=2)
+    label(ax, 0.15, 4.85, "центр вращения", size=7, ha="left")
+    work = XShift(ax, SHIFT)
+    draw_excavator_side(work)
+    draw_block_side(work)
+    draw_chain(work, EYE_SIDE, HITCH_SIDE, step=0.26)
     length = math.hypot(EYE_SIDE[0] - HITCH_SIDE[0], EYE_SIDE[1] - HITCH_SIDE[1])
-    label(ax, 13.72, 1.62, comma(length, 1), size=7.5)
-    label(ax, 14.35, 2.55, "не стоять", size=7)
-    ax.plot([STOP, STOP], [0, 3.15], color=INK, lw=0.9, ls=(0, (5, 2.5)), zorder=3)
-    label(ax, STOP + 0.12, 3.4, "стоп", size=8, bold=True, ha="left")
+    label(ax, 5.45, 2.05, comma(length, 1), size=7.5)
+    label(ax, 4.85, 3.35, "не стоять", size=7)
+    ax.plot([STOP, STOP], [0, 3.55], color=INK, lw=0.9, ls=(0, (5, 2.5)), zorder=3)
+    label(ax, STOP + 0.12, 4.55, "стоп", size=8, bold=True, ha="left")
+    top = RAIL_TOP + HEIGHT + 0.42
     ax.annotate(
-        "", xy=(NEAR + 0.15, RAIL_TOP + HEIGHT + 0.38),
-        xytext=(NEAR + ALONG - 0.15, RAIL_TOP + HEIGHT + 0.38),
+        "", xy=(STOP + 0.2, top), xytext=(STOP + ALONG - 0.2, top),
         arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.0), zorder=6,
     )
-    label(ax, NEAR + 1.5, RAIL_TOP + HEIGHT + 0.72, "ход блока", size=7.5)
+    label(ax, STOP + 1.5, top + 0.32, "ход блока", size=7.5)
     hdim(ax, 0, STOP, -1.15, comma(STOP, 1), y_from=0, size=7.5)
-    hdim(ax, 0, CAB_FRONT, -1.85, comma(CAB_FRONT, 1), y_from=1.05, size=7)
-    label(ax, 16.2, 5.25, "Вид сбоку", size=11, bold=True)
+    hdim(ax, 0, CAB_FRONT, -1.85, comma(CAB_FRONT, 1), y_from=0, size=7)
+    label(ax, 8.2, 5.25, "Вид сбоку. Крана в створе нет", size=11, bold=True)
 
 
 def draw_face(ax):
@@ -555,7 +607,7 @@ def main():
     )
     fig.text(
         0.04, 0.942,
-        "Один блок 3 × 9 × 2,5 м, масса 8,7 т. Тяга по трём путям к крану. Размеры в метрах.",
+        "Один блок 3 × 9 × 2,5 м, масса 8,7 т. Кран со створа убран, блок доводят до вылета. Размеры в метрах.",
         ha="left", va="top", fontsize=9, fontproperties=SANS, color=INK,
     )
 
@@ -564,35 +616,41 @@ def main():
     draw_face(fig.add_axes([0.66, 0.55, 0.32, 0.35]))
 
     notes = (
-        "1. Экскаватор гусеничный, около 20 т,\n"
+        "1. До тяги кран собирает стрелу\n"
+        "    в транспортное положение\n"
+        "    и отъезжает со створа.\n"
+        "    Створ свободен, блок доводят\n"
+        "    до вылета 6,5 м.\n"
+        "2. Экскаватор гусеничный, около 20 т,\n"
         "    обратная лопата. Усилие рукояти\n"
         "    не меньше 90 кН. Стоит на щебне\n"
-        "    по оси путей, между краном и блоком.\n"
+        "    по оси путей.\n"
         "    На головки рельсов гусеницы не ставят.\n"
-        "2. Блок скользит по трём путям\n"
+        "3. Блок скользит по трём путям\n"
         "    колеи 1520 мм. По грунту его не тащат.\n"
-        "3. Строп 2СЦ, цепь 10 мм класса 8,\n"
+        "4. Строп 2СЦ, цепь 10 мм класса 8,\n"
         "    по паспорту не меньше 4,2 т.\n"
         "    Ветви 2–3 м. Две точки на нижнем\n"
         "    поясе торца к крану, по центру,\n"
         "    между точками не больше 1,5 м.\n"
-        "4. Строп — на рым ковша, если рым\n"
+        "5. Строп — на рым ковша, если рым\n"
         "    по паспорту не меньше 4 т.\n"
         "    За зубья ковша не цепляют.\n"
-        "5. Тянут ходом рукояти, короткими\n"
+        "6. Тянут ходом рукояти, короткими\n"
         "    подачами. Между экскаватором\n"
         "    и блоком не стоят.\n"
-        "6. Стоп: ближняя грань блока — 6,5 м\n"
-        "    от центра вращения. Строп снимают,\n"
-        "    экскаватор уводят из створа стрелы.\n"
-        "    Затем блок берёт кран.\n"
-        "7. 5,0 м до переда кабины сверяют\n"
-        "    обмером. На передвижке стрела\n"
-        "    крана поднята."
+        "7. Стоп: ближняя грань блока — 6,5 м\n"
+        "    от центра места крана.\n"
+        "    Строп снимают, экскаватор\n"
+        "    уходит со створа.\n"
+        "8. Кран возвращается на этот центр,\n"
+        "    опоры полностью. 5,0 м до переда\n"
+        "    кабины сверяют обмером.\n"
+        "    Дальше подъём по схеме крана."
     )
     fig.text(
-        0.675, 0.50, notes, ha="left", va="top", fontsize=8.0,
-        fontproperties=SANS, color=INK, linespacing=1.32,
+        0.675, 0.50, notes, ha="left", va="top", fontsize=7.6,
+        fontproperties=SANS, color=INK, linespacing=1.22,
     )
     fig.add_artist(Rectangle(
         (0.012, 0.015), 0.976, 0.97, transform=fig.transFigure,
