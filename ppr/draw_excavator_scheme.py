@@ -530,7 +530,7 @@ def draw_block_side(ax):
 
 
 def draw_plan(ax):
-    style_ax(ax, (-4.8, 20.8), (-6.6, 6.9))
+    style_ax(ax, (-4.8, 20.8), (-7.2, 6.9))
     face = NEAR + SHIFT
     ax.add_patch(Rectangle((-2.4, -5.2), 12.7, 10.4, fc=STONE, ec="#e4dfd4", lw=0.4, hatch="..", zorder=0))
     draw_tracks_plan(ax, -1.5, face + ALONG + 0.6)
@@ -545,18 +545,21 @@ def draw_plan(ax):
     label(ax, 16.2, -2.35, "на время тяги кран здесь", size=7.5)
     ax.plot([STOP, STOP], [-5.0, 5.15], color=INK, lw=0.9, ls=(0, (5, 2.5)), zorder=3)
     label(ax, STOP + 0.18, 5.55, "стоп", size=8, bold=True, ha="left")
-    label(ax, -2.6, 5.85, "сюда кран встаёт после стопа", size=7, ha="left")
+    label(ax, -2.6, 5.85, "центр вращения,\nсюда кран встаёт после стопа", size=7, ha="left")
     label(ax, 5.3, -1.55, "не стоять", size=7)
     label(ax, 5.15, 1.25, "2СЦ", size=7.5)
     label(ax, 1.4, -4.55, "щебень", size=7)
-    hdim(ax, 0, CAB_FRONT, -5.55, "5,0 кабина", y_from=-2.4, size=7)
-    hdim(ax, 0, STOP, -6.25, comma(STOP, 1), y_from=-2.4, size=7.5)
+    # 5,0 — будущий перед кабины, не габарит экскаватора. 6,5 — стоп блока.
+    ax.plot([CAB_FRONT, CAB_FRONT], [-4.15, -5.2], color=INK, lw=0.65, ls=(0, (3, 1.5)), zorder=3)
+    hdim(ax, 0, CAB_FRONT, -5.45, "5,0 до переда кабины", y_from=-4.15, size=6.8)
+    hdim(ax, CAB_FRONT, STOP, -5.45, "1,5", y_from=-4.5, size=6.8)
+    hdim(ax, 0, STOP, -6.4, "6,5 до ближней грани", y_from=-4.5, size=7)
     vdim(ax, -ACROSS / 2, ACROSS / 2, face + ALONG + 0.7, comma(ACROSS, 1), x_from=face + ALONG, size=7)
-    label(ax, 3.4, 6.45, "План. Блок доводят до вылета", size=11, bold=True)
+    label(ax, 3.4, 6.45, "План. Стоп — ближняя грань блока", size=11, bold=True)
 
 
 def draw_side(ax):
-    style_ax(ax, (-3.4, 11.6), (-2.15, 5.7))
+    style_ax(ax, (-3.4, 11.6), (-2.85, 5.7))
     ax.plot([-3.0, 11.2], [0, 0], color=INK, lw=1.0, zorder=2)
     ax.add_patch(Rectangle((-2.2, -0.42), 12.6, 0.42, fc=STONE, ec="none", hatch="..", zorder=0))
     draw_tracks_side(ax, -1.6, NEAR + SHIFT + ALONG + 0.5)
@@ -577,8 +580,10 @@ def draw_side(ax):
         arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.0), zorder=6,
     )
     label(ax, STOP + 1.5, top + 0.32, "ход блока", size=7.5)
-    hdim(ax, 0, STOP, -1.15, comma(STOP, 1), y_from=0, size=7.5)
-    hdim(ax, 0, CAB_FRONT, -1.85, comma(CAB_FRONT, 1), y_from=0, size=7)
+    ax.plot([CAB_FRONT, CAB_FRONT], [0, 0.85], color=INK, lw=0.65, ls=(0, (3, 1.5)), zorder=3)
+    hdim(ax, 0, CAB_FRONT, -1.15, "5,0 до переда кабины", y_from=0, size=6.5)
+    hdim(ax, CAB_FRONT, STOP, -1.15, "1,5", y_from=0, size=6.5)
+    hdim(ax, 0, STOP, -2.05, "6,5 до ближней грани", y_from=0, size=6.5)
     label(ax, 8.2, 5.25, "Вид сбоку. Крана в створе нет", size=11, bold=True)
 
 
@@ -607,7 +612,7 @@ def main():
     )
     fig.text(
         0.04, 0.942,
-        "Один блок 3 × 9 × 2,5 м, масса 8,7 т. Кран со створа убран, блок доводят до вылета. Размеры в метрах.",
+        "Один блок 3 × 9 × 2,5 м, масса 8,7 т. Кран со створа убран. Стоп — ближняя грань 6,5 м от центра вращения. Размеры в метрах.",
         ha="left", va="top", fontsize=9, fontproperties=SANS, color=INK,
     )
 
@@ -619,8 +624,8 @@ def main():
         "1. До тяги кран собирает стрелу\n"
         "    в транспортное положение\n"
         "    и отъезжает со створа.\n"
-        "    Створ свободен, блок доводят\n"
-        "    до вылета 6,5 м.\n"
+        "    Створ свободен. Блок доводят\n"
+        "    до ближней грани 6,5 м.\n"
         "2. Экскаватор гусеничный, около 20 т,\n"
         "    обратная лопата. Усилие рукояти\n"
         "    не меньше 90 кН. Стоит на щебне\n"
@@ -640,13 +645,16 @@ def main():
         "    подачами. Между экскаватором\n"
         "    и блоком не стоят.\n"
         "7. Стоп: ближняя грань блока — 6,5 м\n"
-        "    от центра места крана.\n"
+        "    от центра вращения крана.\n"
+        "    Это не вылет стрелы. Середина\n"
+        "    блока будет на вылете 8,0 м.\n"
         "    Строп снимают, экскаватор\n"
         "    уходит со створа.\n"
-        "8. Кран возвращается на этот центр,\n"
-        "    опоры полностью. 5,0 м до переда\n"
-        "    кабины сверяют обмером.\n"
-        "    Дальше подъём по схеме крана."
+        "8. Кран возвращается на этот центр.\n"
+        "    Перед кабины — 5,0 м от центра,\n"
+        "    сверяют обмером. До блока\n"
+        "    остаётся 1,5 м. Дальше подъём\n"
+        "    по схеме крана."
     )
     fig.text(
         0.675, 0.50, notes, ha="left", va="top", fontsize=7.6,
