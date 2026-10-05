@@ -32,22 +32,23 @@ SLEEPER_W = 0.28
 # Машина около 20 т: башмак 0,60 м, просвет между гусеницами около 1,6 м.
 SHOE = 0.60
 TRACK_GAP = 1.60
-STOP = 6.5
-# Рельсы начинаются у стопа. Перед торцом шпал нет: шпала длиннее просвета.
-RAIL_START = STOP
-CAB_FRONT = 5.0
-# Блок на стопе: ближняя грань 6,5 м. Кран на это время со створа убран.
-# Машины нарисованы в старых координатах и сдвинуты на SHIFT.
-NEAR = 15.0
-SHIFT = -8.5
+# Торц решётки, куда тянут. Очередной блок: ближний торец в 6 м от торца.
+RAIL0 = 0.0
+RAIL1 = 18.0
+FACE = 6.0
+STICK = 3.0
 ALONG = 3.0
 ACROSS = 9.0
 HEIGHT = 2.5
 HITCH = 0.6  # половина расстояния между точками на нижнем поясе
 RAIL_TOP = 0.28
-# Рым ковша и точка на нижнем поясе. Длина ветви выходит около 2,7 м.
+# Рым в местных координатах машины. На листе он стоит в 1,2 м перед торцом.
+EYE_LOCAL = 12.50
+EYE_X = -1.2
+EX_SHIFT = EYE_X - EYE_LOCAL
 EYE_SIDE = (12.48, 1.52)
-HITCH_SIDE = (NEAR, RAIL_TOP + 0.28)
+SIDE_SHIFT = EYE_X - EYE_SIDE[0]
+HITCH_Z = RAIL_TOP + 0.28
 
 
 def comma(value, digits=1):
@@ -517,91 +518,107 @@ def draw_excavator_side(ax):
     label(ax, 13.2, 0.7, "зубья", size=6.5)
 
 
-def draw_block_plan(ax):
-    rect(ax, NEAR, -ACROSS / 2, ALONG, ACROSS, fc=BLOCK, ec=INK, lw=1.15, zorder=4)
-    for cx, cy in (
-        (NEAR, -ACROSS / 2), (NEAR + ALONG, -ACROSS / 2),
-        (NEAR, ACROSS / 2), (NEAR + ALONG, ACROSS / 2),
-    ):
-        rect(ax, cx - 0.08, cy - 0.08, 0.16, 0.16, fc="#cfc6b4", ec=INK, lw=0.4, zorder=5)
-    rect(ax, NEAR, -ACROSS / 2, ALONG, 0.08, fc="#e7dfd0", ec="none", zorder=5)
-    for y in (-HITCH, HITCH):
-        eye_mark(ax, NEAR, y, r=0.11)
-    label(ax, NEAR + 1.55, 1.7, "один блок", size=8, bold=True)
-    ax.annotate(
-        "", xy=(NEAR + 0.35, -2.4), xytext=(NEAR + ALONG - 0.25, -2.4),
-        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.05), zorder=6,
-    )
-    label(ax, NEAR + 1.55, -2.85, "ход блока", size=7.5)
+def chain_len():
+    return math.hypot(FACE - EYE_X, HITCH)
 
 
-def draw_block_side(ax):
-    block_wall(ax, NEAR, RAIL_TOP, ALONG, HEIGHT)
-    eye_mark(ax, HITCH_SIDE[0], HITCH_SIDE[1], r=0.09)
-    label(ax, NEAR + 1.5, RAIL_TOP + 0.7, "блок", size=8, bold=True)
+def draw_block_at(ax, x, y0, text, dashed=False):
+    kw = dict(fc=BLOCK, ec=INK, lw=1.1, zorder=4)
+    if dashed:
+        kw.update(fc="none", lw=0.9, ls=(0, (5, 2.2)))
+    rect(ax, x, y0, ALONG, ACROSS, **kw)
+    if not dashed:
+        for cy in (-HITCH, HITCH):
+            eye_mark(ax, x, y0 + ACROSS / 2 + cy, r=0.11)
+        label(ax, x + ALONG / 2, y0 + ACROSS / 2 + 1.15, text, size=8, bold=True)
 
 
 def draw_plan(ax):
-    style_ax(ax, (-4.8, 20.8), (-7.7, 6.9))
-    face = NEAR + SHIFT
-    ax.add_patch(Rectangle((-2.4, -5.55), 12.7, 11.10, fc=STONE, ec="#e4dfd4", lw=0.4, hatch="..", zorder=0))
-    draw_tracks_plan(ax, RAIL_START, face + ALONG + 0.6)
-    ax.plot([0, 0], [-5.4, 5.4], color=INK, lw=0.7, ls=(0, (4, 2.2)), zorder=2)
-    work = XShift(ax, SHIFT)
-    draw_excavator_plan(work)
-    draw_block_plan(work)
+    style_ax(ax, (-9.2, 20.4), (-7.6, 7.15))
+    ax.add_patch(Rectangle((-8.6, -6.2), 8.6, 12.4, fc="#f7f6f2", ec="none", zorder=0))
+    ax.add_patch(Rectangle((-0.65, -5.55), 19.30, 11.10, fc=STONE, ec="#e4dfd4", lw=0.4, hatch="..", zorder=0))
+    draw_tracks_plan(ax, RAIL0, RAIL1)
+    ax.plot([RAIL0, RAIL0], [-5.7, 5.7], color=INK, lw=0.95, zorder=3)
+    label(ax, 0.15, 6.35, "торц решётки", size=8, bold=True, ha="left")
+
+    # Место, куда дотягивают, и блоки, которые ещё стоят дальше.
+    ax.add_patch(Rectangle(
+        (0, -ACROSS / 2), ALONG, ACROSS,
+        fc="none", ec=INK, lw=0.8, ls=(0, (2, 1.6)), zorder=3,
+    ))
+    label(ax, 1.5, 0.15, "до торца", size=7)
+    draw_block_at(ax, FACE, -ACROSS / 2, "тянут этот")
+    for x, num in ((9, "4"), (12, "5"), (15, "6")):
+        ax.add_patch(Rectangle(
+            (x, -ACROSS / 2), ALONG, ACROSS,
+            fc="none", ec=INK, lw=0.75, ls=(0, (5, 2.2)), zorder=3,
+        ))
+        label(ax, x + 1.5, 0.2, num, size=8)
+
+    machine = XShift(ax, EX_SHIFT)
+    draw_excavator_plan(machine)
     for y in (-HITCH, HITCH):
-        draw_chain(work, (12.5, 0.0), (NEAR, y), step=0.32)
-    parked = XShift(ax, 14.7)
-    draw_crane_plan(parked, transport=True)
-    label(ax, 16.2, -2.35, "на время тяги кран здесь", size=7.5)
-    ax.plot([STOP, STOP], [-5.4, 5.35], color=INK, lw=0.9, ls=(0, (5, 2.5)), zorder=3)
-    label(ax, STOP + 0.18, 5.72, "стоп, торец путей", size=7.5, bold=True, ha="left")
-    label(ax, -4.65, 3.55, "центр вращения,\nкран встаёт сюда\nпосле стопа", size=6.5, ha="left")
-    label(ax, 5.3, -1.55, "не стоять", size=7)
-    label(ax, 5.15, 1.25, "2СЦ", size=7.5)
-    label(ax, 1.15, -4.35, "щебень\nбез шпал", size=6.5)
-    vdim(ax, -TRACK_GAP / 2, TRACK_GAP / 2, -1.55, "1,6", x_from=-0.95, size=6.5)
-    vdim(
-        ax, AXIS_STEP - SLEEPER_L / 2, AXIS_STEP + SLEEPER_L / 2,
-        face - 0.85, "2,70", x_from=face, size=6.5,
+        draw_chain(ax, (EYE_X, 0.0), (FACE, y), step=0.34)
+    label(ax, 2.15, 2.05, "2СЦ", size=8, bold=True)
+
+    ax.annotate(
+        "", xy=(0.35, -3.15), xytext=(FACE - 0.2, -3.15),
+        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.15), zorder=6,
     )
-    # 5,0 — будущий перед кабины. 6,5 — стоп блока.
-    ax.plot([CAB_FRONT, CAB_FRONT], [-4.15, -6.0], color=INK, lw=0.65, ls=(0, (3, 1.5)), zorder=3)
-    hdim(ax, 0, CAB_FRONT, -6.25, "5,0 до переда кабины", y_from=-4.15, size=6.8)
-    hdim(ax, CAB_FRONT, STOP, -6.25, "1,5", y_from=-4.5, size=6.8)
-    hdim(ax, 0, STOP, -7.05, "6,5 до ближней грани", y_from=-4.5, size=7)
-    vdim(ax, -ACROSS / 2, ACROSS / 2, face + ALONG + 0.7, comma(ACROSS, 1), x_from=face + ALONG, size=7)
-    label(ax, 3.4, 6.45, "План. Стоп — ближняя грань блока", size=11, bold=True)
+    label(ax, 3.0, -3.55, "ход блока 6 м, на себя", size=7.5)
+    ax.annotate(
+        "", xy=(-6.3, -2.55), xytext=(-3.3, -2.55),
+        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.05), zorder=6,
+    )
+    label(ax, -4.8, -2.95, "потом ход назад 3 м", size=7)
+    label(ax, 4.5, 2.55, "сначала рукоятью 3 м", size=7)
+    label(ax, -4.6, 2.35, "гусеницы перед торцом", size=7.5)
+    label(ax, -4.6, 1.85, "на шпалы не заезжают", size=7)
+    label(ax, 2.6, -5.15, "между машиной и блоком не стоять", size=7.5)
+
+    vdim(ax, -TRACK_GAP / 2, TRACK_GAP / 2, -2.35, "1,6", x_from=-1.7, size=6.5)
+    vdim(ax, AXIS_STEP - SLEEPER_L / 2, AXIS_STEP + SLEEPER_L / 2, 17.55, "2,70", x_from=16.6, size=6.5)
+    hdim(ax, EYE_X, RAIL0, -6.35, "1,2", y_from=-1.3, size=7)
+    hdim(ax, RAIL0, FACE, -6.95, "6,0 до торца блока", y_from=-4.5, size=7)
+    hdim(ax, 0, 18, 6.85, "решётка 18 м", y_from=5.05, size=7.5)
+    label(ax, 8.5, 6.55, "План. Тяга с торца, только на себя", size=11, bold=True)
 
 
 def draw_side(ax):
-    style_ax(ax, (-3.4, 11.6), (-2.85, 5.7))
-    ax.plot([-3.0, 11.2], [0, 0], color=INK, lw=1.0, zorder=2)
-    ax.add_patch(Rectangle((-2.2, -0.42), 12.6, 0.42, fc=STONE, ec="none", hatch="..", zorder=0))
-    draw_tracks_side(ax, RAIL_START, NEAR + SHIFT + ALONG + 0.5)
-    ax.plot([0, 0], [0, 4.5], color=INK, lw=0.7, ls=(0, (4, 2.2)), zorder=2)
-    label(ax, 0.15, 4.85, "центр вращения", size=7, ha="left")
-    work = XShift(ax, SHIFT)
+    style_ax(ax, (-8.4, 12.6), (-2.55, 5.35))
+    ax.plot([-8.0, 12.2], [0, 0], color=INK, lw=1.0, zorder=2)
+    ax.add_patch(Rectangle((-8.0, -0.55), 8.0, 0.55, fc="#f7f6f2", ec="none", zorder=0))
+    ax.add_patch(Rectangle((-0.65, -0.55), 12.5, 0.55, fc=STONE, ec="none", hatch="..", zorder=0))
+    draw_tracks_side(ax, RAIL0, FACE + ALONG + 1.2)
+    ax.plot([RAIL0, RAIL0], [0, 4.35], color=INK, lw=0.9, zorder=3)
+    label(ax, 0.12, 4.7, "торц", size=8, bold=True, ha="left")
+
+    work = XShift(ax, SIDE_SHIFT)
     draw_excavator_side(work)
-    draw_block_side(work)
-    draw_chain(work, EYE_SIDE, HITCH_SIDE, step=0.26)
-    length = math.hypot(EYE_SIDE[0] - HITCH_SIDE[0], EYE_SIDE[1] - HITCH_SIDE[1])
-    label(ax, 6.15, 1.55, "на стопе " + comma(length, 1), size=7.5)
-    label(ax, 4.85, 3.35, "не стоять", size=7)
-    ax.plot([STOP, STOP], [0, 3.55], color=INK, lw=0.9, ls=(0, (5, 2.5)), zorder=3)
-    label(ax, STOP + 0.12, 4.55, "стоп", size=8, bold=True, ha="left")
-    top = RAIL_TOP + HEIGHT + 0.42
+    block_wall(ax, FACE, RAIL_TOP, ALONG, HEIGHT)
+    eye_mark(ax, FACE, HITCH_Z, r=0.09)
+    label(ax, FACE + 1.5, RAIL_TOP + 1.15, "блок", size=8, bold=True)
+    eye = (EYE_X, EYE_SIDE[1])
+    hitch = (FACE, HITCH_Z)
+    draw_chain(ax, eye, hitch, step=0.26)
+    length = math.hypot(hitch[0] - eye[0], hitch[1] - eye[1])
+    label(ax, 2.35, 2.35, "ветвь " + comma(length, 1) + " м", size=8)
+    label(ax, 4.35, 4.25, "не стоять", size=7.5)
+
+    ax.add_patch(Rectangle(
+        (0, RAIL_TOP), ALONG, HEIGHT,
+        fc="none", ec=INK, lw=0.7, ls=(0, (3, 1.8)), zorder=3,
+    ))
+    label(ax, 1.5, RAIL_TOP + 1.15, "до торца", size=7)
+    top = RAIL_TOP + HEIGHT + 0.72
     ax.annotate(
-        "", xy=(STOP + 0.2, top), xytext=(STOP + ALONG - 0.2, top),
-        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.0), zorder=6,
+        "", xy=(0.4, top), xytext=(FACE - 0.15, top),
+        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.05), zorder=6,
     )
-    label(ax, STOP + 1.5, top + 0.32, "ход блока", size=7.5)
-    ax.plot([CAB_FRONT, CAB_FRONT], [0, 0.85], color=INK, lw=0.65, ls=(0, (3, 1.5)), zorder=3)
-    hdim(ax, 0, CAB_FRONT, -1.15, "5,0 до переда кабины", y_from=0, size=6.5)
-    hdim(ax, CAB_FRONT, STOP, -1.15, "1,5", y_from=0, size=6.5)
-    hdim(ax, 0, STOP, -2.05, "6,5 до ближней грани", y_from=0, size=6.5)
-    label(ax, 8.2, 5.25, "Вид сбоку. Крана в створе нет", size=11, bold=True)
+    label(ax, 3.0, top + 0.28, "ход 6 м", size=7.5)
+    hdim(ax, EYE_X, 0, -1.35, "1,2", y_from=0, size=7)
+    hdim(ax, 0, FACE, -2.05, "6,0", y_from=0, size=7)
+    label(ax, 1.6, 5.05, "Вид сбоку. Тяга на себя с торца решётки", size=11, bold=True)
 
 
 def draw_face(ax):
@@ -617,7 +634,7 @@ def draw_face(ax):
         ax.plot([x - 0.11, x + 0.11], [HEIGHT - 0.09, HEIGHT - 0.31], color=INK, lw=0.7, zorder=7)
     hdim(ax, mid - HITCH, mid + HITCH, -0.9, comma(2 * HITCH, 1), y_from=0.34, size=7.5)
     label(ax, mid, 0.72, "нижний пояс", size=7.5)
-    label(ax, mid, 4.15, "Торец к крану", size=11, bold=True)
+    label(ax, mid, 4.15, "Торец к экскаватору", size=11, bold=True)
     label(ax, mid, 3.4, "верхние петли этим стропом не занимают", size=7)
 
 
@@ -629,64 +646,56 @@ def main():
     )
     fig.text(
         0.04, 0.942,
-        "Один блок 3 × 9 × 2,5 м, масса 8,7 т. Кран со створа убран. Стоп — ближняя грань 6,5 м от центра вращения. Размеры в метрах.",
+        "Модуль на трёх решётках. Блок 3 × 9 × 2,5 м, масса 8,7 т. Тянут с торца, только на себя. Размеры в метрах.",
         ha="left", va="top", fontsize=9, fontproperties=SANS, color=INK,
     )
 
-    draw_plan(fig.add_axes([0.012, 0.50, 0.66, 0.40]))
-    draw_side(fig.add_axes([0.012, 0.045, 0.66, 0.42]))
-    draw_face(fig.add_axes([0.66, 0.55, 0.32, 0.35]))
+    draw_plan(fig.add_axes([0.012, 0.48, 0.70, 0.44]))
+    draw_side(fig.add_axes([0.012, 0.04, 0.62, 0.42]))
+    draw_face(fig.add_axes([0.64, 0.04, 0.34, 0.36]))
 
     notes = (
-        "1. До тяги кран собирает стрелу\n"
-        "    в транспортное положение\n"
-        "    и отъезжает со створа.\n"
-        "    Створ свободен. Блок доводят\n"
-        "    до ближней грани 6,5 м.\n"
-        "2. Экскаватор гусеничный, около 20 т,\n"
-        "    обратная лопата. Усилие рукояти\n"
-        "    не меньше 90 кН. Стоит на щебне\n"
-        "    перед торцом путей, по оси тяги.\n"
-        "    Шпала Ш1 — 2,70 м. Просвет между\n"
-        "    гусеницами около 1,6 м, шпала\n"
-        "    между ними не проходит.\n"
-        "    На головки и на шпалы гусеницы\n"
-        "    не ставят.\n"
-        "3. Блок скользит по трём путям\n"
-        "    колеи 1520 мм. По грунту его не тащат.\n"
-        "4. Строп 2СЦ, цепь 10 мм класса 8,\n"
-        "    на ветвь не меньше 3,15 т.\n"
-        "    Две точки на нижнем поясе торца\n"
-        "    к крану, по центру, между ними\n"
-        "    не больше 1,5 м. На схеме блок\n"
-        "    уже у стопа: ветвь 2,7 м. Пока\n"
-        "    блок дальше, цепь длиннее —\n"
-        "    на весь оставшийся ход.\n"
-        "5. Строп — на рым ковша, если рым\n"
-        "    по паспорту не меньше 4 т.\n"
-        "    За зубья ковша не цепляют.\n"
-        "6. Сила сдвига от длины цепи\n"
-        "    не растёт: это трение блока\n"
-        "    по головкам. 8,7 т × 0,30 = 2,6 тс,\n"
-        "    при 0,50 будет 4,4 тс на блок\n"
-        "    и около 2,2 тс на ветвь.\n"
-        "    Тянут ходом назад по щебню.\n"
-        "    Между машиной и блоком не стоят.\n"
-        "7. Стоп: ближняя грань блока — 6,5 м\n"
-        "    от центра вращения крана.\n"
-        "    Это не вылет стрелы. Середина\n"
-        "    блока будет на вылете 8,0 м.\n"
-        "    Строп снимают, экскаватор\n"
-        "    уходит со створа.\n"
-        "8. Кран возвращается на этот центр.\n"
-        "    Перед кабины — 5,0 м от центра,\n"
-        "    сверяют обмером. До блока\n"
-        "    остаётся 1,5 м. Дальше подъём\n"
-        "    по схеме крана."
+        "1. Экскаватор гусеничный, около 20 т,\n"
+        "    обратная лопата. Стоит перед торцом\n"
+        "    решётки, по оси модуля, на грунте.\n"
+        "    Шпала 2,70 м, просвет гусениц 1,6 м:\n"
+        "    на путь и на шпалы не заезжает.\n"
+        "2. Блоки снимают по одному, с ближнего\n"
+        "    к торцу. На листе ближний торец\n"
+        "    очередного блока в 6 м от торца.\n"
+        "    Его тянут на эти 6 м, к концу решётки.\n"
+        "3. Сначала ковшом на себя, ход рукояти\n"
+        "    около 3 м. Остаток — ходом машины\n"
+        "    назад, здесь ещё 3 м. Цепь не\n"
+        "    удлиняют: блок идёт за ковшом.\n"
+        "    Ход ковша сверяют с паспортом.\n"
+        "4. До торца, м:  3   6   9   12   15\n"
+        "    рукоятью, м: 3   3   3    3    3\n"
+        "    ходом, м:    0   3   6    9   12\n"
+        "    Блок, который уже у торца, не тянут.\n"
+        "5. Строп 2СЦ, цепь 10 мм класса 8,\n"
+        "    на ветвь не меньше 3,15 т. Две точки\n"
+        "    на нижнем поясе торца, по центру,\n"
+        "    между ними 1,2 м. На рым ковша,\n"
+        "    если рым по паспорту не меньше 4 т.\n"
+        "    За зубья не цепляют. Верхние петли\n"
+        "    этим стропом не занимают.\n"
+        "6. На листе ветвь 7,3 м. Для торца\n"
+        "    в 3 / 9 / 12 / 15 м ветвь около\n"
+        "    4,3 / 10,3 / 13,3 / 16,3 м.\n"
+        "7. Сила от длины цепи не растёт.\n"
+        "    8,7 т × 0,30 = 2,6 тс, при 0,50\n"
+        "    будет 4,4 тс на блок и до 2,2 тс\n"
+        "    на ветвь. По грунту блок не тащат,\n"
+        "    только по головкам трёх путей.\n"
+        "8. При обрыве цепь бьёт на свою длину.\n"
+        "    На этой тяге люди не ближе 7,3 м\n"
+        "    от линии цепи. На дальней тяге\n"
+        "    зона равна длине той ветви."
     )
     fig.text(
-        0.675, 0.50, notes, ha="left", va="top",         fontsize=7.2,
-        fontproperties=SANS, color=INK, linespacing=1.12,
+        0.70, 0.90, notes, ha="left", va="top", fontsize=7.15,
+        fontproperties=SANS, color=INK, linespacing=1.14,
     )
     fig.add_artist(Rectangle(
         (0.012, 0.015), 0.976, 0.97, transform=fig.transFigure,
@@ -694,8 +703,7 @@ def main():
     ))
     fig.savefig("/workspace/ppr/skhema-ekskavator.png", dpi=160, facecolor="white")
     fig.savefig("/workspace/ppr/skhema-ekskavator.pdf", facecolor="white")
-    length = math.hypot(EYE_SIDE[0] - HITCH_SIDE[0], EYE_SIDE[1] - HITCH_SIDE[1])
-    print("chain", round(length, 2))
+    print("chain_plan", round(chain_len(), 2), "shift", round(EX_SHIFT, 2))
 
 
 if __name__ == "__main__":
