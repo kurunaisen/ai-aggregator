@@ -27,19 +27,27 @@ STEEL_DK = "#3e4850"
 BOOM = "#e7e1d4"
 BOOM_EDGE = "#2c3136"
 
-# Рельсы 0…18 м. Кран сбоку площадки: стрела вдоль 9 м блока.
-# Колея КамАЗ-65115 уже шпалы, на путь кран не встаёт.
+# Кран за торцом, стрела вдоль путей. Шаланда перпендикулярно кабине.
+# Блок на шаланде: 9 м вдоль неё, 3 м вдоль стрелы. Середина — вылет 8,0 м.
 RAIL0 = 0.0
 RAIL1 = 18.0
 TRACK_FRONT = 2.05
 TRACK_REAR = 1.89
-CRANE_WIDTH = 2.50
 SLEEPER_L = 2.70
-CAB_REACH = 5.0
-GAP_CAB = 0.50
+CENTER_X = -6.5
+CAB_X = CENTER_X + 5.0
+SET_X = 0.0
 BLOCK_W = 9.0
 BLOCK_L = 3.0
 BLOCK_H = 2.5
+HOOK_X = SET_X + BLOCK_L / 2
+OUTREACH = HOOK_X - CENTER_X
+DECK_W = 2.50
+DECK_L = 13.6
+DECK_TOP = 1.30
+# Платформа под блоком: свес блока по 0,25 м с каждого борта.
+DECK_X = SET_X + (BLOCK_L - DECK_W) / 2
+DECK_Y = -DECK_L / 2
 AXIS_STEP = 3.70
 GAUGE = 1.52
 AXES = (-AXIS_STEP, 0.0, AXIS_STEP)
@@ -48,15 +56,9 @@ PAD_X1 = 18.65
 PAD_Y = 5.55
 STONE_H = 0.25
 RAIL_TOP = 0.68
-# Места 1…6 вдоль путей. Посадка показана на месте 6; к остальным кран переезжает сбоку.
 PLACES = ((1, 15.0), (2, 12.0), (3, 9.0), (4, 6.0), (5, 3.0), (6, 0.0))
-SET_X = 0.0
-HOOK_X = SET_X + BLOCK_L / 2
-NEAR_Y = -BLOCK_W / 2
-# Перед кабины на торце шпал. Колёса позади переда, на шпалу не попадают.
-CAB_Y = NEAR_Y - GAP_CAB
-CENTER_Y = CAB_Y - CAB_REACH
-OUTREACH = HOOK_X * 0 + (0.0 - CENTER_Y)
+DECK = "#e4c99a"
+DECK_DK = "#c4a36e"
 
 
 def style_ax(ax, xlim, ylim):
@@ -249,6 +251,49 @@ def draw_crane_plan(ax, hook_x):
     ax.add_patch(Circle((hook_x, 0.0), 0.06, fc="white", zorder=11))
 
 
+def draw_flatbed(ax):
+    """Шаланда в местных координатах крана. Длина поперёк стрелы, тягач к −Y."""
+    deck_x = DECK_X - CENTER_X
+    deck_y = DECK_Y
+    rect(ax, deck_x, deck_y, DECK_W, DECK_L, fc=DECK, ec=DECK_DK, lw=0.8, zorder=3)
+    for i in range(int(DECK_L / 0.28)):
+        yy = deck_y + i * 0.28
+        if -4.35 < yy < 4.35:
+            continue
+        ax.plot([deck_x, deck_x + DECK_W], [yy, yy], color=DECK_DK, lw=0.35, zorder=3)
+    rect(ax, deck_x - 0.06, deck_y, 0.06, DECK_L, fc=STEEL_DK, ec=INK, lw=0.3, zorder=4)
+    rect(ax, deck_x + DECK_W, deck_y, 0.06, DECK_L, fc=STEEL_DK, ec=INK, lw=0.3, zorder=4)
+    rect(ax, deck_x - 0.08, deck_y + DECK_L, DECK_W + 0.16, 0.16, fc=STEEL_DK, ec=INK, lw=0.45, zorder=5)
+    for lx in (deck_x + 0.15, deck_x + DECK_W - 0.40):
+        rect(ax, lx, deck_y + DECK_L + 0.02, 0.26, 0.10, fc="#b23b3b", ec=INK, lw=0.25, zorder=6)
+
+    def dual(cx, cy):
+        for dx in (-0.34, -0.12):
+            ax.add_patch(FancyBboxPatch(
+                (cx + dx, cy), 0.20, 0.62,
+                boxstyle="round,pad=0.005,rounding_size=0.05",
+                fc="#2a2a2a", ec=INK, lw=0.35, zorder=5,
+            ))
+
+    for cy in (4.70, 5.35, 6.00):
+        dual(deck_x - 0.60, cy)
+        dual(deck_x + DECK_W + 0.10, cy)
+
+    # Тягач у южного торца, за бровкой площадки.
+    tx = deck_x + 0.20
+    rect(ax, tx, deck_y - 1.75, 2.10, 1.75, fc="#c5ced6", ec=INK, lw=0.7, zorder=5)
+    ax.add_patch(FancyBboxPatch(
+        (tx + 0.10, deck_y - 2.85), 1.90, 1.20,
+        boxstyle="round,pad=0.01,rounding_size=0.12",
+        fc=CAB, ec=INK, lw=0.85, zorder=6,
+    ))
+    rect(ax, tx + 0.28, deck_y - 2.78, 1.50, 0.20, fc=GLASS, ec=INK, lw=0.3, zorder=7)
+    for wx in (tx + 0.15, tx + 1.45):
+        tire_plan(ax, wx, deck_y - 2.15, 0.46, 0.28, z=6)
+        tire_plan(ax, wx, deck_y - 1.35, 0.46, 0.28, z=6)
+    label(ax, tx + 1.05, deck_y - 2.25, "тягач", size=6.5, color="white")
+
+
 def draw_rails(ax, x0, x1, z=2):
     step = 0.5
     x = x0
@@ -268,7 +313,7 @@ def draw_rails(ax, x0, x1, z=2):
 
 
 def draw_plan(ax):
-    style_ax(ax, (-4.6, 22.2), (-16.2, 8.5))
+    style_ax(ax, (-11.6, 22.0), (-13.4, 8.8))
     rect(ax, PAD_X0, -PAD_Y, PAD_X1 - PAD_X0, PAD_Y * 2, fc=STONE, ec="#ddd6c8", lw=0.5, hatch="..", zorder=0)
     draw_rails(ax, RAIL0, RAIL1)
     for number, x0 in PLACES:
@@ -276,40 +321,41 @@ def draw_plan(ax):
             continue
         ax.add_patch(Rectangle(
             (x0, -BLOCK_W / 2), BLOCK_L, BLOCK_W,
-            fc="none", ec=INK, lw=0.9, ls=(0, (5, 2.2)), zorder=4,
+            fc="none", ec=INK, lw=0.85, ls=(0, (5, 2.2)), zorder=4,
         ))
         label(ax, x0 + 1.5, 2.15, str(number), size=11, bold=True)
-    rect(ax, SET_X, NEAR_Y, BLOCK_L, BLOCK_W, fc=BLOCK, ec=INK, lw=1.15, zorder=5)
-    for cx, cy in ((SET_X, NEAR_Y), (SET_X + BLOCK_L, NEAR_Y), (SET_X, 4.5), (SET_X + BLOCK_L, 4.5)):
-        rect(ax, cx - 0.08, cy - 0.08, 0.16, 0.16, fc="#cfc6b4", ec=INK, lw=0.35, zorder=6)
-    label(ax, HOOK_X + 0.85, 2.15, "6", size=12, bold=True)
-    label(ax, 2.15, -1.85, "посадка", size=7, bold=True, ha="left")
-    label(ax, 2.25, 1.55, "крюк", size=7, ha="left")
 
-    # +90°: вперёд по местной оси x смотрит на север, вдоль блока.
-    crane = Pose(ax, HOOK_X, CENTER_Y, 90)
-    draw_crane_plan(crane, OUTREACH)
-    ax.plot([HOOK_X - 0.7, HOOK_X + 0.7], [CENTER_Y, CENTER_Y], color=INK, lw=0.7, zorder=3)
-    label(ax, 4.7, -11.7, "центр вращения", size=7, ha="left")
-    label(ax, 8.4, -8.6, "кран сбоку,\nстрела вдоль блока", size=8)
+    rig = XShift(ax, CENTER_X)
+    draw_flatbed(rig)
+    draw_crane_plan(rig, OUTREACH)
+
+    rect(ax, SET_X, -BLOCK_W / 2, BLOCK_L, BLOCK_W, fc=BLOCK, ec=INK, lw=1.15, zorder=5)
+    for cx, cy in ((SET_X, -4.5), (SET_X + BLOCK_L, -4.5), (SET_X, 4.5), (SET_X + BLOCK_L, 4.5)):
+        rect(ax, cx - 0.08, cy - 0.08, 0.16, 0.16, fc="#cfc6b4", ec=INK, lw=0.35, zorder=6)
+    label(ax, HOOK_X + 0.85, 2.35, "6", size=12, bold=True)
+    label(ax, HOOK_X + 0.85, -2.15, "с шаланды", size=7, bold=True)
+    label(ax, 4.55, 1.85, "крюк", size=7, ha="left")
+    label(ax, -0.45, -4.7, "шаланда\n13,6 × 2,5", size=7, ha="right")
+
+    ax.plot([CENTER_X, CENTER_X], [-1.15, 1.15], color=INK, lw=0.7, zorder=3)
+    label(ax, CENTER_X, -3.55, "центр\nвращения", size=7)
+    label(ax, -8.7, 3.4, "кран за торцом", size=7.5)
 
     ax.annotate(
-        "", xy=(16.8, 6.35), xytext=(1.5, 6.35),
-        arrowprops=dict(arrowstyle="<->", color=INK, lw=1.0), zorder=6,
+        "", xy=(1.5, 7.7), xytext=(1.5, 7.15),
+        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.05), zorder=6,
     )
-    label(ax, 9.2, 6.85, "кран переезжает вдоль площадки к каждому месту", size=8)
+    label(ax, 3.5, 7.45, "выезд шаланды", size=7.5, ha="left")
+    label(ax, 13.2, 8.25, "План. Шаланда перпендикулярно крану", size=12, bold=True)
 
-    label(ax, 9.0, 7.65, "План. Стрела вдоль блока", size=12, bold=True)
-
-    hdim(ax, SET_X, SET_X + BLOCK_L, 5.85, "3,0", y_from=4.5, size=7.5)
-    hdim(ax, 0, 18, -14.35, "18,0", y_from=-4.5, size=8)
-    hdim(ax, PAD_X0, PAD_X1, -15.15, "19,30", y_from=-PAD_Y, size=7.5)
-    vdim(ax, CENTER_Y, 0.0, -3.15, "10,0", x_from=HOOK_X, size=8)
-    vdim(ax, CENTER_Y, CAB_Y, -4.15, "5,0", x_from=HOOK_X, size=7.5)
-    vdim(ax, CAB_Y, NEAR_Y, -0.55, "0,50", x_from=0.15, size=7)
-    vdim(ax, NEAR_Y, 4.5, 19.35, "9,0", x_from=18, size=8)
-    vdim(ax, -PAD_Y, PAD_Y, 20.7, "11,10", x_from=18.65, size=7.5)
-    label(ax, 10.5, -1.85, "места 1–5 — так же, сбоку", size=7)
+    hdim(ax, SET_X, SET_X + BLOCK_L, 6.15, "3,0", y_from=4.5, size=7.5)
+    hdim(ax, CENTER_X, CAB_X, -10.15, "5,0", y_from=-1.2, size=7.5)
+    hdim(ax, CAB_X, SET_X, -10.95, "1,5", y_from=-4.5, size=7.5)
+    hdim(ax, CENTER_X, HOOK_X, -11.75, "вылет 8,0", y_from=0, size=8)
+    vdim(ax, -4.5, 4.5, 19.2, "9,0", x_from=18.0, size=8)
+    vdim(ax, -PAD_Y, PAD_Y, 20.5, "11,10", x_from=18.65, size=7.5)
+    hdim(ax, 0, 18, -12.55, "18,0", y_from=-4.5, size=7.5)
+    label(ax, 10.5, -1.85, "после выезда — на головки, дальше по рельсам", size=7)
 
 
 def block_side(ax, x, y, w, h):
@@ -364,41 +410,39 @@ def draw_crane_side(ax, tip_x):
 
 
 def draw_section(ax):
-    """Поперечник поперёк путей: стрела вдоль 9 м блока."""
-    style_ax(ax, (-14.6, 7.2), (-2.35, 10.4))
-    ax.plot([-14.2, 6.8], [0, 0], color=INK, lw=1.0, zorder=2)
-    rect(ax, -PAD_Y, 0.0, PAD_Y * 2, STONE_H, fc=STONE, ec="#ddd6c8", lw=0.4, hatch="..", zorder=1)
-    for axis in AXES:
-        rect(ax, axis - SLEEPER_L / 2, STONE_H, SLEEPER_L, 0.23, fc=SLEEPER, ec="#c9c1b4", lw=0.35, zorder=2)
-        for sign in (-1, 1):
-            ry = axis + sign * (GAUGE / 2)
-            rect(ax, ry - 0.04, RAIL_TOP - 0.16, 0.08, 0.16, fc=RAIL, ec=INK, lw=0.3, zorder=3)
+    """Вид вдоль стрелы: блок на шаланде над головками рельсов."""
+    style_ax(ax, (-11.2, 6.8), (-2.15, 10.6))
+    ax.plot([-10.8, 6.4], [0, 0], color=INK, lw=1.0, zorder=2)
+    rect(ax, PAD_X0, 0.0, 6.4, STONE_H, fc=STONE, ec="#ddd6c8", lw=0.35, hatch="..", zorder=1)
+    rect(ax, RAIL0, STONE_H, 5.6, 0.23, fc=SLEEPER, ec="#c9c1b4", lw=0.3, zorder=2)
+    rect(ax, RAIL0, RAIL_TOP - 0.16, 5.6, 0.16, fc=RAIL, ec=INK, lw=0.35, zorder=3)
 
-    crane = XShift(ax, CENTER_Y)
+    crane = XShift(ax, CENTER_X)
     draw_crane_side(crane, OUTREACH)
 
-    top = RAIL_TOP + BLOCK_H
-    ax.plot([-0.04, -0.04], [8.15, top + 0.55], color=INK, lw=0.85, zorder=5)
-    ax.plot([0.04, 0.04], [8.15, top + 0.55], color=INK, lw=0.55, zorder=5)
-    ax.add_patch(FancyBboxPatch(
-        (-0.28, top + 0.38), 0.56, 0.26,
-        boxstyle="round,pad=0.01,rounding_size=0.04",
-        fc="#f4f4f4", ec=INK, lw=0.6, zorder=6,
-    ))
-    ax.add_patch(Wedge((0.0, top + 0.34), 0.16, 200, 340, width=0.045, fc=INK, ec=INK, zorder=7))
+    # Платформа шаланды поперёк стрелы: в этом виде видна ширина 2,5 м.
+    rect(ax, DECK_X, 0.72, DECK_W, 0.42, fc="#9aa6b0", ec=INK, lw=0.6, zorder=4)
+    rect(ax, DECK_X, DECK_TOP - 0.12, DECK_W, 0.12, fc=DECK, ec=INK, lw=0.55, zorder=5)
+    for wx in (DECK_X + 0.35, DECK_X + DECK_W - 0.35):
+        wheel_side(ax, wx, 0.42, 0.40, dual=True)
+    label(ax, 3.25, 0.72, "шаланда", size=7, ha="left")
 
-    block_wall(ax, NEAR_Y, RAIL_TOP, BLOCK_W, BLOCK_H)
-    label(ax, -2.2, RAIL_TOP + 1.15, "блок", size=8, bold=True)
-    label(ax, 0.85, top + 0.7, "крюк", size=7, ha="left")
-    label(ax, CENTER_Y - 2.6, 2.7, "кран", size=8)
-    ax.plot([CENTER_Y, CENTER_Y], [0.0, 0.38], color=INK, lw=0.7, zorder=4)
-    label(ax, CENTER_Y, -2.05, "центр вращения", size=7)
+    block_wall(ax, SET_X, DECK_TOP, BLOCK_L, BLOCK_H)
+    label(ax, HOOK_X, DECK_TOP + 0.85, "блок", size=8, bold=True)
+    top = DECK_TOP + BLOCK_H
+    ax.plot([HOOK_X - 0.04, HOOK_X - 0.04], [8.15, top + 0.42], color=INK, lw=0.85, zorder=6)
+    ax.plot([HOOK_X + 0.04, HOOK_X + 0.04], [8.15, top + 0.42], color=INK, lw=0.55, zorder=6)
+    ax.add_patch(Wedge((HOOK_X, top + 0.28), 0.16, 200, 340, width=0.045, fc=INK, ec=INK, zorder=7))
+    label(ax, HOOK_X + 0.45, top + 1.15, "крюк", size=7, ha="left")
+    label(ax, CENTER_X - 2.4, 2.65, "кран", size=8)
+    ax.plot([CENTER_X, CENTER_X], [0.0, 0.36], color=INK, lw=0.7, zorder=4)
+    label(ax, CENTER_X, -1.85, "центр вращения", size=7)
 
-    hdim(ax, CENTER_Y, 0.0, -1.55, "10,0", y_from=0, size=7.5)
-    hdim(ax, CENTER_Y, CAB_Y, -0.7, "5,0", y_from=0, size=7)
-    label(ax, (CAB_Y + NEAR_Y) / 2, 1.35, "0,50", size=7)
-    vdim(ax, RAIL_TOP, top, 5.35, "2,5", x_from=4.5, size=7.5)
-    label(ax, -6.5, 9.7, "Поперечник. Стрела вдоль блока", size=11, bold=True)
+    hdim(ax, CENTER_X, HOOK_X, -1.35, "8,0", y_from=0, size=7.5)
+    hdim(ax, CENTER_X, CAB_X, -0.55, "5,0", y_from=0, size=7)
+    vdim(ax, DECK_TOP, top, 4.15, "2,5", x_from=3.0, size=7.5)
+    vdim(ax, 0, DECK_TOP, 5.55, "1,3", x_from=3.2, size=7)
+    label(ax, -3.2, 9.85, "С шаланды на рельсы. Шаланда поперёк стрелы", size=11, bold=True)
 
 
 def main():
@@ -409,40 +453,36 @@ def main():
     )
     fig.text(
         0.04, 0.942,
-        "Шесть блоков 3 × 9 × 2,5 м, масса каждого 8,7 т. Кран сбоку, стрела вдоль блока. Размеры в метрах.",
+        "Шесть блоков 3 × 9 × 2,5 м, масса каждого 8,7 т. Шаланда перпендикулярно крану. Размеры в метрах.",
         ha="left", va="top", fontsize=9, fontproperties=SANS, color=INK,
     )
     draw_plan(fig.add_axes([0.012, 0.40, 0.976, 0.52]))
     draw_section(fig.add_axes([0.02, 0.04, 0.58, 0.34]))
 
     notes = (
-        "1. Колея КамАЗ-65115: передние колёса\n"
-        "    2,05 м, задние 1,89 м между серединами\n"
-        "    двойных скатов. Ширина крана 2,50 м.\n"
-        "    Шпала Ш1 — 2,70 м. Шпала длиннее\n"
-        "    колеи: между колёсами она не встаёт.\n"
-        "    Просвет между торцами шпал 1,00 м,\n"
-        "    уже крана. На путь и в междупутье\n"
-        "    кран не ставят.\n"
-        "2. Кран стоит сбоку площадки, за торцами\n"
-        "    шпал. Опоры полностью, на грунте\n"
-        "    у бровки. Стрела только вперёд над\n"
-        "    кабиной, вдоль блока: 9 м по вылету,\n"
-        "    3 м поперёк стрелы.\n"
+        "1. Шаланда 13,6 × 2,5 м стоит\n"
+        "    перпендикулярно кабине. Блок на ней:\n"
+        "    9 м вдоль шаланды, 3 м вдоль стрелы.\n"
+        "    Тягач за бровкой. С этой шаланды блок\n"
+        "    берут и сажают на головки рельсов.\n"
+        "2. Кран за торцом, на шпалы не заезжает.\n"
+        "    Колея 2,05 и 1,89 м короче шпалы\n"
+        "    2,70 м. Опоры полностью. Стрела только\n"
+        "    вперёд над кабиной. На подъёме и\n"
+        "    посадке с этой стоянки не переезжает.\n"
         "3. 5,0 м до переда кабины сверяют обмером.\n"
-        "    Зазор кабины до ближней грани 0,50 м.\n"
-        "    Середина блока — вылет 10,0 м, дальняя\n"
-        "    грань 14,5 м. На крюке 9,1 т, момент\n"
-        "    91 т·м. У КС-55713 момент 80 т·м.\n"
-        "    На стреле 14 м при вылете 8 м ещё\n"
-        "    около 9,9 т. Вылет 10 м этим грузом\n"
-        "    паспорт не принимает.\n"
-        "4. К каждому месту кран переезжает вдоль\n"
-        "    площадки со собранной стрелой. На\n"
-        "    посадке с стоянки не переезжает.\n"
-        "    Блок опускают на головки. Строп 4СЦ\n"
-        "    — по схеме строповки. Блоки вплотную.\n"
-        "    В сборе модуль 18 × 9 м."
+        "    Ближняя грань 6,5 м, середина — вылет\n"
+        "    8,0 м, дальняя грань 9,5 м. Зазор\n"
+        "    кабины 1,5 м. На крюке 9,1 т. Стрела\n"
+        "    14 м, при 8 м около 9,9 т. Строп 4СЦ\n"
+        "    — по схеме строповки.\n"
+        "4. После строповки шаланда выезжает по\n"
+        "    своей оси. В кабине и на платформе\n"
+        "    людей нет. Блок опускают на головки\n"
+        "    у торца. Дальше его передвигают по\n"
+        "    рельсам на своё место, кран со створа\n"
+        "    уходит. Следующая шаланда заезжает\n"
+        "    так же. Блоки вплотную. Модуль 18 × 9 м."
     )
     fig.text(
         0.61, 0.37, notes, ha="left", va="top", fontsize=7.6,
@@ -458,8 +498,8 @@ def main():
     print(
         "track", TRACK_FRONT, TRACK_REAR, "sleeper", SLEEPER_L,
         "gap", round(AXIS_STEP - SLEEPER_L, 2),
-        "center_y", CENTER_Y, "cab_y", CAB_Y,
-        "outreach", OUTREACH, "moment", round(moment, 1),
+        "center_x", CENTER_X, "cab_x", CAB_X, "deck", DECK_X,
+        "outreach", round(OUTREACH, 2), "moment", round(moment, 1),
     )
 
 
