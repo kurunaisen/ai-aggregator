@@ -313,7 +313,7 @@ def draw_rails(ax, x0, x1, z=2):
 
 
 def draw_plan(ax):
-    style_ax(ax, (-11.6, 22.0), (-13.4, 8.8))
+    style_ax(ax, (-11.6, 22.0), (-14.6, 8.8))
     rect(ax, PAD_X0, -PAD_Y, PAD_X1 - PAD_X0, PAD_Y * 2, fc=STONE, ec="#ddd6c8", lw=0.5, hatch="..", zorder=0)
     draw_rails(ax, RAIL0, RAIL1)
     for number, x0 in PLACES:
@@ -349,12 +349,25 @@ def draw_plan(ax):
     label(ax, 13.2, 8.25, "План. Шаланда перпендикулярно крану", size=12, bold=True)
 
     hdim(ax, SET_X, SET_X + BLOCK_L, 6.15, "3,0", y_from=4.5, size=7.5)
+    y_oh = 5.45
+    ax.plot([SET_X, SET_X], [4.5, y_oh], color=INK, lw=0.45, zorder=6)
+    ax.plot([DECK_X, DECK_X], [4.5, y_oh], color=INK, lw=0.45, zorder=6)
+    ax.annotate(
+        "", xy=(DECK_X, y_oh), xytext=(SET_X, y_oh),
+        arrowprops=dict(arrowstyle="<->", color=INK, lw=0.7, shrinkA=0, shrinkB=0),
+        zorder=6,
+    )
+    label(ax, SET_X - 0.12, y_oh, "0,25", size=6.5, ha="right", va="center")
+    vdim(ax, 4.5, DECK_Y + DECK_L, 3.55, "2,3", x_from=3.0, size=7)
+    vdim(ax, DECK_Y, -4.5, 3.55, "2,3", x_from=3.0, size=7)
     hdim(ax, CENTER_X, CAB_X, -10.15, "5,0", y_from=-1.2, size=7.5)
     hdim(ax, CAB_X, SET_X, -10.95, "1,5", y_from=-4.5, size=7.5)
     hdim(ax, CENTER_X, HOOK_X, -11.75, "вылет 8,0", y_from=0, size=8)
+    hdim(ax, CENTER_X, SET_X + BLOCK_L, -12.55, "9,5", y_from=3.0, size=7.5)
     vdim(ax, -4.5, 4.5, 19.2, "9,0", x_from=18.0, size=8)
     vdim(ax, -PAD_Y, PAD_Y, 20.5, "11,10", x_from=18.65, size=7.5)
-    hdim(ax, 0, 18, -12.55, "18,0", y_from=-4.5, size=7.5)
+    hdim(ax, 0, 18, -13.35, "18,0", y_from=-4.5, size=7.5)
+    hdim(ax, PAD_X0, PAD_X1, -14.15, "19,30", y_from=-PAD_Y, size=7.5)
     label(ax, 10.5, -1.85, "после выезда — на головки, дальше по рельсам", size=7)
 
 
