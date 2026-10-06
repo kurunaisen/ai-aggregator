@@ -10,7 +10,7 @@ from matplotlib.transforms import Affine2D
 from matplotlib.font_manager import FontProperties
 
 sys.path.insert(0, "/workspace/ppr")
-from draw_crane_scheme import block_wall, fender, telescopic_boom, wheel_side  # noqa: E402
+from draw_crane_scheme import fender, telescopic_boom, wheel_side  # noqa: E402
 
 SANS = FontProperties(fname="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
 BOLD = FontProperties(fname="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
@@ -248,54 +248,108 @@ def axle_tires(ax, x, track, dual=False):
             tire_plan(ax, x - 0.34, sign * half + dy - 0.14, w=0.68, h=0.28, z=5)
 
 
+def _tire(ax, x, y, w=0.70, h=0.32, z=5):
+    ax.add_patch(FancyBboxPatch(
+        (x, y), w, h, boxstyle="round,pad=0.01,rounding_size=0.1",
+        fc="#1a1a1a", ec=INK, lw=0.45, zorder=z,
+    ))
+    ax.add_patch(Circle((x + w / 2, y + h / 2), min(w, h) * 0.28, fc="#d8d8d8", ec=INK, lw=0.3, zorder=z + 1))
+
+
 def draw_crane_plan(ax):
-    """Местные оси: +X — кабина, −X — зад. Стрела и крюк над задом, вылет 8,4 м."""
+    """Местные оси: +X — кабина водителя, −X — зад. Стрела над задом."""
     ax.add_patch(FancyBboxPatch(
-        (-3.20, -1.25), 8.20, 2.50,
-        boxstyle="round,pad=0.02,rounding_size=0.12",
-        fc=CRANE, ec=INK, lw=1.05, zorder=4,
+        (-3.45, -1.22), 8.45, 2.44,
+        boxstyle="round,pad=0.02,rounding_size=0.16",
+        fc="#c5d0d8", ec=INK, lw=1.0, zorder=4,
     ))
-    axle_tires(ax, 3.55, TRACK_FRONT, dual=False)
-    axle_tires(ax, -0.15, TRACK_REAR, dual=True)
-    axle_tires(ax, -1.47, TRACK_REAR, dual=True)
+    rect(ax, -3.2, -0.38, 5.3, 0.14, fc="#8e99a2", ec=INK, lw=0.3, zorder=4)
+    rect(ax, -3.2, 0.24, 5.3, 0.14, fc="#8e99a2", ec=INK, lw=0.3, zorder=4)
+    rect(ax, -3.55, -1.22, 0.18, 2.44, fc=STEEL_DK, ec=INK, lw=0.45, zorder=4)
+    for wx, dual in ((3.45, False), (-0.15, True), (-1.5, True)):
+        if dual:
+            _tire(ax, wx, 1.05, 0.62, 0.28)
+            _tire(ax, wx, 1.32, 0.62, 0.28)
+            _tire(ax, wx, -1.33, 0.62, 0.28)
+            _tire(ax, wx, -1.60, 0.62, 0.28)
+        else:
+            _tire(ax, wx, 1.08, 0.78, 0.34)
+            _tire(ax, wx, -1.42, 0.78, 0.34)
+
     ax.add_patch(FancyBboxPatch(
-        (2.55, -1.05), 2.45, 2.10,
-        boxstyle="round,pad=0.01,rounding_size=0.1",
-        fc=CAB, ec=INK, lw=0.85, zorder=6,
+        (2.55, -1.15), 2.30, 2.30,
+        boxstyle="round,pad=0.01,rounding_size=0.12",
+        fc=CAB, ec=INK, lw=1.0, zorder=6,
     ))
-    rect(ax, 4.75, -0.72, 0.18, 1.44, fc=GLASS, ec=INK, lw=0.3, zorder=7)
+    rect(ax, 4.62, -0.95, 0.22, 1.90, fc=GLASS, ec=INK, lw=0.4, zorder=7)
+    rect(ax, 2.75, 0.62, 1.55, 0.32, fc="#163040", ec=GLASS, lw=0.35, zorder=7)
+    rect(ax, 2.75, -0.94, 1.55, 0.32, fc="#163040", ec=GLASS, lw=0.35, zorder=7)
+    ax.plot([3.55, 3.55], [-0.5, 0.5], color="#10202a", lw=0.5, zorder=7)
+    for lamp_y in (0.95, -1.15):
+        ax.add_patch(Circle((4.85, lamp_y), 0.09, fc="#f4f7f8", ec=INK, lw=0.3, zorder=8))
+    for sign in (1, -1):
+        ax.plot([4.25, 4.55], [sign * 1.02, sign * 1.48], color=INK, lw=0.7, zorder=8)
+        rect(ax, 4.42, sign * 1.40, 0.36, 0.16, fc="#141414", ec=INK, lw=0.3, zorder=8)
+    ax.text(3.7, 0.0, "КРАН", ha="center", va="center", color="white", fontsize=8, fontproperties=BOLD, zorder=8)
+
     for cx, cy in (
         (OUT_LONG, OUT_WIDE), (OUT_LONG, -OUT_WIDE),
         (-OUT_LONG, OUT_WIDE), (-OUT_LONG, -OUT_WIDE),
     ):
-        sx = 0.95 if cx > 0 else -0.95
-        sy = 0.95 if cy > 0 else -0.95
+        sx = 1.05 if cx > 0 else -1.05
+        sy = 1.0 if cy > 0 else -1.0
         ax.add_patch(Polygon(
-            boom_polygon(sx, sy, cx, cy, 0.20, 0.14),
-            closed=True, fc="#4c565e", ec=INK, lw=0.45, zorder=5,
+            boom_polygon(sx, sy, cx, cy, 0.28, 0.18),
+            closed=True, fc="#4c565e", ec=INK, lw=0.55, zorder=5,
         ))
-        rect(ax, cx - 0.28, cy - 0.28, 0.56, 0.56, fc=PAD, ec=INK, lw=0.5, zorder=6)
-    ax.add_patch(Circle((0, 0), 0.95, fc="#e7ebef", ec=INK, lw=0.7, zorder=7))
+        ax.add_patch(FancyBboxPatch(
+            (cx - 0.32, cy - 0.32), 0.64, 0.64,
+            boxstyle="round,pad=0.01,rounding_size=0.06",
+            fc=PAD, ec=INK, lw=0.6, zorder=6,
+        ))
+        rect(ax, cx - 0.18, cy - 0.18, 0.36, 0.36, fc="#2c3338", ec=INK, lw=0.3, zorder=7)
+
+    ax.add_patch(Circle((0, 0), 1.15, fc="#d5dbdf", ec=INK, lw=0.85, zorder=7))
+    for ang in range(0, 360, 30):
+        a = math.radians(ang)
+        ax.add_patch(Circle((0.92 * math.cos(a), 0.92 * math.sin(a)), 0.035, fc="#222", zorder=8))
     ax.add_patch(FancyBboxPatch(
-        (0.85, -0.62), 0.95, 1.24,
-        boxstyle="round,pad=0.01,rounding_size=0.08",
-        fc="#8b9298", ec=INK, lw=0.6, zorder=8,
+        (0.55, -0.72), 1.35, 1.44,
+        boxstyle="round,pad=0.01,rounding_size=0.06",
+        fc="#8b9298", ec=INK, lw=0.7, zorder=8,
     ))
-    ax.add_patch(Circle((0, 0), 0.08, fc=INK, zorder=9))
-    ax.plot([-0.22, 0.22], [0, 0], color="white", lw=0.6, zorder=9)
-    ax.plot([0, 0], [-0.22, 0.22], color="white", lw=0.6, zorder=9)
+    for i in range(4):
+        ax.plot([0.7, 1.75], [-0.5 + i * 0.28, -0.5 + i * 0.28], color="#5e676e", lw=0.45, zorder=9)
+    ax.add_patch(FancyBboxPatch(
+        (-0.85, -0.7), 1.35, 1.4,
+        boxstyle="round,pad=0.01,rounding_size=0.06",
+        fc=CRANE, ec=INK, lw=0.75, zorder=8,
+    ))
+    ax.add_patch(FancyBboxPatch(
+        (-0.55, 0.22), 0.85, 0.42,
+        boxstyle="round,pad=0.01,rounding_size=0.05",
+        fc=CAB, ec=INK, lw=0.45, zorder=9,
+    ))
+    rect(ax, -0.42, 0.32, 0.55, 0.22, fc=GLASS, ec=INK, lw=0.25, zorder=10)
+    ax.add_patch(Circle((0, 0), 0.1, fc=INK, zorder=10))
+    ax.plot([-0.28, 0.28], [0, 0], color="white", lw=0.7, zorder=11)
+    ax.plot([0, 0], [-0.28, 0.28], color="white", lw=0.7, zorder=11)
+
     hook_x = -OUTREACH
-    ax.add_patch(Polygon(
-        boom_polygon(-0.35, 0.0, hook_x + 0.25, 0.0, 0.42, 0.20),
-        closed=True, fc=BOOM, ec=BOOM_EDGE, lw=0.9, zorder=8,
-    ))
-    ax.text(
-        3.7, 0.0, "КРАН", ha="center", va="center", color="white", fontsize=8,
-        fontproperties=BOLD, zorder=12,
+    sections = (
+        (0.05, 0.32, 0.55, 0.42, "#d9d3c4"),
+        (0.28, 0.55, 0.42, 0.32, "#e4dece"),
+        (0.50, 0.78, 0.32, 0.24, "#ece6d8"),
+        (0.74, 0.96, 0.24, 0.16, "#f7f3ea"),
     )
-    ax.plot([-0.55, hook_x + 0.35], [0.06, 0.06], color="#6a6256", lw=0.45, zorder=9)
-    ax.add_patch(Circle((hook_x, 0.0), 0.16, fc=INK, ec=INK, lw=0.4, zorder=10))
-    ax.add_patch(Circle((hook_x, 0.0), 0.06, fc="white", zorder=11))
+    root, tip = -0.2, hook_x + 0.55
+    for a, b, w0, w1, color in sections:
+        p0 = _along((root, 0.0), (tip, 0.0), a)
+        p1 = _along((root, 0.0), (tip, 0.0), b)
+        ax.add_patch(Polygon(boom_polygon(*p0, *p1, w0, w1), closed=True, fc=color, ec=BOOM_EDGE, lw=0.65, zorder=9))
+    ax.add_patch(Circle((tip, 0), 0.16, fc="#efeae0", ec=INK, lw=0.6, zorder=10))
+    ax.add_patch(Circle((hook_x, 0), 0.13, fc=INK, zorder=11))
+    ax.add_patch(Circle((hook_x, 0), 0.05, fc="white", zorder=12))
 
 
 def draw_flatbed(ax):
@@ -359,49 +413,187 @@ def draw_rails(ax, x0, x1, z=2):
             ax.plot([x0, x1], [y, y], color="#9eb4c9", lw=0.7, solid_capstyle="butt", zorder=z + 2)
 
 
-def draw_flatbed_world(ax):
-    """Шаланда справа от крана. 9 м блока вдоль неё и вдоль стрелы на подъёме."""
-    rect(ax, DECK_X0, DECK_Y0, DECK_L, DECK_W, fc=DECK, ec=DECK_DK, lw=1.15, zorder=3)
-    for axle in (2.2, 4.4, 6.6, 8.8, 11.0):
-        for side, dy in ((-1, -0.42), (1, DECK_W)):
-            ax.add_patch(FancyBboxPatch(
-                (DECK_X0 + axle, DECK_Y0 + dy), 0.55, 0.38,
-                boxstyle="round,pad=0.01,rounding_size=0.08",
-                fc="#1c1c1c", ec=INK, lw=0.4, zorder=4,
-            ))
-    for i in range(int(DECK_L / 0.45)):
-        xx = DECK_X0 + 0.3 + i * 0.45
-        if PICK[0] - 4.2 < xx < PICK[0] + 4.2:
-            continue
-        ax.plot([xx, xx], [DECK_Y0, DECK_Y0 + DECK_W], color=DECK_DK, lw=0.35, zorder=3)
-    rect(ax, DECK_X0, DECK_Y0 - 0.06, DECK_L, 0.06, fc=STEEL_DK, ec=INK, lw=0.3, zorder=4)
-    rect(ax, DECK_X0, DECK_Y0 + DECK_W, DECK_L, 0.06, fc=STEEL_DK, ec=INK, lw=0.3, zorder=4)
-    nose = DECK_X0 + DECK_L
-    rect(ax, nose, DECK_Y0 - 0.08, 0.16, DECK_W + 0.16, fc=STEEL_DK, ec=INK, lw=0.45, zorder=5)
-    rect(ax, nose, PICK[1] - 1.05, 2.15, 2.10, fc="#c5ced6", ec=INK, lw=0.7, zorder=5)
+def lifting_eye(ax, x, y, z=9):
+    ax.add_patch(Rectangle((x - 0.18, y - 0.18), 0.36, 0.36, fc="#2c2c2c", ec=INK, lw=0.45, zorder=z))
+    ax.add_patch(Circle((x, y), 0.10, fc="#f4f4f4", ec=INK, lw=0.35, zorder=z + 1))
+    ax.add_patch(Circle((x, y), 0.035, fc="#161616", zorder=z + 2))
+
+
+def draw_module_plan(ax, x, y, w, h, title="", subtitle="", z=6):
+    """Крыша модуля: швы панелей и проушины по углам. Не сплошной прямоугольник."""
+    ax.add_patch(Rectangle((x + 0.12, y - 0.14), w, h, fc="#000000", ec="none", alpha=0.12, zorder=z - 1))
+    rect(ax, x, y, w, h, fc=BLOCK, ec=BLOCK_EDGE, lw=1.8, zorder=z)
+    seam = "#e0b44a"
+    if w >= h:
+        t = 1.5
+        while t < w - 0.3:
+            ax.plot([x + t, x + t], [y + 0.1, y + h - 0.1], color=seam, lw=0.7, zorder=z + 1)
+            t += 1.5
+    else:
+        t = 1.5
+        while t < h - 0.3:
+            ax.plot([x + 0.1, x + w - 0.1], [y + t, y + t], color=seam, lw=0.7, zorder=z + 1)
+            t += 1.5
+    rect(ax, x + 0.08, y + 0.08, w - 0.16, h - 0.16, fc="none", ec="#f8e7a8", lw=0.6, zorder=z + 1)
+    for cx, cy in ((x, y), (x + w, y), (x, y + h), (x + w, y + h)):
+        lifting_eye(ax, cx, cy, z=z + 2)
+    if title:
+        label(ax, x + w / 2, y + h - 0.7, title, size=9, bold=True, z=z + 3)
+    if subtitle:
+        label(ax, x + w / 2, y + h - 1.5, subtitle, size=7, z=z + 3)
+
+
+def _plan_tire(ax, x, y, w=0.64, h=0.30, z=5):
     ax.add_patch(FancyBboxPatch(
-        (nose + 2.05, PICK[1] - 0.95), 1.35, 1.90,
-        boxstyle="round,pad=0.01,rounding_size=0.12",
-        fc=CAB, ec=INK, lw=0.8, zorder=6,
+        (x, y), w, h, boxstyle="round,pad=0.01,rounding_size=0.08",
+        fc="#1a1a1a", ec=INK, lw=0.4, zorder=z,
     ))
-    rect(ax, nose + 3.15, PICK[1] - 0.55, 0.16, 1.10, fc=GLASS, ec=INK, lw=0.3, zorder=7)
-    for wy in (PICK[1] - 0.85, PICK[1] + 0.45):
-        tire_plan(ax, nose + 0.25, wy, 0.55, 0.32, z=6)
-        tire_plan(ax, nose + 1.15, wy, 0.55, 0.32, z=6)
-    label(ax, nose + 2.7, PICK[1], "тягач", size=6.5, color="white")
+    ax.plot([x + 0.08, x + w - 0.08], [y + h * 0.5, y + h * 0.5], color="#4a4a4a", lw=0.35, zorder=z + 1)
+
+
+def _dual_plan(ax, x, y_outer, sign, z=5):
+    """Двускатное колесо. sign > 0 — наружу в сторону +Y."""
+    for i in range(2):
+        _plan_tire(ax, x - 0.32, y_outer + sign * i * 0.30, z=z)
+
+
+def draw_flatbed_world(ax):
+    """Шаланда справа от крана. 9 м блока вдоль неё. Тягач с дальнего торца.
+
+    Снизу от плана пристроен вид сбоку в тех же X: так видно колёса,
+    кабину тягача и стену модуля, а не вторую жёлтую коробку.
+    """
+    # План площадки: доски видны там, где блок их не закрывает.
+    rect(ax, DECK_X0, DECK_Y0, DECK_L, DECK_W, fc="#c96d12", ec=DECK_DK, lw=1.0, zorder=3)
+    xx = DECK_X0 + 0.22
+    while xx < DECK_X0 + DECK_L - 0.1:
+        ax.plot([xx, xx], [DECK_Y0 + 0.08, DECK_Y0 + DECK_W - 0.08], color=DECK_DK, lw=0.45, zorder=3)
+        xx += 0.42
+    rect(ax, DECK_X0, DECK_Y0 - 0.07, DECK_L, 0.07, fc=STEEL_DK, ec=INK, lw=0.35, zorder=4)
+    rect(ax, DECK_X0, DECK_Y0 + DECK_W, DECK_L, 0.07, fc=STEEL_DK, ec=INK, lw=0.35, zorder=4)
+    rect(ax, DECK_X0 - 0.16, DECK_Y0 - 0.1, 0.16, DECK_W + 0.2, fc=STEEL_DK, ec=INK, lw=0.45, zorder=4)
+    rect(ax, DECK_X0 - 0.12, DECK_Y0 + 0.15, 0.08, 0.28, fc="#c0392b", ec=INK, lw=0.25, zorder=5)
+    rect(ax, DECK_X0 - 0.12, DECK_Y0 + DECK_W - 0.43, 0.08, 0.28, fc="#c0392b", ec=INK, lw=0.25, zorder=5)
+
+    nose = DECK_X0 + DECK_L
+    # Шкворень и лапы — на свободной части площадки, за блоком.
+    ax.add_patch(Circle((nose - 1.55, PICK[1]), 0.28, fc="#6a737a", ec=INK, lw=0.45, zorder=4))
+    ax.add_patch(Circle((nose - 1.55, PICK[1]), 0.08, fc="#222", zorder=5))
+    sy = DECK_Y0 + DECK_W - 0.02
+    rect(ax, nose - 3.15, sy, 0.16, 0.30, fc="#4e585f", ec=INK, lw=0.35, zorder=4)
+    rect(ax, nose - 3.28, sy + 0.24, 0.42, 0.08, fc=PAD, ec=INK, lw=0.3, zorder=4)
+
+    # Тягач, кабина-кабина, нос от крана.
+    rect(ax, nose - 1.7, PICK[1] - 0.42, 3.55, 0.22, fc="#8e99a2", ec=INK, lw=0.4, zorder=4)
+    rect(ax, nose - 1.7, PICK[1] + 0.20, 3.55, 0.22, fc="#8e99a2", ec=INK, lw=0.4, zorder=4)
+    for axle in (nose - 1.85, nose - 0.95):
+        _dual_plan(ax, axle, DECK_Y0 + DECK_W + 0.02, 1, z=5)
+    cab_x, cab_y = nose + 0.15, PICK[1] - 1.15
+    ax.add_patch(FancyBboxPatch(
+        (cab_x, cab_y), 2.35, 2.30,
+        boxstyle="round,pad=0.01,rounding_size=0.12",
+        fc=CAB, ec=INK, lw=1.0, zorder=6,
+    ))
+    rect(ax, cab_x + 2.05, cab_y + 0.28, 0.22, 1.74, fc=GLASS, ec=INK, lw=0.4, zorder=7)
+    rect(ax, cab_x + 0.15, cab_y + 1.85, 1.70, 0.28, fc="#163040", ec=GLASS, lw=0.3, zorder=7)
+    rect(ax, cab_x + 0.15, cab_y + 0.16, 1.70, 0.28, fc="#163040", ec=GLASS, lw=0.3, zorder=7)
+    for my in (cab_y + 2.15, cab_y - 0.18):
+        ax.plot([cab_x + 1.7, cab_x + 2.15], [cab_y + 1.15, my], color=INK, lw=0.65, zorder=8)
+        rect(ax, cab_x + 2.05, my, 0.34, 0.16, fc="#141414", ec=INK, lw=0.3, zorder=8)
+    for lamp_y in (cab_y + 1.95, cab_y + 0.15):
+        ax.add_patch(Circle((cab_x + 2.42, lamp_y), 0.09, fc="#f7f9fb", ec=INK, lw=0.3, zorder=8))
+    _plan_tire(ax, cab_x + 1.15, cab_y - 0.34, 0.72, 0.32, z=5)
+    _plan_tire(ax, cab_x + 1.15, cab_y + 2.30, 0.72, 0.32, z=5)
+    rect(ax, cab_x + 2.48, cab_y + 0.15, 0.14, 2.00, fc="#1a2228", ec=INK, lw=0.35, zorder=7)
     ax.text(
-        16.7, PICK[1], "ДЛИННОМЕР", ha="center", va="center",
-        color="white", fontsize=8, fontproperties=BOLD, zorder=8,
+        (PICK[0] + BLOCK_W / 2 + nose) / 2, PICK[1], "ДЛИННОМЕР",
+        ha="center", va="center", color="white", fontsize=8, fontproperties=BOLD, zorder=8,
     )
+
+    # Вид сбоку, привязанный к южной грани блока. Высоты в масштабе плана.
+    ground = (PICK[1] - BLOCK_L / 2) - BLOCK_H - DECK_TOP
+    deck_top = ground + DECK_TOP
+    ax.plot([DECK_X0 - 0.4, nose + 3.3], [ground, ground], color=INK, lw=1.0, zorder=2)
+    rect(ax, DECK_X0 - 0.5, ground - 0.45, DECK_L + 4.3, 0.45, fc="#ece7df", ec="none", zorder=1)
+    rect(ax, DECK_X0, ground + 0.78, DECK_L, 0.32, fc="#9aa6b0", ec=INK, lw=0.6, zorder=3)
+    member = DECK_X0 + 0.4
+    while member < nose - 0.3:
+        rect(ax, member, ground + 0.62, 0.08, 0.18, fc="#7d8892", ec=INK, lw=0.25, zorder=3)
+        member += 1.15
+    rect(ax, DECK_X0, deck_top - 0.18, DECK_L, 0.18, fc=DECK, ec=INK, lw=0.7, zorder=4)
+    for px in [DECK_X0 + 0.2 + i * 0.42 for i in range(33)]:
+        if px < nose - 0.05:
+            ax.plot([px, px], [deck_top - 0.16, deck_top - 0.02], color=DECK_DK, lw=0.35, zorder=4)
+    rect(ax, DECK_X0 - 0.14, ground + 0.55, 0.14, 0.75, fc=STEEL_DK, ec=INK, lw=0.4, zorder=4)
+    rect(ax, DECK_X0 - 0.12, ground + 0.95, 0.10, 0.16, fc="#c0392b", ec=INK, lw=0.25, zorder=5)
+
+    for cx in (DECK_X0 + 1.15, DECK_X0 + 2.35, DECK_X0 + 3.55):
+        fender(ax, cx, ground + 0.48, 0.46, z=3)
+        wheel_side(ax, cx, ground + 0.48, 0.46, dual=True)
+    rect(ax, DECK_X0 + 3.85, ground + 0.12, 0.08, 0.55, fc="#2a2a2a", ec=INK, lw=0.3, zorder=4)
+
+    module_wall(ax, DECK_X0, deck_top, BLOCK_W, BLOCK_H, z=5)
+    ax.plot(
+        [DECK_X0 + BLOCK_W, DECK_X0 + BLOCK_W], [deck_top, deck_top + BLOCK_H],
+        color=BLOCK_EDGE, lw=1.3, zorder=6,
+    )
+
+    # Тягач сбоку, нос вправо. Колёса стоят под теми же X, что и на плане.
+    rect(ax, nose - 2.3, ground + 0.82, 4.55, 0.36, fc="#b7c0c8", ec=INK, lw=0.65, zorder=3)
+    rect(ax, nose - 0.2, ground + 0.55, 0.7, 0.28, fc="#8d98a2", ec=INK, lw=0.35, zorder=3)
+    for cx, dual in ((nose - 1.85, True), (nose - 0.95, True), (nose + 1.55, False)):
+        fender(ax, cx, ground + 0.48, 0.50, z=3)
+        wheel_side(ax, cx, ground + 0.48, 0.50, dual=dual)
+    ax.add_patch(Wedge((nose - 1.55, deck_top), 0.22, 0, 180, fc="#5c656c", ec=INK, lw=0.4, zorder=5))
+    ax.add_patch(Polygon(
+        [
+            (nose + 0.15, ground + 1.15), (nose + 0.35, ground + 2.55),
+            (nose + 0.62, ground + 2.95), (nose + 1.85, ground + 2.88),
+            (nose + 2.35, ground + 2.15), (nose + 2.55, ground + 1.45),
+            (nose + 2.55, ground + 1.08), (nose + 0.15, ground + 1.15),
+        ],
+        closed=True, fc=CAB, ec=INK, lw=0.9, zorder=5,
+    ))
+    ax.add_patch(Polygon(
+        [
+            (nose + 1.95, ground + 2.15), (nose + 2.22, ground + 2.55),
+            (nose + 2.42, ground + 2.15), (nose + 2.22, ground + 1.85),
+        ],
+        closed=True, fc=GLASS, ec=INK, lw=0.35, zorder=6,
+    ))
+    rect(ax, nose + 0.55, ground + 1.45, 1.05, 1.05, fc="#162430", ec=GLASS, lw=0.35, zorder=6)
+    rect(ax, nose + 0.70, ground + 1.60, 0.75, 0.72, fc="#243848", ec="#9bb4c6", lw=0.3, zorder=7)
+    ax.add_patch(Circle((nose + 2.42, ground + 1.28), 0.07, fc="#f7f9fb", ec=INK, lw=0.25, zorder=7))
+    rect(ax, nose + 2.35, ground + 1.02, 0.45, 0.12, fc="#1a2228", ec=INK, lw=0.3, zorder=6)
+    label(ax, nose + 2.75, ground + 1.7, "тягач", size=7, ha="left")
+    label(ax, DECK_X0 + BLOCK_W / 2, deck_top + 1.15, "блок", size=8, bold=True)
+    label(ax, DECK_X0 + 10.2, ground + 1.55, "площадка", size=7)
+    ax.plot([nose, nose], [DECK_Y0, deck_top], color="#b7b1a8", lw=0.45, ls=(0, (2, 2)), zorder=2)
+    label(ax, DECK_X0 + 6.8, ground - 0.85, "тот же длинномер сбоку", size=7.5)
 
 
 def draw_pick_boom(ax):
-    ax.add_patch(Polygon(
-        boom_polygon(CENTER[0] + 0.4, CENTER[1], PICK[0] - 0.35, PICK[1], 0.28, 0.14),
-        closed=True, fc="#efe8da", ec=INK, lw=0.6, ls=(0, (4, 1.6)), zorder=7,
-    ))
-    ax.add_patch(Circle(PICK, 0.14, fc="none", ec=INK, lw=0.7, zorder=8))
-    ax.add_patch(Circle(PICK, 0.05, fc=INK, zorder=9))
+    """Стрела в положении подъёма: от оси вправо, вдоль стороны 9 м."""
+    root = (CENTER[0] + 1.25, CENTER[1])
+    tip = (PICK[0] - 0.45, PICK[1])
+    sections = (
+        (0.00, 0.40, 0.46, 0.36, "#d9d3c4"),
+        (0.28, 0.60, 0.36, 0.28, "#e4dece"),
+        (0.50, 0.80, 0.28, 0.20, "#ece6d8"),
+        (0.72, 1.00, 0.20, 0.14, "#f7f3ea"),
+    )
+    for a, b, w0, w1, color in sections:
+        p0 = _along(root, tip, a)
+        p1 = _along(root, tip, b)
+        ax.add_patch(Polygon(
+            boom_polygon(*p0, *p1, w0, w1), closed=True, fc=color, ec=BOOM_EDGE, lw=0.65, zorder=8,
+        ))
+    ax.add_patch(Circle(tip, 0.16, fc="#efeae0", ec=INK, lw=0.55, zorder=9))
+    ax.add_patch(Circle((tip[0] + 0.02, tip[1]), 0.06, fc=INK, zorder=10))
+    ax.plot([tip[0], PICK[0]], [tip[1] + 0.05, PICK[1]], color=INK, lw=0.7, zorder=9)
+    ax.plot([tip[0], PICK[0]], [tip[1] - 0.05, PICK[1]], color=INK, lw=0.45, zorder=9)
+    ax.add_patch(Circle(PICK, 0.12, fc=INK, zorder=11))
+    ax.add_patch(Circle(PICK, 0.045, fc="white", zorder=12))
 
 
 def draw_plan(ax):
@@ -410,26 +602,25 @@ def draw_plan(ax):
     draw_rails(ax, RAIL0, RAIL1)
 
     draw_flatbed_world(ax)
-    rect(
-        ax, PICK[0] - BLOCK_W / 2, PICK[1] - BLOCK_L / 2, BLOCK_W, BLOCK_L,
-        fc=BLOCK, ec=BLOCK_EDGE, lw=1.5, zorder=5,
-    )
-    label(ax, PICK[0], PICK[1] + 0.55, "БЛОК", size=9, bold=True)
-    label(ax, PICK[0], PICK[1] - 0.45, "на длинномере", size=7)
+    bx0, by0 = PICK[0] - BLOCK_W / 2, PICK[1] - BLOCK_L / 2
+    draw_module_plan(ax, bx0, by0, BLOCK_W, BLOCK_L, z=6)
+    label(ax, PICK[0], by0 + BLOCK_L + 0.42, "БЛОК на длинномере", size=8, bold=True)
+    for corner in ((bx0, by0), (bx0 + BLOCK_W, by0), (bx0, by0 + BLOCK_L), (bx0 + BLOCK_W, by0 + BLOCK_L)):
+        ax.plot([corner[0], PICK[0]], [corner[1], PICK[1]], color="#2a2622", lw=0.7, zorder=7)
 
     crane = Pose(ax, CENTER[0], CENTER[1], -90)
     draw_crane_plan(crane)
     draw_pick_boom(ax)
 
-    rect(ax, SET_X, -BLOCK_W / 2, BLOCK_L, BLOCK_W, fc=BLOCK, ec=BLOCK_EDGE, lw=1.7, zorder=5)
+    draw_module_plan(ax, SET_X, -BLOCK_W / 2, BLOCK_L, BLOCK_W, z=5)
+    label(ax, 1.5, 1.85, "БЛОК 1", size=9, bold=True)
+    for corner in ((SET_X, -BLOCK_W / 2), (SET_X + BLOCK_L, -BLOCK_W / 2), (SET_X, BLOCK_W / 2), (SET_X + BLOCK_L, BLOCK_W / 2)):
+        ax.plot([corner[0], HOOK[0]], [corner[1], HOOK[1]], color="#2a2622", lw=0.7, zorder=7)
     # Рельсы под блоком: три короткие нитки поверх заливки, чтобы было видно, на чём он стоит.
     for axis in AXES:
         for sign in (-1, 1):
             y = axis + sign * GAUGE / 2
             ax.plot([0.15, 2.85], [y, y], color=RAIL, lw=2.2, solid_capstyle="butt", zorder=6)
-    label(ax, 1.5, 2.55, "БЛОК 1", size=10, bold=True)
-    label(ax, 1.5, -2.55, "на ЖД путях", size=7.5)
-
     arc = Arc(
         CENTER, OUTREACH * 2, OUTREACH * 2, angle=0, theta1=0, theta2=90,
         ec=INK, lw=0.8, ls=(0, (4, 2)), zorder=6,
@@ -453,18 +644,27 @@ def draw_plan(ax):
         arrowprops=dict(arrowstyle="-|>", color=RAIL, lw=0.9),
         bbox=dict(fc="white", ec=RAIL, pad=0.2, alpha=0.95),
     )
-    swatches = (
-        (STONE, "щебень"),
-        (RAIL, "ЖД путь"),
-        (BLOCK, "блок"),
-        (DECK, "длинномер"),
-        (CRANE, "кран"),
-    )
-    for i, (color, name) in enumerate(swatches):
-        yy = -14.7 + i * 0.72
-        rect(ax, 14.6, yy, 0.85, 0.48, fc=color, ec=INK, lw=0.6, zorder=8)
-        label(ax, 15.6, yy + 0.24, name, size=7.5, ha="left")
     label(ax, 11.5, 7.15, "План. Кран перпендикулярно площадке, стрела вдоль 9 м", size=11, bold=True)
+
+
+def module_wall(ax, x, y, w, h, z=4):
+    """Стена модуля тем же жёлтым, что и крыша на плане."""
+    rect(ax, x, y, w, h, fc=BLOCK, ec=BLOCK_EDGE, lw=1.15, zorder=z)
+    rect(ax, x, y + h - 0.08, w, 0.08, fc="#e7c56a", ec=BLOCK_EDGE, lw=0.3, zorder=z + 1)
+    rect(ax, x, y, w, 0.10, fc="#e0b44a", ec=BLOCK_EDGE, lw=0.3, zorder=z + 1)
+    rect(ax, x, y, 0.08, h, fc="#e0b44a", ec=BLOCK_EDGE, lw=0.3, zorder=z + 1)
+    rect(ax, x + w - 0.08, y, 0.08, h, fc="#e0b44a", ec=BLOCK_EDGE, lw=0.3, zorder=z + 1)
+    if w < 5:
+        ww, wh = min(1.15, w * 0.4), h * 0.26
+        rect(ax, x + (w - ww) / 2, y + h * 0.52, ww, wh, fc=GLASS, ec=INK, lw=0.4, zorder=z + 2)
+        return
+    rect(ax, x + 0.35, y + 0.16, 0.9, h * 0.52, fc="#fff6dc", ec=BLOCK_EDGE, lw=0.45, zorder=z + 2)
+    span = w - 2.3
+    gap, n = 0.4, 3
+    ww = (span - gap * (n - 1)) / n
+    gy, wh = y + h * 0.56, h * 0.22
+    for i in range(n):
+        rect(ax, x + 1.7 + i * (ww + gap), gy, ww, wh, fc=GLASS, ec=INK, lw=0.4, zorder=z + 2)
 
 
 def block_side(ax, x, y, w, h):
@@ -531,8 +731,8 @@ def draw_section(ax):
     crane = MirrorX(ax, CENTER[1])
     draw_crane_side(crane, -OUTREACH)
 
-    rect(ax, -BLOCK_W / 2, RAIL_TOP, BLOCK_W, BLOCK_H, fc=BLOCK, ec=BLOCK_EDGE, lw=1.3, zorder=4)
-    label(ax, 0, RAIL_TOP + 1.25, "БЛОК", size=9, bold=True)
+    module_wall(ax, -BLOCK_W / 2, RAIL_TOP, BLOCK_W, BLOCK_H, z=4)
+    label(ax, 1.6, RAIL_TOP + 1.35, "БЛОК", size=9, bold=True)
     label(ax, -11.2, 1.7, "КРАН", size=8, bold=True, color=CRANE)
     label(ax, 2.2, RAIL_TOP + 0.28, "рельс", size=7, color=RAIL)
     top = RAIL_TOP + BLOCK_H
@@ -597,6 +797,23 @@ def main():
         0.58, 0.375, notes, ha="left", va="top", fontsize=8.0,
         fontproperties=SANS, color=INK, linespacing=1.28,
     )
+    legend = (
+        (STONE, "щебень"),
+        (RAIL, "ЖД путь"),
+        (BLOCK, "блок"),
+        (DECK, "длинномер"),
+        (CRANE, "кран"),
+    )
+    for i, (color, name) in enumerate(legend):
+        yy = 0.84 - i * 0.032
+        fig.add_artist(Rectangle(
+            (0.745, yy), 0.02, 0.018, transform=fig.transFigure,
+            fc=color, ec=INK, lw=0.7, zorder=5,
+        ))
+        fig.text(
+            0.772, yy + 0.009, name, ha="left", va="center",
+            fontsize=9, fontproperties=SANS, color=INK,
+        )
     fig.add_artist(Rectangle(
         (0.012, 0.015), 0.976, 0.97, transform=fig.transFigure,
         fill=False, edgecolor=INK, lw=1.15,
