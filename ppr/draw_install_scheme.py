@@ -16,16 +16,20 @@ SANS = FontProperties(fname="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
 BOLD = FontProperties(fname="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
 
 INK = "#1a1a1a"
-STONE = "#f3f0e8"
-SLEEPER = "#e7dfd0"
-RAIL = "#3e4850"
-BLOCK = "#f6f1e4"
-CAB = "#2f3d4a"
+STONE = "#e4efe0"
+SLEEPER = "#cbb892"
+RAIL = "#163a5f"
+BLOCK = "#f6d36b"
+BLOCK_EDGE = "#8a5a12"
+CAB = "#1d3f5a"
+CRANE = "#2f7eb0"
 GLASS = "#d5e4ef"
-PAD = "#5c656c"
+PAD = "#3d4c57"
 STEEL_DK = "#3e4850"
-BOOM = "#e7e1d4"
-BOOM_EDGE = "#2c3136"
+BOOM = "#f3e3a4"
+BOOM_EDGE = "#6b5a32"
+DECK = "#e08a28"
+DECK_DK = "#8a4e12"
 
 # Кран сбоку площадки, шасси перпендикулярно путям. Кабина от площадки.
 # Посадка: стрела над задом, вдоль стороны 9 м, вылет 8,4 м.
@@ -58,8 +62,6 @@ PAD_Y = 5.55
 STONE_H = 0.25
 RAIL_TOP = 0.68
 PLACES = ((2, 3.0), (3, 6.0), (4, 9.0), (5, 12.0), (6, 15.0))
-DECK = "#e4c99a"
-DECK_DK = "#c4a36e"
 # Опорный контур 5,1 × 6,1 м — между центрами тарелок.
 OUT_LONG = 2.55
 OUT_WIDE = 3.05
@@ -252,7 +254,7 @@ def draw_crane_plan(ax):
     ax.add_patch(FancyBboxPatch(
         (-3.20, -1.25), 8.20, 2.50,
         boxstyle="round,pad=0.02,rounding_size=0.12",
-        fc="#d7dee4", ec=INK, lw=0.9, zorder=4,
+        fc=CRANE, ec=INK, lw=1.05, zorder=4,
     ))
     axle_tires(ax, 3.55, TRACK_FRONT, dual=False)
     axle_tires(ax, -0.15, TRACK_REAR, dual=True)
@@ -285,9 +287,13 @@ def draw_crane_plan(ax):
     ax.plot([0, 0], [-0.22, 0.22], color="white", lw=0.6, zorder=9)
     hook_x = -OUTREACH
     ax.add_patch(Polygon(
-        boom_polygon(-0.35, 0.0, hook_x + 0.25, 0.0, 0.36, 0.16),
-        closed=True, fc="#cfc6b4", ec=INK, lw=0.7, zorder=8,
+        boom_polygon(-0.35, 0.0, hook_x + 0.25, 0.0, 0.42, 0.20),
+        closed=True, fc=BOOM, ec=BOOM_EDGE, lw=0.9, zorder=8,
     ))
+    ax.text(
+        3.7, 0.0, "КРАН", ha="center", va="center", color="white", fontsize=8,
+        fontproperties=BOLD, zorder=12,
+    )
     ax.plot([-0.55, hook_x + 0.35], [0.06, 0.06], color="#6a6256", lw=0.45, zorder=9)
     ax.add_patch(Circle((hook_x, 0.0), 0.16, fc=INK, ec=INK, lw=0.4, zorder=10))
     ax.add_patch(Circle((hook_x, 0.0), 0.06, fc="white", zorder=11))
@@ -337,26 +343,33 @@ def draw_flatbed(ax):
 
 
 def draw_rails(ax, x0, x1, z=2):
-    step = 0.5
-    x = x0
-    while x <= x1 + 1e-6:
+    step = 0.55
+    x = x0 + 0.25
+    while x <= x1 - 0.15:
         for axis in AXES:
             rect(
-                ax, x - 0.08, axis - 1.35, 0.16, 2.70,
-                fc=SLEEPER, ec="#d5cbb8", lw=0.2, zorder=z,
+                ax, x - 0.09, axis - 1.35, 0.18, 2.70,
+                fc=SLEEPER, ec="#8d7b5e", lw=0.35, zorder=z,
             )
         x += step
     half = GAUGE / 2
     for axis in AXES:
         for sign in (-1, 1):
             y = axis + sign * half
-            y0 = y if sign > 0 else y - 0.07
-            rect(ax, x0, y0, x1 - x0, 0.07, fc=RAIL, ec=INK, lw=0.2, zorder=z + 1)
+            ax.plot([x0, x1], [y, y], color=RAIL, lw=2.6, solid_capstyle="butt", zorder=z + 1)
+            ax.plot([x0, x1], [y, y], color="#9eb4c9", lw=0.7, solid_capstyle="butt", zorder=z + 2)
 
 
 def draw_flatbed_world(ax):
     """Шаланда справа от крана. 9 м блока вдоль неё и вдоль стрелы на подъёме."""
-    rect(ax, DECK_X0, DECK_Y0, DECK_L, DECK_W, fc=DECK, ec=DECK_DK, lw=0.8, zorder=3)
+    rect(ax, DECK_X0, DECK_Y0, DECK_L, DECK_W, fc=DECK, ec=DECK_DK, lw=1.15, zorder=3)
+    for axle in (2.2, 4.4, 6.6, 8.8, 11.0):
+        for side, dy in ((-1, -0.42), (1, DECK_W)):
+            ax.add_patch(FancyBboxPatch(
+                (DECK_X0 + axle, DECK_Y0 + dy), 0.55, 0.38,
+                boxstyle="round,pad=0.01,rounding_size=0.08",
+                fc="#1c1c1c", ec=INK, lw=0.4, zorder=4,
+            ))
     for i in range(int(DECK_L / 0.45)):
         xx = DECK_X0 + 0.3 + i * 0.45
         if PICK[0] - 4.2 < xx < PICK[0] + 4.2:
@@ -377,6 +390,10 @@ def draw_flatbed_world(ax):
         tire_plan(ax, nose + 0.25, wy, 0.55, 0.32, z=6)
         tire_plan(ax, nose + 1.15, wy, 0.55, 0.32, z=6)
     label(ax, nose + 2.7, PICK[1], "тягач", size=6.5, color="white")
+    ax.text(
+        16.7, PICK[1], "ДЛИННОМЕР", ha="center", va="center",
+        color="white", fontsize=8, fontproperties=BOLD, zorder=8,
+    )
 
 
 def draw_pick_boom(ax):
@@ -402,18 +419,23 @@ def draw_plan(ax):
     draw_flatbed_world(ax)
     rect(
         ax, PICK[0] - BLOCK_W / 2, PICK[1] - BLOCK_L / 2, BLOCK_W, BLOCK_L,
-        fc=BLOCK, ec=INK, lw=1.0, zorder=5,
+        fc=BLOCK, ec=BLOCK_EDGE, lw=1.5, zorder=5,
     )
-    label(ax, PICK[0], PICK[1] + 0.85, "берёт", size=8, bold=True)
-    label(ax, PICK[0], PICK[1] - 0.7, "9 м вдоль стрелы", size=6.5)
+    label(ax, PICK[0], PICK[1] + 0.55, "БЛОК", size=9, bold=True)
+    label(ax, PICK[0], PICK[1] - 0.45, "на длинномере", size=7)
 
     crane = Pose(ax, CENTER[0], CENTER[1], -90)
     draw_crane_plan(crane)
     draw_pick_boom(ax)
 
-    rect(ax, SET_X, -BLOCK_W / 2, BLOCK_L, BLOCK_W, fc=BLOCK, ec=INK, lw=1.15, zorder=5)
-    label(ax, 1.5, 1.15, "1", size=12, bold=True)
-    label(ax, 1.5, -1.35, "сажает", size=7.5, bold=True)
+    rect(ax, SET_X, -BLOCK_W / 2, BLOCK_L, BLOCK_W, fc=BLOCK, ec=BLOCK_EDGE, lw=1.7, zorder=5)
+    # Рельсы под блоком: три короткие нитки поверх заливки, чтобы было видно, на чём он стоит.
+    for axis in AXES:
+        for sign in (-1, 1):
+            y = axis + sign * GAUGE / 2
+            ax.plot([0.15, 2.85], [y, y], color=RAIL, lw=2.2, solid_capstyle="butt", zorder=6)
+    label(ax, 1.5, 2.55, "БЛОК 1", size=10, bold=True)
+    label(ax, 1.5, -2.55, "на ЖД путях", size=7.5)
 
     arc = Arc(
         CENTER, OUTREACH * 2, OUTREACH * 2, angle=0, theta1=0, theta2=90,
@@ -437,6 +459,24 @@ def draw_plan(ax):
     vdim(ax, -4.5, 4.5, 20.3, "9,0", x_from=18.0, size=8)
     vdim(ax, -PAD_Y, PAD_Y, 22.2, "11,10", x_from=18.65, size=7)
     hdim(ax, 0, 18, 6.95, "18,0 пути", y_from=4.5, size=7.5)
+    ax.annotate(
+        "ЖД пути",
+        xy=(11.2, 3.7), xytext=(11.2, 5.55),
+        ha="center", va="bottom", fontsize=8, fontproperties=BOLD, color=RAIL, zorder=9,
+        arrowprops=dict(arrowstyle="-|>", color=RAIL, lw=0.9),
+        bbox=dict(fc="white", ec=RAIL, pad=0.2, alpha=0.95),
+    )
+    swatches = (
+        (STONE, "щебень"),
+        (RAIL, "ЖД путь"),
+        (BLOCK, "блок"),
+        (DECK, "длинномер"),
+        (CRANE, "кран"),
+    )
+    for i, (color, name) in enumerate(swatches):
+        yy = -14.7 + i * 0.72
+        rect(ax, 14.6, yy, 0.85, 0.48, fc=color, ec=INK, lw=0.6, zorder=8)
+        label(ax, 15.6, yy + 0.24, name, size=7.5, ha="left")
     label(ax, 11.5, 7.15, "План. Кран перпендикулярно площадке, стрела вдоль 9 м", size=11, bold=True)
 
 
@@ -451,7 +491,7 @@ def block_side(ax, x, y, w, h):
 
 def draw_crane_side(ax, tip_x):
     """Кран в местных координатах: перед кабины x = 5, крюк над tip_x."""
-    rect(ax, -3.55, 0.92, 8.55, 0.32, fc="#c5ced6", ec=INK, lw=0.7, zorder=3)
+    rect(ax, -3.55, 0.92, 8.55, 0.32, fc=CRANE, ec=INK, lw=0.8, zorder=3)
     rect(ax, 0.55, 0.55, 0.85, 0.42, fc="#8d98a2", ec=INK, lw=0.4, zorder=3)
     for cx, dual in ((3.95, False), (-0.15, True), (-1.55, True)):
         fender(ax, cx, 0.52, 0.48, z=3)
@@ -504,8 +544,10 @@ def draw_section(ax):
     crane = MirrorX(ax, CENTER[1])
     draw_crane_side(crane, -OUTREACH)
 
-    block_wall(ax, -BLOCK_W / 2, RAIL_TOP, BLOCK_W, BLOCK_H)
-    label(ax, 0, RAIL_TOP + 1.05, "блок 9 м", size=8, bold=True)
+    rect(ax, -BLOCK_W / 2, RAIL_TOP, BLOCK_W, BLOCK_H, fc=BLOCK, ec=BLOCK_EDGE, lw=1.3, zorder=4)
+    label(ax, 0, RAIL_TOP + 1.25, "БЛОК", size=9, bold=True)
+    label(ax, -11.2, 1.7, "КРАН", size=8, bold=True, color=CRANE)
+    label(ax, 2.2, RAIL_TOP + 0.28, "рельс", size=7, color=RAIL)
     top = RAIL_TOP + BLOCK_H
     hook_z = top + 5.15
     ax.plot([-0.04, -0.04], [hook_z - 0.15, top + 0.15], color=INK, lw=0.9, zorder=6)
