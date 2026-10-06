@@ -61,7 +61,6 @@ PAD_X1 = 18.65
 PAD_Y = 5.55
 STONE_H = 0.25
 RAIL_TOP = 0.68
-PLACES = ((2, 3.0), (3, 6.0), (4, 9.0), (5, 12.0), (6, 15.0))
 # Опорный контур 5,1 × 6,1 м — между центрами тарелок.
 OUT_LONG = 2.55
 OUT_WIDE = 3.05
@@ -409,12 +408,6 @@ def draw_plan(ax):
     style_ax(ax, (-2.4, 24.2), (-15.6, 7.6))
     rect(ax, PAD_X0, -PAD_Y, PAD_X1 - PAD_X0, PAD_Y * 2, fc=STONE, ec="#ddd6c8", lw=0.5, hatch="..", zorder=0)
     draw_rails(ax, RAIL0, RAIL1)
-    for number, x0 in PLACES:
-        ax.add_patch(Rectangle(
-            (x0, -BLOCK_W / 2), BLOCK_L, BLOCK_W,
-            fc="none", ec=INK, lw=0.8, ls=(0, (5, 2.2)), zorder=4,
-        ))
-        label(ax, x0 + 1.5, 2.2, str(number), size=10, bold=True)
 
     draw_flatbed_world(ax)
     rect(
@@ -444,16 +437,10 @@ def draw_plan(ax):
     ax.add_patch(arc)
     label(ax, 7.6, -3.3, "обратно\nна площадку", size=7)
 
-    ax.annotate(
-        "", xy=(6.2, -12.6), xytext=(3.2, -12.6),
-        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.05), zorder=6,
-    )
-    label(ax, 8.6, -12.6, "следующая стоянка +3 м", size=7, ha="left")
     label(ax, -0.15, -10.35, "центр\nвращения", size=6.5)
     label(ax, 1.5, -14.55, "кабина от площадки", size=7)
 
     hdim(ax, 0, 3, 6.15, "3,0", y_from=4.5, size=7.5)
-    hdim(ax, 3, 6, 6.15, "3,0", y_from=4.5, size=7)
     vdim(ax, CENTER[1], -4.5, -1.35, "3,9", x_from=CENTER[0], size=7.5)
     vdim(ax, CENTER[1], 0, -2.15, "вылет 8,4", x_from=CENTER[0], size=8)
     vdim(ax, -4.5, 4.5, 20.3, "9,0", x_from=18.0, size=8)
