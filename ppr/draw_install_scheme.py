@@ -30,6 +30,8 @@ BOOM = "#f3e3a4"
 BOOM_EDGE = "#6b5a32"
 DECK = "#e08a28"
 DECK_DK = "#8a4e12"
+WOOD = "#e7d3a6"
+WOOD_EDGE = "#b08958"
 
 # Кран сбоку площадки, шасси перпендикулярно путям. Кабина от площадки.
 # Посадка: стрела над задом, вдоль стороны 9 м, вылет 8,4 м.
@@ -470,16 +472,20 @@ def _axle_duals(ax, x):
 
 def draw_flatbed_world(ax):
     """Один длинномер в плане. Блок ляжет на площадку сверху. Второго вида нет."""
-    rect(ax, DECK_X0, DECK_Y0, DECK_L, DECK_W, fc="#c96d12", ec=DECK_DK, lw=1.0, zorder=3)
-    xx = DECK_X0 + 0.22
-    while xx < DECK_X0 + DECK_L - 0.1:
-        ax.plot([xx, xx], [DECK_Y0 + 0.08, DECK_Y0 + DECK_W - 0.08], color=DECK_DK, lw=0.45, zorder=3)
-        xx += 0.42
-    rect(ax, DECK_X0, DECK_Y0 - 0.07, DECK_L, 0.07, fc=STEEL_DK, ec=INK, lw=0.35, zorder=4)
-    rect(ax, DECK_X0, DECK_Y0 + DECK_W, DECK_L, 0.07, fc=STEEL_DK, ec=INK, lw=0.35, zorder=4)
-    rect(ax, DECK_X0 - 0.16, DECK_Y0 - 0.1, 0.16, DECK_W + 0.2, fc=STEEL_DK, ec=INK, lw=0.45, zorder=4)
-    rect(ax, DECK_X0 - 0.12, DECK_Y0 + 0.15, 0.08, 0.28, fc="#c0392b", ec=INK, lw=0.25, zorder=5)
-    rect(ax, DECK_X0 - 0.12, DECK_Y0 + DECK_W - 0.43, 0.08, 0.28, fc="#c0392b", ec=INK, lw=0.25, zorder=5)
+    # Рама и доски настила. Не сплошная заливка: иначе свободный кусок читается как контейнер.
+    rect(ax, DECK_X0, DECK_Y0, DECK_L, 0.11, fc="#9aa6b0", ec=INK, lw=0.35, zorder=3)
+    rect(ax, DECK_X0, DECK_Y0 + DECK_W - 0.11, DECK_L, 0.11, fc="#9aa6b0", ec=INK, lw=0.35, zorder=3)
+    beam = DECK_X0 + 0.35
+    while beam < DECK_X0 + DECK_L - 0.2:
+        rect(ax, beam, DECK_Y0 + 0.11, 0.08, DECK_W - 0.22, fc="#7d8892", ec=INK, lw=0.2, zorder=3)
+        beam += 1.35
+    plank = DECK_X0 + 0.06
+    while plank < DECK_X0 + DECK_L - 0.12:
+        rect(ax, plank, DECK_Y0 + 0.16, 0.20, DECK_W - 0.32, fc=WOOD, ec=WOOD_EDGE, lw=0.25, zorder=4)
+        plank += 0.28
+    rect(ax, DECK_X0 - 0.16, DECK_Y0 - 0.06, 0.16, DECK_W + 0.12, fc=STEEL_DK, ec=INK, lw=0.45, zorder=5)
+    rect(ax, DECK_X0 - 0.12, DECK_Y0 + 0.12, 0.08, 0.22, fc="#c0392b", ec=INK, lw=0.25, zorder=6)
+    rect(ax, DECK_X0 - 0.12, DECK_Y0 + DECK_W - 0.34, 0.08, 0.22, fc="#c0392b", ec=INK, lw=0.25, zorder=6)
 
     nose = DECK_X0 + DECK_L
     for axle in (DECK_X0 + 1.25, DECK_X0 + 2.45, DECK_X0 + 3.65, nose - 1.85, nose - 0.95):
@@ -512,10 +518,6 @@ def draw_flatbed_world(ax):
     _plan_tire(ax, cab_x + 1.05, cab_y - 0.34, 0.80, 0.34, z=8)
     _plan_tire(ax, cab_x + 1.05, cab_y + 2.30, 0.80, 0.34, z=8)
     rect(ax, cab_x + 2.48, cab_y + 0.15, 0.14, 2.00, fc="#1a2228", ec=INK, lw=0.35, zorder=7)
-    ax.text(
-        (PICK[0] + BLOCK_W / 2 + nose) / 2, PICK[1], "ДЛИННОМЕР",
-        ha="center", va="center", color="white", fontsize=8, fontproperties=BOLD, zorder=8,
-    )
     label(ax, cab_x + 1.15, cab_y - 0.72, "тягач", size=7)
 
 
@@ -748,7 +750,7 @@ def main():
         (STONE, "щебень"),
         (RAIL, "ЖД путь"),
         (BLOCK, "блок"),
-        (DECK, "длинномер"),
+        (WOOD, "длинномер"),
         (CRANE, "кран"),
     )
     for i, (color, name) in enumerate(legend):
