@@ -458,11 +458,14 @@ def _dual_plan(ax, x, y_outer, sign, z=5):
 
 
 def _axle_duals(ax, x):
-    """Двускатные колёса одной оси. Внешнее колесо выходит за блок, внутреннее под свесом."""
-    _plan_tire(ax, x - 0.32, -10.38, 0.64, 0.32, z=5)
-    _plan_tire(ax, x - 0.32, -10.04, 0.64, 0.30, z=4)
-    _plan_tire(ax, x - 0.32, -6.54, 0.64, 0.32, z=5)
-    _plan_tire(ax, x - 0.32, -6.88, 0.64, 0.30, z=4)
+    """Двускатные колёса вплотную к бортам. Ось доходит до ступицы."""
+    south = DECK_Y0 - 0.07
+    north = DECK_Y0 + DECK_W + 0.07
+    ax.plot([x, x], [south - 0.62, north + 0.62], color="#3a3a3a", lw=1.6, solid_capstyle="butt", zorder=7)
+    _plan_tire(ax, x - 0.34, south - 0.34, 0.68, 0.34, z=8)
+    _plan_tire(ax, x - 0.34, south - 0.66, 0.68, 0.32, z=8)
+    _plan_tire(ax, x - 0.34, north, 0.68, 0.34, z=8)
+    _plan_tire(ax, x - 0.34, north + 0.34, 0.68, 0.32, z=8)
 
 
 def draw_flatbed_world(ax):
@@ -506,8 +509,8 @@ def draw_flatbed_world(ax):
         rect(ax, cab_x + 2.05, my, 0.34, 0.16, fc="#141414", ec=INK, lw=0.3, zorder=8)
     for lamp_y in (cab_y + 1.95, cab_y + 0.15):
         ax.add_patch(Circle((cab_x + 2.42, lamp_y), 0.09, fc="#f7f9fb", ec=INK, lw=0.3, zorder=8))
-    _plan_tire(ax, cab_x + 1.15, cab_y - 0.36, 0.72, 0.32, z=5)
-    _plan_tire(ax, cab_x + 1.15, cab_y + 2.32, 0.72, 0.32, z=5)
+    _plan_tire(ax, cab_x + 1.05, cab_y - 0.34, 0.80, 0.34, z=8)
+    _plan_tire(ax, cab_x + 1.05, cab_y + 2.30, 0.80, 0.34, z=8)
     rect(ax, cab_x + 2.48, cab_y + 0.15, 0.14, 2.00, fc="#1a2228", ec=INK, lw=0.35, zorder=7)
     ax.text(
         (PICK[0] + BLOCK_W / 2 + nose) / 2, PICK[1], "ДЛИННОМЕР",
