@@ -545,7 +545,7 @@ def draw_pick_boom(ax):
 
 
 def draw_plan(ax):
-    style_ax(ax, (-2.4, 24.2), (-15.6, 7.6))
+    style_ax(ax, (-3.8, 24.2), (-16.6, 7.6))
     rect(ax, PAD_X0, -PAD_Y, PAD_X1 - PAD_X0, PAD_Y * 2, fc=STONE, ec="#ddd6c8", lw=0.5, hatch="..", zorder=0)
     draw_rails(ax, RAIL0, RAIL1)
 
@@ -564,8 +564,31 @@ def draw_plan(ax):
         for sign in (-1, 1):
             y = axis + sign * GAUGE / 2
             ax.plot([0.15, 2.85], [y, y], color=RAIL, lw=2.2, solid_capstyle="butt", zorder=6)
-    label(ax, -0.15, -10.35, "центр\nвращения", size=6.5)
-    label(ax, 1.5, -14.55, "кабина от площадки", size=7)
+    # До длинномера: 3,9 м до ближнего торца, вылет 8,4 м до середины груза.
+    # Ось вынесена влево, в обход кабины, размеры — ниже кабины.
+    y_axis, y_close, y_reach = -13.55, -14.45, -15.30
+    bypass = -3.15
+    ax.plot([0.40, bypass], [CENTER[1], CENTER[1]], color=INK, lw=0.55, zorder=6)
+    ax.plot([bypass, bypass], [CENTER[1], y_axis], color=INK, lw=0.55, zorder=6)
+    ax.plot([bypass, CENTER[0]], [y_axis, y_axis], color=INK, lw=0.55, zorder=6)
+    ax.plot([CENTER[0], CENTER[0]], [y_axis, y_reach - 0.18], color=INK, lw=0.55, zorder=6)
+    label(ax, -1.55, -12.15, "центр\nвращения", size=6.5)
+    for y, x2, text in (
+        (y_close, DECK_X0, "3,9 до длинномера"),
+        (y_reach, PICK[0], "вылет 8,4"),
+    ):
+        ax.annotate(
+            "", xy=(x2, y), xytext=(CENTER[0], y),
+            arrowprops=dict(arrowstyle="<->", color=INK, lw=0.85, shrinkA=0, shrinkB=0),
+            zorder=6,
+        )
+        ax.plot([x2, x2], [y, DECK_Y0], color=INK, lw=0.7, zorder=6)
+        ax.plot([x2 - 0.16, x2 + 0.16], [DECK_Y0, DECK_Y0], color=INK, lw=0.7, zorder=6)
+        label(ax, (CENTER[0] + x2) / 2, y + 0.14, text, size=7.5, va="bottom")
+    ax.plot([PICK[0] - 0.28, PICK[0] + 0.28], [PICK[1], PICK[1]], color=INK, lw=0.9, zorder=8)
+    ax.plot([PICK[0], PICK[0]], [PICK[1] - 0.28, PICK[1] + 0.28], color=INK, lw=0.9, zorder=8)
+    label(ax, PICK[0], -11.15, "середина груза", size=7)
+    label(ax, 1.15, -16.05, "кабина от площадки", size=7)
 
     hdim(ax, 0, 3, 6.15, "3,0", y_from=4.5, size=7.5)
     vdim(ax, CENTER[1], -4.5, -1.35, "3,9", x_from=CENTER[0], size=7.5)
@@ -710,10 +733,10 @@ def main():
         "    Опоры полностью, контур 5,1 × 6,1 м.\n"
         "    На шпалы и на щебень тарелки не ставят.\n"
         "2. Шаланда справа, перпендикулярно крану.\n"
-        "    На рисунке она без блока: видна стоянка.\n"
-        "    Блок подают на неё, 9 м вдоль шаланды.\n"
-        "    Стрела поворачивается вправо и берёт\n"
-        "    блок по этой стороне. Вылет 8,4 м.\n"
+        "    Ближний торец в 3,9 м от оси крана.\n"
+        "    Вылет до середины груза на ней — 8,4 м.\n"
+        "    Блок подают, 9 м вдоль шаланды, стрела\n"
+        "    берёт по этой стороне.\n"
         "3. Стрела возвращается на площадку тем\n"
         "    же вылетом. На крюке 9,1 т. Стрела\n"
         "    14 м, зона над задом: на 8 м — 9,9 т,\n"
