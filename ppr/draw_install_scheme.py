@@ -487,7 +487,9 @@ def draw_flatbed_world(ax):
     rect(ax, DECK_X0 - 0.12, DECK_Y0 + DECK_W - 0.34, 0.08, 0.22, fc="#c0392b", ec=INK, lw=0.25, zorder=6)
 
     nose = DECK_X0 + DECK_L
-    for axle in (DECK_X0 + 1.25, DECK_X0 + 2.45, DECK_X0 + 3.65, nose - 1.85, nose - 0.95):
+    # Оси под блоком не рисуем: блок шире площадки и закрывает их.
+    # Колёса только у открытого настила и у тягача, не на жёлтом борту.
+    for axle in (nose - 1.85, nose - 0.95):
         _axle_duals(ax, axle)
     ax.add_patch(Circle((nose - 1.55, PICK[1]), 0.28, fc="#6a737a", ec=INK, lw=0.45, zorder=4))
     ax.add_patch(Circle((nose - 1.55, PICK[1]), 0.08, fc="#222", zorder=5))
