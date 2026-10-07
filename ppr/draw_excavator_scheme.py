@@ -13,13 +13,15 @@ BOLD = FontProperties(fname="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.tt
 
 INK = "#1a1a1a"
 GLASS = "#d5e4ef"
-BLOCK = "#f6f1e4"
+BLOCK = "#f6d36b"
 CAB = "#2f3d4a"
 STEEL = "#6d7882"
 STEEL_DK = "#3e4850"
 PAD = "#5c656c"
-STONE = "#f3f0e8"
-RAIL = "#4a545c"
+STONE = "#e7efe4"
+RAIL = "#163a5f"
+SLEEPER_FC = "#cbb892"
+SLEEPER_EC = "#7a6244"
 BOOM = "#e4dece"
 BOOM_EDGE = "#2c3136"
 COUNTER = "#8b9298"
@@ -74,10 +76,13 @@ def rect(ax, x, y, w, h, **kw):
     ax.add_patch(Rectangle((x, y), w, h, **kw))
 
 
-def label(ax, x, y, text, size=8, bold=False, ha="center", va="center", color=INK, z=9, rotation=0):
+def label(ax, x, y, text, size=8, bold=False, ha="center", va="center", color=INK, z=9, rotation=0, box=False):
+    kw = {}
+    if box:
+        kw["bbox"] = dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=0.92)
     ax.text(
         x, y, text, ha=ha, va=va, color=color, fontsize=size, rotation=rotation,
-        fontproperties=BOLD if bold else SANS, zorder=z,
+        fontproperties=BOLD if bold else SANS, zorder=z, **kw,
     )
 
 
@@ -180,7 +185,7 @@ def draw_chain(ax, p0, p1, step=0.28):
     dx, dy = p1[0] - p0[0], p1[1] - p0[1]
     dist = math.hypot(dx, dy) or 1.0
     ang = math.degrees(math.atan2(dy, dx))
-    ax.plot([p0[0], p1[0]], [p0[1], p1[1]], color="#2a2a2a", lw=0.7, zorder=6, solid_capstyle="round")
+    ax.plot([p0[0], p1[0]], [p0[1], p1[1]], color="#1a1a1a", lw=1.05, zorder=6, solid_capstyle="round")
     n = max(5, int(dist / step))
     for i in range(n):
         t = (i + 0.5) / n
@@ -257,18 +262,18 @@ def draw_tracks_plan(ax, x0, x1):
         while x < x1 - 0.2:
             rect(
                 ax, x - SLEEPER_W / 2, sleeper_y, SLEEPER_W, SLEEPER_L,
-                fc="#ddd6ca", ec="#c9c1b4", lw=0.25, zorder=1,
+                fc=SLEEPER_FC, ec=SLEEPER_EC, lw=0.45, zorder=1,
             )
             x += 0.90
         for rail in rails_of(axis):
-            ax.plot([x0, x1], [rail, rail], color=RAIL, lw=2.0, zorder=2, solid_capstyle="butt")
-            ax.plot([x0, x1], [rail, rail], color="#9aa3aa", lw=0.55, zorder=3, solid_capstyle="butt")
+            ax.plot([x0, x1], [rail, rail], color=RAIL, lw=2.8, zorder=2, solid_capstyle="butt")
+            ax.plot([x0, x1], [rail, rail], color="#8eb4d4", lw=0.7, zorder=3, solid_capstyle="butt")
 
 
 def draw_tracks_side(ax, x0, x1):
     x = x0 + 0.3
     while x < x1:
-        rect(ax, x, 0.0, 0.18, 0.16, fc="#ddd6ca", ec="#c9c1b4", lw=0.2, zorder=1)
+        rect(ax, x, 0.0, 0.18, 0.16, fc=SLEEPER_FC, ec=SLEEPER_EC, lw=0.35, zorder=1)
         x += 1.0
     rect(ax, x0, 0.16, x1 - x0, 0.05, fc="#8d969e", ec="none", zorder=2)
     rect(ax, x0, RAIL_TOP - 0.06, x1 - x0, 0.06, fc=RAIL, ec=INK, lw=0.35, zorder=2)
@@ -442,7 +447,7 @@ def draw_excavator_plan(ax):
         closed=True, fc=STEEL_DK, ec=INK, lw=0.6, zorder=8,
     ))
     eye_mark(ax, 12.5, 0.0, r=0.1)
-    label(ax, 9.7, -1.85, "экскаватор", size=7)
+    label(ax, 9.75, 0.0, "экскаватор", size=6.5, box=True)
 
 
 def sprocket(ax, cx, cy, r, z=6):
@@ -520,9 +525,9 @@ def draw_excavator_side(ax):
     for tx in (11.98, 12.14, 12.30, 12.44):
         ax.plot([tx, tx + 0.03], [1.02, 0.74], color=INK, lw=0.85, zorder=7)
     eye_mark(ax, EYE_SIDE[0], EYE_SIDE[1], r=0.09)
-    label(ax, 12.9, 2.15, "рым", size=7)
-    ax.plot([12.75, EYE_SIDE[0] + 0.04], [2.02, EYE_SIDE[1] + 0.06], color=INK, lw=0.45, zorder=8)
-    label(ax, 13.2, 0.7, "зубья", size=6.5)
+    label(ax, 13.05, 1.05, "рым", size=8, bold=True, box=True)
+    ax.plot([12.72, EYE_SIDE[0] + 0.02], [1.18, EYE_SIDE[1] - 0.02], color=INK, lw=0.5, zorder=8)
+    label(ax, 13.55, 0.55, "зубья,\nне цеплять", size=7, box=True)
 
 
 def branch_len():
@@ -534,170 +539,213 @@ def branch_len():
 
 
 def draw_block_at(ax, x, y0, text, dashed=False):
-    kw = dict(fc=BLOCK, ec=INK, lw=1.1, zorder=4)
+    kw = dict(fc=BLOCK, ec=INK, lw=1.15, zorder=4)
     if dashed:
-        kw.update(fc="none", lw=0.9, ls=(0, (5, 2.2)))
+        kw.update(fc="none", ec="#8a6a12", lw=1.05, ls=(0, (5, 2.2)))
     rect(ax, x, y0, ALONG, ACROSS, **kw)
     if not dashed:
         for cy in (-HITCH, HITCH):
-            eye_mark(ax, x, y0 + ACROSS / 2 + cy, r=0.11)
-        label(ax, x + ALONG / 2, y0 + ACROSS / 2 + 1.15, text, size=8, bold=True)
+            eye_mark(ax, x, y0 + ACROSS / 2 + cy, r=0.13)
+        label(ax, x + ALONG / 2, y0 + ACROSS / 2 + 1.05, text, size=9, bold=True, box=True)
+        label(ax, x + ALONG / 2, y0 + ACROSS / 2 - 0.55, "8,7 т", size=8, bold=True, box=True)
 
 
 def draw_plan(ax):
-    style_ax(ax, (-2.8, 19.4), (-7.7, 6.9))
+    style_ax(ax, (-2.8, 19.6), (-7.7, 6.9))
     ax.add_patch(Rectangle(
-        (-0.35, -4.85), 18.7, 9.7, fc=STONE, ec="#e4dfd4", lw=0.4, hatch="..", zorder=0,
+        (-0.35, -4.85), 18.7, 9.7, fc=STONE, ec="#d5e0d2", lw=0.4, hatch="..", zorder=0,
     ))
     draw_tracks_plan(ax, RAIL0, RAIL1)
-    ax.plot([RAIL0, RAIL0], [-4.6, 4.7], color=INK, lw=0.95, zorder=3)
-    label(ax, 0.2, 5.05, "торц, сюда к погрузке", size=8, bold=True, ha="left")
+    ax.plot([RAIL0, RAIL0], [-4.6, 4.7], color=INK, lw=1.05, zorder=3)
+    label(ax, 0.25, 5.15, "торец погрузки", size=8, bold=True, ha="left", box=True)
 
     draw_block_at(ax, FACE, -ACROSS / 2, "тянут этот")
-    for x in (12.0, 15.0):
+    for x, name in ((12.0, "12 м"), (15.0, "15 м")):
         draw_block_at(ax, x, -ACROSS / 2, "", dashed=True)
-    label(ax, 15.0, 0.55, "ещё стоят", size=7.5)
+        label(ax, x + 1.5, -3.15, name, size=8, bold=True, box=True)
+    label(ax, 13.5, 0.35, "ещё стоят", size=8, box=True)
 
     machine = XShift(ax, EX_SHIFT)
     draw_excavator_plan(machine)
     for y in (-HITCH, HITCH):
         draw_chain(ax, (EYE_X, 0.0), (FACE, y), step=0.34)
-    label(ax, 7.5, 1.55, "2СЦ", size=8, bold=True)
+    label(ax, 7.55, 1.35, "2СЦ, ветвь 3,2 м", size=8, bold=True, box=True)
+    label(ax, EYE_X + 0.15, 0.48, "рым", size=7.5, bold=True, box=True)
+    vdim(ax, -HITCH, HITCH, FACE + 0.55, "1,2", x_from=FACE, size=7.5)
 
     ax.annotate(
         "", xy=(1.15, -4.55), xytext=(4.5, -4.55),
-        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.05), zorder=6,
-    )
-    label(ax, 2.85, -4.85, "назад по междупутью", size=7)
-    ax.annotate(
-        "", xy=(EYE_X + 0.35, -5.55), xytext=(FACE - 0.25, -5.55),
         arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.15), zorder=6,
     )
-    label(ax, 7.5, -5.25, "сначала рукоять 3 м, на себя", size=7.5)
-    label(ax, 3.2, 4.7, "гусеницы между шпалами", size=7.5)
-    label(ax, 2.3, -5.9, "на цепи не стоять", size=7.5)
+    label(ax, 2.85, -4.95, "назад по междупутью", size=8, box=True)
+    ax.annotate(
+        "", xy=(EYE_X + 0.35, -5.55), xytext=(FACE - 0.25, -5.55),
+        arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.25), zorder=6,
+    )
+    label(ax, 7.5, -5.2, "сначала рукоять 3 м, на себя", size=8, box=True)
+    label(ax, 2.5, -6.05, "на цепи не стоять", size=8, bold=True, box=True)
 
-    vdim(ax, -MACHINE_W / 2, MACHINE_W / 2, -1.7, "2,80", x_from=-1.15, size=7)
-    label(ax, -1.7, -1.85, "меньше 3 м", size=6.5)
+    vdim(ax, -MACHINE_W / 2, MACHINE_W / 2, -1.7, "2,80", x_from=-1.15, size=8)
+    label(ax, -1.85, -2.15, "меньше 3 м", size=7, box=True)
     north = AXES_Y[1]
-    vdim(ax, north - SLEEPER_L / 2, north + SLEEPER_L / 2, 16.7, "2,70", x_from=16.0, size=7)
+    vdim(ax, north - SLEEPER_L / 2, north + SLEEPER_L / 2, 16.55, "2,70", x_from=15.7, size=8)
     inner = TRACK_STEP - SLEEPER_L / 2
-    vdim(ax, -inner, inner, 18.15, "3,30", x_from=17.2, size=7.5)
-    hdim(ax, EYE_X, FACE, -6.55, "3,0 рукоять", y_from=-4.5, size=7)
-    hdim(ax, RAIL0, FACE, -7.25, "9,0 до торца блока", y_from=-4.5, size=7)
-    hdim(ax, 0, 18, 5.45, "решётка 18 м", y_from=4.5, size=7.5)
-    label(ax, 8.2, 6.45, "План. Два пути, машина между ними, тяга на себя", size=11, bold=True)
+    vdim(ax, -inner, inner, 18.35, "3,30", x_from=17.15, size=8)
+    vdim(ax, north - GAUGE / 2, north + GAUGE / 2, 4.35, "1,52", x_from=3.55, size=7.5)
+    hdim(ax, EYE_X, FACE, -6.55, "3,0 рукоять", y_from=-4.5, size=8)
+    hdim(ax, RAIL0, FACE, -7.25, "9,0 до торца блока", y_from=-4.5, size=8)
+    hdim(ax, 0, 18, 5.55, "решётка 18 м", y_from=4.55, size=8)
+    label(ax, 8.0, 6.5, "План. Два крайних пути, тяга на себя", size=11, bold=True)
 
 
 def draw_side(ax):
     """Разрез по междупутью: под машиной рельса нет, блок стоит на путях."""
-    style_ax(ax, (-1.4, 16.6), (-2.45, 5.55))
-    ax.plot([-0.8, 16.2], [0, 0], color=INK, lw=1.0, zorder=2)
-    ax.add_patch(Rectangle((-0.5, -0.55), 16.9, 0.55, fc=STONE, ec="none", hatch="..", zorder=0))
-    draw_tracks_side(ax, FACE, RAIL1)
-    ax.plot([RAIL0, RAIL0], [0, 4.15], color=INK, lw=0.9, zorder=3)
-    label(ax, 0.12, 4.45, "торц", size=8, bold=True, ha="left")
+    style_ax(ax, (-1.4, 16.8), (-2.55, 5.55))
+    ax.add_patch(Rectangle((-0.6, -0.55), FACE + 0.6, 0.55, fc="#efe6d4", ec="none", hatch="..", zorder=0))
+    ax.add_patch(Rectangle((FACE, -0.55), 16.2 - FACE, 0.55, fc="#d7c7a2", ec="none", hatch="..", zorder=0))
+    ax.plot([-0.8, FACE], [0, 0], color="#8d8374", lw=0.8, zorder=2)
+    draw_tracks_side(ax, FACE, 16.2)
+    ax.plot([RAIL0, RAIL0], [0, 4.15], color=INK, lw=1.0, zorder=3)
+    label(ax, 0.15, 4.5, "торец", size=8, bold=True, ha="left", box=True)
 
     work = XShift(ax, SIDE_SHIFT)
     draw_excavator_side(work)
-    label(ax, 3.2, -0.85, "грунт между путями", size=7)
+    label(ax, 3.0, -0.95, "грунт, рельса нет", size=8, box=True)
+    label(ax, 13.6, -0.95, "рельс под блоком", size=8, box=True)
     block_wall(ax, FACE, RAIL_TOP, ALONG, HEIGHT)
-    eye_mark(ax, FACE, HITCH_Z, r=0.09)
-    label(ax, FACE + 1.5, RAIL_TOP + 1.25, "блок", size=8, bold=True)
+    eye_mark(ax, FACE, HITCH_Z, r=0.1)
+    label(ax, FACE + 1.5, RAIL_TOP + 1.35, "блок 8,7 т", size=8, bold=True, box=True)
     eye = (EYE_X, EYE_SIDE[1])
     hitch = (FACE, HITCH_Z)
     draw_chain(ax, eye, hitch, step=0.26)
-    label(ax, 7.4, 2.55, "ветвь " + comma(branch_len(), 1) + " м", size=8)
-    label(ax, 7.5, 3.55, "не стоять", size=7.5)
-    hdim(ax, EYE_X, FACE, -1.45, "3,0", y_from=0, size=7)
-    hdim(ax, 0, FACE, -2.15, "9,0", y_from=0, size=7)
-    label(ax, 6.4, 5.15, "Вид сбоку. Машина между путями, тяга на себя", size=11, bold=True)
+    label(ax, 7.85, 2.75, "ветвь " + comma(branch_len(), 1) + " м", size=8, bold=True, box=True)
+    label(ax, 6.15, 3.85, "не стоять", size=8, bold=True, box=True)
+    vdim(ax, RAIL_TOP, RAIL_TOP + HEIGHT, FACE + ALONG + 0.85, "2,5", x_from=FACE + ALONG, size=8)
+    hdim(ax, EYE_X, FACE, -1.55, "3,0", y_from=0, size=8)
+    hdim(ax, 0, FACE, -2.25, "9,0", y_from=0, size=8)
+    label(ax, 6.6, 5.15, "Вид сбоку. Тяга на себя, по головкам", size=11, bold=True)
 
 
 def draw_face(ax):
-    """Торец 9 м, обращённый к крану. Точки строповки на нижнем поясе."""
-    style_ax(ax, (-1.3, 10.4), (-1.55, 4.55))
+    """Торец 9 м, обращённый к экскаватору. Точки строповки на нижнем поясе."""
+    style_ax(ax, (-1.7, 10.6), (-2.15, 4.85))
     block_wall(ax, 0, 0, ACROSS, HEIGHT)
     mid = ACROSS / 2
     for x in (mid - HITCH, mid + HITCH):
-        eye_mark(ax, x, 0.34, r=0.11)
-    for x in (0.18, ACROSS - 0.18):
-        ax.add_patch(Circle((x, HEIGHT - 0.2), 0.09, fc="white", ec=INK, lw=0.55, zorder=6))
-        ax.plot([x - 0.11, x + 0.11], [HEIGHT - 0.31, HEIGHT - 0.09], color=INK, lw=0.7, zorder=7)
-        ax.plot([x - 0.11, x + 0.11], [HEIGHT - 0.09, HEIGHT - 0.31], color=INK, lw=0.7, zorder=7)
-    hdim(ax, mid - HITCH, mid + HITCH, -0.9, comma(2 * HITCH, 1), y_from=0.34, size=7.5)
-    label(ax, mid, 0.72, "нижний пояс", size=7.5)
-    label(ax, mid, 4.15, "Торец к экскаватору", size=11, bold=True)
-    label(ax, mid, 3.4, "верхние петли этим стропом не занимают", size=7)
+        eye_mark(ax, x, 0.34, r=0.12)
+    for x in (0.22, ACROSS - 0.22):
+        ax.add_patch(Circle((x, HEIGHT - 0.22), 0.1, fc="white", ec=INK, lw=0.6, zorder=6))
+        ax.plot([x - 0.12, x + 0.12], [HEIGHT - 0.34, HEIGHT - 0.1], color=INK, lw=0.8, zorder=7)
+        ax.plot([x - 0.12, x + 0.12], [HEIGHT - 0.1, HEIGHT - 0.34], color=INK, lw=0.8, zorder=7)
+        label(ax, x, HEIGHT - 0.58, "крану", size=7.5, box=True)
+    hdim(ax, mid - HITCH, mid + HITCH, -0.85, "1,2", y_from=0.34, size=8)
+    hdim(ax, 0, ACROSS, -1.6, "9,0", y_from=0, size=8)
+    vdim(ax, 0, HEIGHT, -1.05, "2,5", x_from=0, size=8)
+    label(ax, mid, 0.78, "нижний пояс, 2СЦ", size=8, bold=True, box=True)
+    label(ax, mid, 4.45, "Торец к экскаватору", size=11, bold=True)
+    label(ax, mid, 3.55, "верхние петли этим стропом не занимают", size=8)
+
+
+def draw_section(ax):
+    """Поперечный разрез по машине: две крайние решётки, среднего пути нет."""
+    style_ax(ax, (-6.6, 6.6), (-3.15, 4.15))
+    ax.add_patch(Rectangle((-6.3, -0.4), 12.6, 0.4, fc=STONE, ec="none", hatch="..", zorder=0))
+    ax.plot([-6.3, 6.3], [0, 0], color="#6d665c", lw=0.8, zorder=2)
+    for axis in AXES_Y:
+        y0 = axis - SLEEPER_L / 2
+        rect(ax, y0, 0.0, SLEEPER_L, 0.16, fc=SLEEPER_FC, ec=SLEEPER_EC, lw=0.7, zorder=3)
+        for rail in rails_of(axis):
+            rect(ax, rail - 0.07, 0.16, 0.14, 0.16, fc=RAIL, ec=INK, lw=0.45, zorder=4)
+    for y0 in (-(TRACK_GAP / 2 + SHOE), TRACK_GAP / 2):
+        ax.add_patch(FancyBboxPatch(
+            (y0, 0.02), SHOE, 0.46,
+            boxstyle="round,pad=0,rounding_size=0.06",
+            fc="#242424", ec=INK, lw=0.7, zorder=5,
+        ))
+    rect(ax, -0.72, 0.40, 1.44, 0.20, fc="#b7c0c8", ec=INK, lw=0.6, zorder=6)
+    ax.add_patch(FancyBboxPatch(
+        (-0.58, 0.58), 1.16, 0.78,
+        boxstyle="round,pad=0.02,rounding_size=0.06",
+        fc="#d5dbe0", ec=INK, lw=0.65, zorder=6,
+    ))
+    rect(ax, -0.22, 1.05, 0.55, 0.28, fc=CAB, ec=INK, lw=0.45, zorder=7)
+    label(ax, 0.0, 0.88, "машина", size=7, box=True)
+
+    ax.plot([0, 0], [2.05, 2.7], color=INK, lw=0.8, ls=(0, (3, 2)), zorder=4)
+    label(ax, 0.0, 3.05, "средний путь не кладут", size=8, bold=True, box=True)
+
+    hdim(ax, -MACHINE_W / 2, MACHINE_W / 2, -1.05, "2,80", y_from=0.02, size=8)
+    inner = TRACK_STEP - SLEEPER_L / 2
+    hdim(ax, -inner, inner, -1.95, "3,30 просвет", y_from=0.0, size=8)
+    north = AXES_Y[1]
+    hdim(ax, north - GAUGE / 2, north + GAUGE / 2, -0.72, "1,52", y_from=0.28, size=8)
+    label(ax, -north, 0.72, "шпала 2,70", size=7.5, box=True)
+    # Зазор 0,25 м уже размерной линии, число вынесено.
+    ax.plot([-1.65, -1.65], [0.16, 0.55], color=INK, lw=0.6, zorder=8)
+    ax.plot([-1.40, -1.40], [0.48, 0.55], color=INK, lw=0.6, zorder=8)
+    ax.annotate(
+        "", xy=(-1.40, 0.55), xytext=(-1.65, 0.55),
+        arrowprops=dict(arrowstyle="<->", color=INK, lw=0.6, shrinkA=0, shrinkB=0), zorder=8,
+    )
+    label(ax, -3.55, 1.5, "0,25 м до шпалы", size=7.5, bold=True, box=True)
+    ax.annotate(
+        "", xy=(-1.52, 0.55), xytext=(-2.65, 1.28),
+        arrowprops=dict(arrowstyle="-|>", color=INK, lw=0.65), zorder=8,
+    )
+    label(ax, 5.15, 1.35, "0,84 м до рельса", size=7.5, bold=True, box=True)
+    ax.annotate(
+        "", xy=(1.82, 0.4), xytext=(4.15, 1.15),
+        arrowprops=dict(arrowstyle="-|>", color=INK, lw=0.65), zorder=8,
+    )
+    label(ax, 0.0, 3.75, "Разрез по машине. Вид с торца погрузки", size=10, bold=True)
 
 
 def main():
     fig = plt.figure(figsize=(16.54, 11.69), dpi=160, facecolor="white")
     fig.text(
-        0.04, 0.972, "Схема передвижки блока экскаватором",
+        0.03, 0.978, "Схема передвижки блока экскаватором",
         ha="left", va="top", fontsize=16, fontproperties=BOLD, color=INK,
     )
     fig.text(
-        0.04, 0.942,
-        "Место погрузки: два пути. Блок 3 × 9 × 2,5 м, масса 8,7 т. Машина между путями, тянет только на себя. Размеры в метрах.",
+        0.03, 0.948,
+        "Место погрузки. Блок 3 × 9 × 2,5 м, масса 8,7 т. Два крайних пути, машина между ними тянет только на себя. Размеры в метрах.",
         ha="left", va="top", fontsize=9, fontproperties=SANS, color=INK,
     )
 
-    draw_plan(fig.add_axes([0.012, 0.48, 0.70, 0.44]))
-    draw_side(fig.add_axes([0.012, 0.04, 0.62, 0.42]))
-    draw_face(fig.add_axes([0.64, 0.04, 0.34, 0.36]))
+    draw_plan(fig.add_axes([0.006, 0.50, 0.60, 0.43]))
+    draw_section(fig.add_axes([0.62, 0.70, 0.37, 0.25]))
+    draw_side(fig.add_axes([0.006, 0.02, 0.575, 0.46]))
+    draw_face(fig.add_axes([0.595, 0.012, 0.395, 0.385]))
 
     length = branch_len()
     # Горизонтальную силу делят две ветви. Наклон увеличивает натяжение.
     tension = (4.4 / 2.0) * (length / (FACE - EYE_X))
     notes = (
-        "1. На установке три решётки, по одной\n"
-        "    на каждые 3 м. На погрузке среднего\n"
-        "    пути нет. Шпала Ш1 — 2,70 м.\n"
-        "    Между шпалами крайних 3,30 м.\n"
-        "2. Экскаватор уже 3 м: на рисунке 2,80 м.\n"
-        "    В просвет 3,30 м проходит, с боков\n"
-        "    по 0,25 м. Тянуть надо до 4,4 тс,\n"
-        "    не поднимать 8,7 т, машина легче.\n"
-        "    На шпалы и на рельс не заезжает.\n"
-        "3. Блоки по одному, с ближнего к торцу\n"
-        "    погрузки. Машина заезжает между\n"
-        "    путями к его торцу. На листе этот\n"
-        "    торец в 9 м, рым в 3 м от него.\n"
-        "4. Сначала рукоять на себя, около 3 м.\n"
-        "    Дальше машина сдаёт назад по\n"
-        "    междупутью, блок идёт за ковшом\n"
-        "    по головкам двух путей. Цепь не\n"
-        "    удлиняют. Ход ковша сверяют\n"
-        "    с паспортом. По грунту блок не тащат.\n"
-        "5. До торца, м:  3   6   9   12   15\n"
-        "    рукоятью, м: 3   3   3    3    3\n"
-        "    назад, м:    0   3   6    9   12\n"
-        "    Блок, который уже у торца, не тянут.\n"
-        "6. Строп 2СЦ, цепь 10 мм класса 8,\n"
-        "    на ветвь не меньше 3,15 т. Две точки\n"
-        "    на нижнем поясе торца, по центру,\n"
-        "    между ними 1,2 м. На рым ковша.\n"
-        "    Рым по паспорту не меньше 4,6 тс.\n"
-        "    За зубья не цепляют. Верхние петли\n"
-        "    оставляют крану.\n"
-        "7. На листе ветвь " + comma(length, 1) + " м, и на ближнем,\n"
-        "    и на дальнем блоке она такая же:\n"
-        "    машина подъезжает, а не достаёт\n"
-        "    с торца длинной цепью.\n"
-        "8. Сила от длины цепи не растёт.\n"
-        "    8,7 т × 0,30 = 2,6 тс, при 0,50\n"
-        "    будет 4,4 тс на блок. С наклоном\n"
-        "    ветви на листе на ветвь до "
-        + comma(tension, 1) + " тс.\n"
-        "9. При обрыве цепь бьёт на свою длину.\n"
-        "    Люди не ближе " + comma(length, 1) + " м от линии\n"
-        "    цепи и не стоят между машиной\n"
-        "    и блоком."
+        "На установке три решётки, шаг 3 м.\n"
+        "На погрузке среднего пути нет.\n"
+        "Между шпалами крайних — 3,30 м.\n"
+        "Машина на рисунке 2,80 м, уже 3 м:\n"
+        "с боков по 0,25 м, до рельса 0,84 м.\n"
+        "Шире 3,30 м в просвет не встаёт.\n"
+        "\n"
+        "Сначала рукоять на себя, 3 м,\n"
+        "потом назад по междупутью.\n"
+        "До торца 3 / 6 / 9 / 12 / 15 м,\n"
+        "назад 0 / 3 / 6 / 9 / 12 м.\n"
+        "\n"
+        "Строп 2СЦ, цепь 10 мм, класс 8,\n"
+        "на ветвь не меньше 3,15 т.\n"
+        "Ветвь " + comma(length, 1) + " м. Рым не меньше 4,6 тс.\n"
+        "За зубья не цепляют, верхние\n"
+        "петли оставляют крану.\n"
+        "\n"
+        "Тяга 2,6 тс при 0,30 и 4,4 тс при 0,50.\n"
+        "На ветвь до " + comma(tension, 1) + " тс. Люди не ближе\n"
+        + comma(length, 1) + " м от цепи и не между машиной и блоком."
     )
     fig.text(
-        0.70, 0.90, notes, ha="left", va="top", fontsize=7.15,
-        fontproperties=SANS, color=INK, linespacing=1.14,
+        0.635, 0.688, notes, ha="left", va="top", fontsize=8.4,
+        fontproperties=SANS, color=INK, linespacing=1.28,
     )
     fig.add_artist(Rectangle(
         (0.012, 0.015), 0.976, 0.97, transform=fig.transFigure,
