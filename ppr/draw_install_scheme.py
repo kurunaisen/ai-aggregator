@@ -487,9 +487,7 @@ def draw_flatbed_world(ax):
     rect(ax, DECK_X0 - 0.12, DECK_Y0 + DECK_W - 0.34, 0.08, 0.22, fc="#c0392b", ec=INK, lw=0.25, zorder=6)
 
     nose = DECK_X0 + DECK_L
-    # Оси под блоком не рисуем: блок шире площадки и закрывает их.
-    # Колёса только у открытого настила и у тягача, не на жёлтом борту.
-    for axle in (nose - 1.85, nose - 0.95):
+    for axle in (DECK_X0 + 1.25, DECK_X0 + 2.45, DECK_X0 + 3.65, nose - 1.85, nose - 0.95):
         _axle_duals(ax, axle)
     ax.add_patch(Circle((nose - 1.55, PICK[1]), 0.28, fc="#6a737a", ec=INK, lw=0.45, zorder=4))
     ax.add_patch(Circle((nose - 1.55, PICK[1]), 0.08, fc="#222", zorder=5))
@@ -552,15 +550,10 @@ def draw_plan(ax):
     draw_rails(ax, RAIL0, RAIL1)
 
     draw_flatbed_world(ax)
-    bx0, by0 = PICK[0] - BLOCK_W / 2, PICK[1] - BLOCK_L / 2
-    draw_module_plan(ax, bx0, by0, BLOCK_W, BLOCK_L, z=6)
-    label(ax, PICK[0], by0 + BLOCK_L + 1.15, "БЛОК на длинномере", size=8, bold=True)
-    for corner in ((bx0, by0), (bx0 + BLOCK_W, by0), (bx0, by0 + BLOCK_L), (bx0 + BLOCK_W, by0 + BLOCK_L)):
-        ax.plot([corner[0], PICK[0]], [corner[1], PICK[1]], color="#2a2622", lw=0.7, zorder=7)
+    label(ax, DECK_X0 + DECK_L / 2, DECK_Y0 + DECK_W + 1.35, "длинномер", size=8, bold=True)
 
     crane = Pose(ax, CENTER[0], CENTER[1], -90)
     draw_crane_plan(crane)
-    draw_pick_boom(ax)
 
     draw_module_plan(ax, SET_X, -BLOCK_W / 2, BLOCK_L, BLOCK_W, z=5)
     label(ax, 1.5, 1.85, "БЛОК 1", size=9, bold=True)
@@ -571,13 +564,6 @@ def draw_plan(ax):
         for sign in (-1, 1):
             y = axis + sign * GAUGE / 2
             ax.plot([0.15, 2.85], [y, y], color=RAIL, lw=2.2, solid_capstyle="butt", zorder=6)
-    arc = Arc(
-        CENTER, OUTREACH * 2, OUTREACH * 2, angle=0, theta1=0, theta2=90,
-        ec=INK, lw=0.8, ls=(0, (4, 2)), zorder=6,
-    )
-    ax.add_patch(arc)
-    label(ax, 7.6, -3.3, "обратно\nна площадку", size=7)
-
     label(ax, -0.15, -10.35, "центр\nвращения", size=6.5)
     label(ax, 1.5, -14.55, "кабина от площадки", size=7)
 
@@ -724,7 +710,8 @@ def main():
         "    Опоры полностью, контур 5,1 × 6,1 м.\n"
         "    На шпалы и на щебень тарелки не ставят.\n"
         "2. Шаланда справа, перпендикулярно крану.\n"
-        "    Блок на ней: 9 м вдоль шаланды.\n"
+        "    На рисунке она без блока: видна стоянка.\n"
+        "    Блок подают на неё, 9 м вдоль шаланды.\n"
         "    Стрела поворачивается вправо и берёт\n"
         "    блок по этой стороне. Вылет 8,4 м.\n"
         "3. Стрела возвращается на площадку тем\n"
