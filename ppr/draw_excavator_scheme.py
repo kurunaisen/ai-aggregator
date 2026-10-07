@@ -27,14 +27,17 @@ COUNTER = "#8b9298"
 GAUGE = 1.52
 SLEEPER_L = 2.70
 SLEEPER_W = 0.28
-# Машина около 20 т: башмак 0,60 м, просвет между гусеницами 1,60 м.
-# По гусеницам 2,80 м. Между осями двух путей нужно не меньше
-# 2,70 + 2,80 = 5,50 м, иначе гусеница садится на шпалу.
+# На установке три решётки, по одной на каждые 3 м стороны 9 м.
+# На погрузке среднего пути нет. Оси крайних ±3 м, между ними 6 м.
+# Просвет между торцами шпал 6,0 − 2,70 = 3,30 м.
+# Машина по гусеницам 2,80 м, это меньше 3 м, в просвет проходит.
 SHOE = 0.60
 TRACK_GAP = 1.60
 MACHINE_W = TRACK_GAP + 2 * SHOE
-AXIS_GAP = SLEEPER_L + MACHINE_W
-AXES_Y = (-AXIS_GAP / 2, AXIS_GAP / 2)
+TRACK_STEP = 3.0
+AXES_Y = (-TRACK_STEP, TRACK_STEP)
+AXIS_GAP = TRACK_STEP * 2
+CLEAR = AXIS_GAP - SLEEPER_L
 # Торц решётки, куда подают блок под погрузку. На листе тянут блок,
 # чей ближний торец в 9 м: рукоять 3 м, потом машина сдаёт назад.
 RAIL0 = 0.0
@@ -542,7 +545,7 @@ def draw_block_at(ax, x, y0, text, dashed=False):
 
 
 def draw_plan(ax):
-    style_ax(ax, (-2.8, 19.4), (-7.3, 6.9))
+    style_ax(ax, (-2.8, 19.4), (-7.7, 6.9))
     ax.add_patch(Rectangle(
         (-0.35, -4.85), 18.7, 9.7, fc=STONE, ec="#e4dfd4", lw=0.4, hatch="..", zorder=0,
     ))
@@ -562,24 +565,26 @@ def draw_plan(ax):
     label(ax, 7.5, 1.55, "2СЦ", size=8, bold=True)
 
     ax.annotate(
-        "", xy=(1.15, -3.85), xytext=(4.5, -3.85),
+        "", xy=(1.15, -4.55), xytext=(4.5, -4.55),
         arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.05), zorder=6,
     )
-    label(ax, 2.85, -4.15, "назад по междупутью", size=7)
+    label(ax, 2.85, -4.85, "назад по междупутью", size=7)
     ax.annotate(
-        "", xy=(EYE_X + 0.35, -4.85), xytext=(FACE - 0.25, -4.85),
+        "", xy=(EYE_X + 0.35, -5.55), xytext=(FACE - 0.25, -5.55),
         arrowprops=dict(arrowstyle="-|>", color=INK, lw=1.15), zorder=6,
     )
-    label(ax, 7.5, -4.55, "сначала рукоять 3 м, на себя", size=7.5)
-    label(ax, 3.2, 4.55, "гусеницы между шпалами", size=7.5)
-    label(ax, 2.3, -5.2, "на цепи не стоять", size=7.5)
+    label(ax, 7.5, -5.25, "сначала рукоять 3 м, на себя", size=7.5)
+    label(ax, 3.2, 4.7, "гусеницы между шпалами", size=7.5)
+    label(ax, 2.3, -5.9, "на цепи не стоять", size=7.5)
 
     vdim(ax, -MACHINE_W / 2, MACHINE_W / 2, -1.7, "2,80", x_from=-1.15, size=7)
+    label(ax, -1.7, -1.85, "меньше 3 м", size=6.5)
     north = AXES_Y[1]
     vdim(ax, north - SLEEPER_L / 2, north + SLEEPER_L / 2, 16.7, "2,70", x_from=16.0, size=7)
-    vdim(ax, AXES_Y[0], AXES_Y[1], 18.15, "5,50", x_from=16.9, size=7.5)
-    hdim(ax, EYE_X, FACE, -5.85, "3,0 рукоять", y_from=-4.5, size=7)
-    hdim(ax, RAIL0, FACE, -6.65, "9,0 до торца блока", y_from=-4.5, size=7)
+    inner = TRACK_STEP - SLEEPER_L / 2
+    vdim(ax, -inner, inner, 18.15, "3,30", x_from=17.2, size=7.5)
+    hdim(ax, EYE_X, FACE, -6.55, "3,0 рукоять", y_from=-4.5, size=7)
+    hdim(ax, RAIL0, FACE, -7.25, "9,0 до торца блока", y_from=-4.5, size=7)
     hdim(ax, 0, 18, 5.45, "решётка 18 м", y_from=4.5, size=7.5)
     label(ax, 8.2, 6.45, "План. Два пути, машина между ними, тяга на себя", size=11, bold=True)
 
@@ -646,21 +651,15 @@ def main():
     # Горизонтальную силу делят две ветви. Наклон увеличивает натяжение.
     tension = (4.4 / 2.0) * (length / (FACE - EYE_X))
     notes = (
-        "1. Место погрузки, два пути, колея\n"
-        "    1520 мм, шпала Ш1 — 2,70 м.\n"
-        "    Экскаватор около 20 т, обратная\n"
-        "    лопата. Башмак 0,60 м, просвет\n"
-        "    между гусеницами 1,60 м, по\n"
-        "    гусеницам 2,80 м.\n"
-        "2. Машина встаёт между путями, по оси\n"
-        "    блока. Между осями путей не меньше\n"
-        "    5,50 м: 2,70 + 2,80. На схеме так\n"
-        "    и взято. Гусеница к торцу шпалы\n"
-        "    впритык, на шпалу не заезжает.\n"
-        "    До внутреннего рельса остаётся\n"
-        "    0,59 м. При осях 3,70 м просвет\n"
-        "    между шпалами 1,00 м — туда\n"
-        "    машина не проходит.\n"
+        "1. На установке три решётки, по одной\n"
+        "    на каждые 3 м. На погрузке среднего\n"
+        "    пути нет. Шпала Ш1 — 2,70 м.\n"
+        "    Между шпалами крайних 3,30 м.\n"
+        "2. Экскаватор уже 3 м: на рисунке 2,80 м.\n"
+        "    В просвет 3,30 м проходит, с боков\n"
+        "    по 0,25 м. Тянуть надо до 4,4 тс,\n"
+        "    не поднимать 8,7 т, машина легче.\n"
+        "    На шпалы и на рельс не заезжает.\n"
         "3. Блоки по одному, с ближнего к торцу\n"
         "    погрузки. Машина заезжает между\n"
         "    путями к его торцу. На листе этот\n"
@@ -706,13 +705,15 @@ def main():
     ))
     fig.savefig("/workspace/ppr/skhema-ekskavator.png", dpi=160, facecolor="white")
     fig.savefig("/workspace/ppr/skhema-ekskavator.pdf", facecolor="white")
-    rail_clear = AXIS_GAP / 2 - GAUGE / 2 - MACHINE_W / 2
+    side = (CLEAR - MACHINE_W) / 2
+    rail_clear = TRACK_STEP - GAUGE / 2 - MACHINE_W / 2
     print(
         "axes", AXIS_GAP,
+        "clear", CLEAR,
         "machine", MACHINE_W,
-        "branch", round(branch_len(), 2),
+        "side", round(side, 2),
         "rail_clear", round(rail_clear, 2),
-        "shift", round(EX_SHIFT, 2),
+        "branch", round(branch_len(), 2),
     )
 
 
