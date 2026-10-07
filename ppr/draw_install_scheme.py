@@ -457,13 +457,16 @@ def _dual_plan(ax, x, y_outer, sign, z=5):
         _plan_tire(ax, x - 0.32, y_outer + sign * i * 0.30, z=z)
 
 
-def draw_flatbed_world(ax):
-    """Шаланда справа от крана. 9 м блока вдоль неё. Тягач с дальнего торца.
+def _axle_duals(ax, x):
+    """Двускатные колёса одной оси. Внешнее колесо выходит за блок, внутреннее под свесом."""
+    _plan_tire(ax, x - 0.32, -10.38, 0.64, 0.32, z=5)
+    _plan_tire(ax, x - 0.32, -10.04, 0.64, 0.30, z=4)
+    _plan_tire(ax, x - 0.32, -6.54, 0.64, 0.32, z=5)
+    _plan_tire(ax, x - 0.32, -6.88, 0.64, 0.30, z=4)
 
-    Снизу от плана пристроен вид сбоку в тех же X: так видно колёса,
-    кабину тягача и стену модуля, а не вторую жёлтую коробку.
-    """
-    # План площадки: доски видны там, где блок их не закрывает.
+
+def draw_flatbed_world(ax):
+    """Один длинномер в плане. Блок ляжет на площадку сверху. Второго вида нет."""
     rect(ax, DECK_X0, DECK_Y0, DECK_L, DECK_W, fc="#c96d12", ec=DECK_DK, lw=1.0, zorder=3)
     xx = DECK_X0 + 0.22
     while xx < DECK_X0 + DECK_L - 0.1:
@@ -476,18 +479,19 @@ def draw_flatbed_world(ax):
     rect(ax, DECK_X0 - 0.12, DECK_Y0 + DECK_W - 0.43, 0.08, 0.28, fc="#c0392b", ec=INK, lw=0.25, zorder=5)
 
     nose = DECK_X0 + DECK_L
-    # Шкворень и лапы — на свободной части площадки, за блоком.
+    for axle in (DECK_X0 + 1.25, DECK_X0 + 2.45, DECK_X0 + 3.65, nose - 1.85, nose - 0.95):
+        _axle_duals(ax, axle)
     ax.add_patch(Circle((nose - 1.55, PICK[1]), 0.28, fc="#6a737a", ec=INK, lw=0.45, zorder=4))
     ax.add_patch(Circle((nose - 1.55, PICK[1]), 0.08, fc="#222", zorder=5))
-    sy = DECK_Y0 + DECK_W - 0.02
-    rect(ax, nose - 3.15, sy, 0.16, 0.30, fc="#4e585f", ec=INK, lw=0.35, zorder=4)
-    rect(ax, nose - 3.28, sy + 0.24, 0.42, 0.08, fc=PAD, ec=INK, lw=0.3, zorder=4)
+    sy = DECK_Y0 + DECK_W + 0.02
+    rect(ax, nose - 3.15, sy, 0.14, 0.28, fc="#4e585f", ec=INK, lw=0.35, zorder=4)
+    rect(ax, nose - 3.28, sy + 0.26, 0.40, 0.08, fc=PAD, ec=INK, lw=0.3, zorder=4)
+    sy = DECK_Y0 - 0.30
+    rect(ax, nose - 3.15, sy, 0.14, 0.28, fc="#4e585f", ec=INK, lw=0.35, zorder=4)
+    rect(ax, nose - 3.28, sy - 0.08, 0.40, 0.08, fc=PAD, ec=INK, lw=0.3, zorder=4)
 
-    # Тягач, кабина-кабина, нос от крана.
     rect(ax, nose - 1.7, PICK[1] - 0.42, 3.55, 0.22, fc="#8e99a2", ec=INK, lw=0.4, zorder=4)
     rect(ax, nose - 1.7, PICK[1] + 0.20, 3.55, 0.22, fc="#8e99a2", ec=INK, lw=0.4, zorder=4)
-    for axle in (nose - 1.85, nose - 0.95):
-        _dual_plan(ax, axle, DECK_Y0 + DECK_W + 0.02, 1, z=5)
     cab_x, cab_y = nose + 0.15, PICK[1] - 1.15
     ax.add_patch(FancyBboxPatch(
         (cab_x, cab_y), 2.35, 2.30,
@@ -502,74 +506,14 @@ def draw_flatbed_world(ax):
         rect(ax, cab_x + 2.05, my, 0.34, 0.16, fc="#141414", ec=INK, lw=0.3, zorder=8)
     for lamp_y in (cab_y + 1.95, cab_y + 0.15):
         ax.add_patch(Circle((cab_x + 2.42, lamp_y), 0.09, fc="#f7f9fb", ec=INK, lw=0.3, zorder=8))
-    _plan_tire(ax, cab_x + 1.15, cab_y - 0.34, 0.72, 0.32, z=5)
-    _plan_tire(ax, cab_x + 1.15, cab_y + 2.30, 0.72, 0.32, z=5)
+    _plan_tire(ax, cab_x + 1.15, cab_y - 0.36, 0.72, 0.32, z=5)
+    _plan_tire(ax, cab_x + 1.15, cab_y + 2.32, 0.72, 0.32, z=5)
     rect(ax, cab_x + 2.48, cab_y + 0.15, 0.14, 2.00, fc="#1a2228", ec=INK, lw=0.35, zorder=7)
     ax.text(
         (PICK[0] + BLOCK_W / 2 + nose) / 2, PICK[1], "ДЛИННОМЕР",
         ha="center", va="center", color="white", fontsize=8, fontproperties=BOLD, zorder=8,
     )
-
-    # Вид сбоку, привязанный к южной грани блока. Высоты в масштабе плана.
-    ground = (PICK[1] - BLOCK_L / 2) - BLOCK_H - DECK_TOP
-    deck_top = ground + DECK_TOP
-    ax.plot([DECK_X0 - 0.4, nose + 3.3], [ground, ground], color=INK, lw=1.0, zorder=2)
-    rect(ax, DECK_X0 - 0.5, ground - 0.45, DECK_L + 4.3, 0.45, fc="#ece7df", ec="none", zorder=1)
-    rect(ax, DECK_X0, ground + 0.78, DECK_L, 0.32, fc="#9aa6b0", ec=INK, lw=0.6, zorder=3)
-    member = DECK_X0 + 0.4
-    while member < nose - 0.3:
-        rect(ax, member, ground + 0.62, 0.08, 0.18, fc="#7d8892", ec=INK, lw=0.25, zorder=3)
-        member += 1.15
-    rect(ax, DECK_X0, deck_top - 0.18, DECK_L, 0.18, fc=DECK, ec=INK, lw=0.7, zorder=4)
-    for px in [DECK_X0 + 0.2 + i * 0.42 for i in range(33)]:
-        if px < nose - 0.05:
-            ax.plot([px, px], [deck_top - 0.16, deck_top - 0.02], color=DECK_DK, lw=0.35, zorder=4)
-    rect(ax, DECK_X0 - 0.14, ground + 0.55, 0.14, 0.75, fc=STEEL_DK, ec=INK, lw=0.4, zorder=4)
-    rect(ax, DECK_X0 - 0.12, ground + 0.95, 0.10, 0.16, fc="#c0392b", ec=INK, lw=0.25, zorder=5)
-
-    for cx in (DECK_X0 + 1.15, DECK_X0 + 2.35, DECK_X0 + 3.55):
-        fender(ax, cx, ground + 0.48, 0.46, z=3)
-        wheel_side(ax, cx, ground + 0.48, 0.46, dual=True)
-    rect(ax, DECK_X0 + 3.85, ground + 0.12, 0.08, 0.55, fc="#2a2a2a", ec=INK, lw=0.3, zorder=4)
-
-    module_wall(ax, DECK_X0, deck_top, BLOCK_W, BLOCK_H, z=5)
-    ax.plot(
-        [DECK_X0 + BLOCK_W, DECK_X0 + BLOCK_W], [deck_top, deck_top + BLOCK_H],
-        color=BLOCK_EDGE, lw=1.3, zorder=6,
-    )
-
-    # Тягач сбоку, нос вправо. Колёса стоят под теми же X, что и на плане.
-    rect(ax, nose - 2.3, ground + 0.82, 4.55, 0.36, fc="#b7c0c8", ec=INK, lw=0.65, zorder=3)
-    rect(ax, nose - 0.2, ground + 0.55, 0.7, 0.28, fc="#8d98a2", ec=INK, lw=0.35, zorder=3)
-    for cx, dual in ((nose - 1.85, True), (nose - 0.95, True), (nose + 1.55, False)):
-        fender(ax, cx, ground + 0.48, 0.50, z=3)
-        wheel_side(ax, cx, ground + 0.48, 0.50, dual=dual)
-    ax.add_patch(Wedge((nose - 1.55, deck_top), 0.22, 0, 180, fc="#5c656c", ec=INK, lw=0.4, zorder=5))
-    ax.add_patch(Polygon(
-        [
-            (nose + 0.15, ground + 1.15), (nose + 0.35, ground + 2.55),
-            (nose + 0.62, ground + 2.95), (nose + 1.85, ground + 2.88),
-            (nose + 2.35, ground + 2.15), (nose + 2.55, ground + 1.45),
-            (nose + 2.55, ground + 1.08), (nose + 0.15, ground + 1.15),
-        ],
-        closed=True, fc=CAB, ec=INK, lw=0.9, zorder=5,
-    ))
-    ax.add_patch(Polygon(
-        [
-            (nose + 1.95, ground + 2.15), (nose + 2.22, ground + 2.55),
-            (nose + 2.42, ground + 2.15), (nose + 2.22, ground + 1.85),
-        ],
-        closed=True, fc=GLASS, ec=INK, lw=0.35, zorder=6,
-    ))
-    rect(ax, nose + 0.55, ground + 1.45, 1.05, 1.05, fc="#162430", ec=GLASS, lw=0.35, zorder=6)
-    rect(ax, nose + 0.70, ground + 1.60, 0.75, 0.72, fc="#243848", ec="#9bb4c6", lw=0.3, zorder=7)
-    ax.add_patch(Circle((nose + 2.42, ground + 1.28), 0.07, fc="#f7f9fb", ec=INK, lw=0.25, zorder=7))
-    rect(ax, nose + 2.35, ground + 1.02, 0.45, 0.12, fc="#1a2228", ec=INK, lw=0.3, zorder=6)
-    label(ax, nose + 2.75, ground + 1.7, "тягач", size=7, ha="left")
-    label(ax, DECK_X0 + BLOCK_W / 2, deck_top + 1.15, "блок", size=8, bold=True)
-    label(ax, DECK_X0 + 10.2, ground + 1.55, "площадка", size=7)
-    ax.plot([nose, nose], [DECK_Y0, deck_top], color="#b7b1a8", lw=0.45, ls=(0, (2, 2)), zorder=2)
-    label(ax, DECK_X0 + 6.8, ground - 0.85, "тот же длинномер сбоку", size=7.5)
+    label(ax, cab_x + 1.15, cab_y - 0.72, "тягач", size=7)
 
 
 def draw_pick_boom(ax):
@@ -604,7 +548,7 @@ def draw_plan(ax):
     draw_flatbed_world(ax)
     bx0, by0 = PICK[0] - BLOCK_W / 2, PICK[1] - BLOCK_L / 2
     draw_module_plan(ax, bx0, by0, BLOCK_W, BLOCK_L, z=6)
-    label(ax, PICK[0], by0 + BLOCK_L + 0.42, "БЛОК на длинномере", size=8, bold=True)
+    label(ax, PICK[0], by0 + BLOCK_L + 1.15, "БЛОК на длинномере", size=8, bold=True)
     for corner in ((bx0, by0), (bx0 + BLOCK_W, by0), (bx0, by0 + BLOCK_L), (bx0 + BLOCK_W, by0 + BLOCK_L)):
         ax.plot([corner[0], PICK[0]], [corner[1], PICK[1]], color="#2a2622", lw=0.7, zorder=7)
 
