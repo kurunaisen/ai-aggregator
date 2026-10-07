@@ -460,10 +460,9 @@ def _dual_plan(ax, x, y_outer, sign, z=5):
 
 
 def _axle_duals(ax, x):
-    """Двускатные колёса вплотную к бортам. Ось доходит до ступицы."""
+    """Двускатные колёса вплотную к бортам. Линию оси по настилу не проводим."""
     south = DECK_Y0 - 0.07
     north = DECK_Y0 + DECK_W + 0.07
-    ax.plot([x, x], [south - 0.62, north + 0.62], color="#3a3a3a", lw=1.6, solid_capstyle="butt", zorder=7)
     _plan_tire(ax, x - 0.34, south - 0.34, 0.68, 0.34, z=8)
     _plan_tire(ax, x - 0.34, south - 0.66, 0.68, 0.32, z=8)
     _plan_tire(ax, x - 0.34, north, 0.68, 0.34, z=8)
